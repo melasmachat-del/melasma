@@ -1,371 +1,88 @@
 // ============================================================================
-//  Knowledge — เนื้อหาสอนก่อนเข้าเล่นแต่ละด่าน
-//  ใช้บน /knowledge ให้เด็กอ่านปูพื้นก่อน คล้าย "ฟิวส์ตอนต้น"
+//  Knowledge - melasma learning base
+//  Used on /knowledge as the main educational content
 // ============================================================================
 
 export interface KnowledgeEntry {
   stageId: number;
-  title: string;        // หัวข้อสั้น
+  title: string;
   emoji: string;
-  difficulty: 'ง่าย' | 'กลาง' | 'ยาก';
-  concept: string;      // สูตร/แนวคิดหลัก
-  /** หัวข้อเรียงเป็นรายการ — เด็กอ่านง่ายและจำได้ */
+  difficulty: 'easy' | 'medium' | 'hard';
+  concept: string;
   points: string[];
-  /** ตัวอย่าง: ถ้าเจอ X ให้พูด Y */
-  example?: { situation: string; response: string };
-  /** แหล่งอ้างอิง */
   source?: string;
 }
 
 export const KNOWLEDGE: KnowledgeEntry[] = [
   {
     stageId: 1,
-    title: 'แยกความจริงจากโฆษณา',
-    emoji: '🔍',
-    difficulty: 'ง่าย',
-    concept: 'Media Literacy — ตั้งคำถามก่อนเชื่อ',
+    title: 'Definition',
+    emoji: 'D',
+    difficulty: 'easy',
+    concept: 'Melasma is a common acquired pigmentation disorder that causes symmetric brown or gray-brown patches, usually on the face.',
     points: [
-      'เห็นข่าวไวรัล → ถามก่อนว่า "ใครพูด มาจากไหน?"',
-      'โฆษณามักใช้คำสวยหรู เช่น "ปลอดภัย" "ช่วยเลิก" — แต่ไม่มีงานวิจัยรับรอง',
-      'ตรวจแหล่งอ้างอิงจากองค์กรกลาง เช่น WHO, CDC, ศจย.',
-      'ถ้าโฆษณาขายของ → ไม่ใช่แหล่งความรู้ที่เชื่อถือได้',
+      'Melasma is not contagious and is not caused by poor hygiene.',
+      'It often appears on the cheeks, forehead, upper lip, nose, and chin.',
+      'The color can range from light brown to dark brown or gray-brown.',
+      'It is more common in adults and is often associated with light sensitivity and hormonal influences.',
     ],
-    example: {
-      situation: 'เพื่อนแชร์โพสต์ "vape ช่วยให้คนเลิกบุหรี่ได้"',
-      response: 'ลองค้นว่า "vape ช่วยเลิกบุหรี่ WHO" → จะเจอข้อมูลจริงว่ามักทำให้ใช้คู่กัน',
-    },
-    source: 'WHO Tobacco Report / CDC Youth Vaping 2023',
+    source: 'American Academy of Dermatology; DermNet NZ; PubMed reviews on melasma',
   },
   {
     stageId: 2,
-    title: 'สูตรปฏิเสธ 3 ขั้น',
-    emoji: '✋',
-    difficulty: 'ง่าย',
-    concept: 'ไม่ → เพราะ → ทางเลือก',
+    title: 'Causes and triggers',
+    emoji: 'C',
+    difficulty: 'easy',
+    concept: 'Melasma is influenced by multiple triggers rather than one single cause.',
     points: [
-      'ขั้น 1: ปฏิเสธชัด — "ไม่"',
-      'ขั้น 2: บอกเหตุผลสั้น — "ผมไม่สูบ" / "ฉันไม่ชอบ"',
-      'ขั้น 3: เสนอทางเลือก — "ไปกินข้าวกันมั้ย?"',
-      'อย่าใช้ "ขอคิดดู" หรือ "อาจจะ" — เพราะคนตื๊อต่อจะไม่หยุด',
+      'Ultraviolet radiation and visible light can darken existing melasma.',
+      'Pregnancy, hormonal therapy, and some contraceptives may contribute in some people.',
+      'Heat, friction, and irritation can also worsen pigmentation.',
+      'Family history and skin type can affect susceptibility.',
     ],
-    example: {
-      situation: 'รุ่นพี่ในห้องน้ำยื่น vape มาให้',
-      response: '"ไม่ครับพี่ ผมไม่สูบ — เดี๋ยวเข้าเรียนสายแล้วครับ"',
-    },
-    source: 'NIDA — Refusal Skills for Adolescents (2022) / สสส.',
+    source: 'AAD patient education; StatPearls: Melasma; DermNet NZ',
   },
   {
     stageId: 3,
-    title: 'ใช้เหตุผลโน้มน้าว',
-    emoji: '💡',
-    difficulty: 'ง่าย',
-    concept: 'พูดด้วยข้อเท็จจริง ไม่ใช่อารมณ์',
+    title: 'Types',
+    emoji: 'T',
+    difficulty: 'medium',
+    concept: 'Melasma is usually described as epidermal, dermal, or mixed.',
     points: [
-      'อย่าด่ากลับ → คนถูกด่ายิ่งดื้อ',
-      'ใช้ข้อมูลที่เพื่อนสนใจ เช่น ผลต่อกีฬา ผลต่อหน้า',
-      'แชร์ความห่วงใยจริง ไม่ใช่การตัดสิน',
-      'ถามคำถามให้เพื่อนคิดเอง เช่น "นายอยากเป็นยังไงตอน 30?"',
+      'Epidermal melasma is often more brown and may respond better to treatment.',
+      'Dermal melasma may look gray-brown and can fade more slowly.',
+      'Mixed melasma is common and contains both superficial and deeper pigment components.',
+      'A dermatologist may use clinical examination or tools such as Wood lamp or dermoscopy to assess the pattern.',
     ],
-    example: {
-      situation: 'งานวันเกิด เพื่อนชวนลอง',
-      response: '"นายเล่นบาสเก่งจะตาย — vape ทำปอดเหนื่อยขึ้น 30% เลยนะ"',
-    },
-    source: 'American Lung Association 2023',
+    source: 'DermNet NZ; StatPearls: Melasma',
   },
   {
     stageId: 4,
-    title: 'แผ่นเสียงตกร่อง — ยืนยันคำเดิมซ้ำ',
-    emoji: '🔁',
-    difficulty: 'กลาง',
-    concept: 'ยืนคำตอบเดิม จนคนตื๊อเลิกเอง',
+    title: 'Prevention',
+    emoji: 'P',
+    difficulty: 'medium',
+    concept: 'Prevention focuses on reducing light and irritation triggers every day.',
     points: [
-      'พูดคำตอบเดียวซ้ำๆ ไม่หาเหตุผลใหม่',
-      'น้ำเสียงสุภาพ แต่ไม่อ่อนข้อ',
-      'อย่าเข้าสู่บทถกเถียง — คนตื๊ออยากให้เถียง เขาจะได้พลิก',
-      'ถ้ายังไม่หยุด → เดินออก',
+      'Use broad-spectrum sunscreen every day, ideally SPF 30 or higher, and reapply when needed.',
+      'Tinted sunscreens with iron oxides can help with visible light protection.',
+      'Use hats, shade, and sunglasses to reduce exposure.',
+      'Keep skin care gentle and avoid unnecessary scrubbing or irritation.',
     ],
-    example: {
-      situation: 'คนขายในห้างเสนอราคาพิเศษซ้ำๆ',
-      response: '"ไม่ครับ ขอบคุณ" / "ไม่ครับ ขอบคุณ" / "ไม่ครับ ขอบคุณ"',
-    },
-    source: 'Smith & Smith — Assertiveness Training: Broken Record Technique / American Heart Association 2022',
+    source: 'AAD sunscreen guidance; DermNet NZ; pigmentary disorder reviews',
   },
   {
     stageId: 5,
-    title: 'เดินหนี (Walk Away) — ออนไลน์',
-    emoji: '🚶',
-    difficulty: 'กลาง',
-    concept: 'หยุด → บล็อก → รายงาน → บอกผู้ใหญ่',
+    title: 'Treatment and follow-up',
+    emoji: 'L',
+    difficulty: 'hard',
+    concept: 'Melasma often improves with consistent treatment, but relapse is common without trigger control.',
     points: [
-      'คนใน DM ที่ส่งของผิดกฎหมาย = อันตราย แม้พูดดี',
-      'อย่าตอบกลับ — แค่ "อ๋อ" ก็เปิดประตูให้เขาตื๊อ',
-      'บล็อก แล้วรายงานแอป (Instagram/TikTok/LINE มีปุ่ม Report)',
-      'บอกผู้ใหญ่/ครู — ป้องกันคนต่อไปด้วย',
+      'Treatment plans are usually individualized by a dermatologist.',
+      'Topical agents, combination creams, and carefully selected procedures may be considered.',
+      'Oral options such as tranexamic acid may be used only under medical supervision in selected patients.',
+      'Any rapidly changing, itchy, painful, or unusual lesion needs in-person review to rule out other conditions.',
     ],
-    example: {
-      situation: 'คนแปลกหน้า DM "พี่มี vape รสผลไม้ลด 50%"',
-      response: 'ไม่อ่าน → กดบล็อก → กดรายงาน → บอกพ่อแม่',
-    },
-    source: 'รายงาน กสทช. 2566 / Common Sense Media — Online Safety for Teens',
-  },
-  {
-    stageId: 6,
-    title: 'ช่วยเพื่อน — Listen-Validate-Care-Lead',
-    emoji: '🤝',
-    difficulty: 'กลาง',
-    concept: 'ฟัง → ยอมรับ → ห่วงใย → นำพา',
-    points: [
-      'L (Listen): ฟังให้จบก่อน — ห้ามตัดบท ห้ามสั่งสอน',
-      'V (Validate): "ฉันเข้าใจที่เธอเครียด" — ยอมรับความรู้สึก',
-      'C (Care): "ฉันเป็นห่วงนาย" — แสดงความใส่ใจ',
-      'L (Lead): "ลองทำ X ดูมั้ย?" — เสนอทางออกอ่อนๆ',
-    ],
-    example: {
-      situation: 'เพื่อนบอก "เครียดมาก อยากลองสักครั้ง"',
-      response: '"ฉันเข้าใจที่เครียด — ไปวิ่งกันเลย? อยู่กับเธอ" (ไม่ใช่ "อย่าโง่")',
-    },
-    source: 'สสส. คู่มือเพื่อนช่วยเพื่อน 2566 / Mental Health First Aid (MHFA)',
-  },
-  {
-    stageId: 7,
-    title: 'รู้กฎหมาย — บุหรี่ไฟฟ้าในไทย',
-    emoji: '⚖️',
-    difficulty: 'กลาง',
-    concept: 'พ.ร.บ.ห้ามนำเข้า + ห้ามขายให้เด็ก',
-    points: [
-      'บุหรี่ไฟฟ้า = ผิดกฎหมายในไทย ตั้งแต่ พ.ศ. 2557',
-      'ครอบครอง / ขาย → มีโทษปรับและจำคุก',
-      'ขายให้เยาวชน < 20 ปี → โทษหนักขึ้น',
-      'แจ้งเบาะแสได้ที่สายด่วน 1422 (สสส.) — ฟรี 24 ชั่วโมง',
-    ],
-    example: {
-      situation: 'เห็นร้านสะดวกซื้อขาย vape ใต้เคาน์เตอร์',
-      response: 'ถ่ายรูปสถานที่ → โทร 1422 แจ้งเบาะแส (ไม่ต้องบอกชื่อ)',
-    },
-    source: 'พ.ร.บ.ศุลกากร 2560 + ประกาศกระทรวงพาณิชย์ 2557',
-  },
-  {
-    stageId: 8,
-    title: 'รวมทุกทักษะ — BOSS',
-    emoji: '👑',
-    difficulty: 'ยาก',
-    concept: 'ผสานทักษะ 7 ด่านเข้าด้วยกัน',
-    points: [
-      'ปฏิเสธชัดเจนตั้งแต่ต้น — อย่าลังเล',
-      'แยกข้อมูลจริง/เท็จ ก่อนเชื่อโฆษณา',
-      'จับคู่ทักษะให้ตรงสถานการณ์ (DM ≠ คนตื๊อตัว)',
-      'ปิดท้ายด้วยความเข้าใจ ไม่ใช่ความเกลียด — เปลี่ยนใจคนได้ดีกว่า',
-    ],
-    source: 'งานวิจัย ศจย. ร่วมกับ สสส. 2566 / WHO Report on Tobacco Epidemic',
-  },
-  {
-    stageId: 9,
-    title: 'สูตร 5A ช่วยเลิก',
-    emoji: '🩺',
-    difficulty: 'ยาก',
-    concept: 'Ask → Advise → Assess → Assist → Arrange',
-    points: [
-      'Ask — ถามอย่างไม่ตัดสิน "รู้สึกยังไง" (อย่าใช้ "ทำไม")',
-      'Advise — แนะนำกระชับ ไม่กดดัน "ฉันแนะนำให้เลิก เพราะ..."',
-      'Assess — ประเมินว่าเขาพร้อมขั้นไหน (1-10)',
-      'Assist — ช่วยวางแผน + ติดต่อสายด่วน 1600 (โทรฟรี ปรึกษาฟรี)',
-      'Arrange — นัดติดตามผล อยู่เป็นกำลังใจ ไม่หายตัวไปหลังคำแนะนำ',
-    ],
-    example: {
-      situation: 'เพื่อนติดแล้ว เลิกไม่ได้',
-      response: 'เริ่มจาก Ask: "รู้สึกยังไงตอนพยายามเลิก?" — ไม่ใช่ "ทำไมเลิกไม่ได้?"',
-    },
-    source: 'WHO Tobacco Cessation Guidelines 2023',
-  },
-  {
-    stageId: 10,
-    title: 'รู้เท่าทันสื่อ TikTok',
-    emoji: '📱',
-    difficulty: 'ยาก',
-    concept: 'ตรวจ Influencer ก่อนเชื่อ',
-    points: [
-      '#sponsored / #ad → คือโฆษณา ต้องระวัง',
-      'อิทธิพลคนดัง ≠ ข้อเท็จจริงทางการแพทย์',
-      'ดูว่าเขาขายอะไร — ถ้าขาย vape เขามี bias',
-      'รายงานคอนเทนต์ผิดกฎหมายที่แพลตฟอร์ม',
-    ],
-    source: 'TikTok Community Guidelines / รายงาน กสทช. 2566',
-  },
-  {
-    stageId: 11,
-    title: 'รับมือคนในครอบครัว',
-    emoji: '🏠',
-    difficulty: 'ยาก',
-    concept: 'แสดงความห่วงใย ไม่ใช่การตำหนิ',
-    points: [
-      'พี่/ลุงที่สูบ → ใช้ "ผมเป็นห่วงพี่" แทน "พี่ทำผิด"',
-      'เลือกเวลาคุยตัวต่อตัว ไม่ใช่ต่อหน้าคนอื่น',
-      'อย่าฟ้องเสียก่อน — ลองคุยให้ใจตรงใจก่อน',
-      'ถ้าไม่ไหว ขอความช่วยเหลือผู้ใหญ่ที่เชื่อใจ (ครู/ปู่/ย่า)',
-    ],
-    source: 'NIDA Family-Based Treatment Research 2022 / กรมสุขภาพจิต',
-  },
-  {
-    stageId: 12,
-    title: 'นักสืบระดับครู',
-    emoji: '🎓',
-    difficulty: 'ยาก',
-    concept: 'ส่งต่อทักษะให้รุ่นน้อง',
-    points: [
-      'การสอน = สรุปทักษะให้เข้าใจง่าย ไม่ใช่ท่องจำ',
-      'ใช้สถานการณ์จริงของรุ่นน้อง — เขาจะอินกว่า',
-      'ฟังคำถามรุ่นน้อง อย่าด่วนตอบ — ให้เขาคิดเอง',
-      'ครูที่ดี ไม่ได้รู้มากที่สุด — แต่สร้างความปลอดภัยให้เด็กถามได้',
-    ],
-    source: 'งานวิจัย ม.มหิดล + สสส. 2566 — Peer Education Effectiveness',
-  },
-
-  // ===== Pro Arc (13-15) =====
-  {
-    stageId: 13,
-    title: 'ความเสี่ยงเป็นสเปกตรัม',
-    emoji: '📊',
-    difficulty: 'ยาก',
-    concept: 'อธิบายเป็นระดับ ไม่ใช่ขาว-ดำ',
-    points: [
-      'พฤติกรรมต่างๆ มี "ระดับ" ความเสี่ยง — ไม่ใช่ปลอดภัย vs อันตรายอย่างเดียว',
-      '"vape ปลอดภัยกว่าบุหรี่" ≠ "vape ปลอดภัย" — กับดักทางภาษา',
-      'ระยะเวลา + ความถี่ ทำให้ระดับเสี่ยงเปลี่ยน (ทุกวัน ≠ ครั้งเดียว)',
-      'พูดเป็น "ระดับ" ทำให้คนฟัง รู้สึกไม่ถูกตัดสิน เปิดใจคุยต่อได้',
-    ],
-    example: {
-      situation: 'เพื่อนบอก "vape ปลอดภัยกว่าบุหรี่"',
-      response: '"จริงตรงที่เผาน้อยกว่า — แต่ติดได้เร็วกว่า ใช้ทุกวัน 1 ปี ปอดอ่อนลง 15-20%"',
-    },
-    source: 'Pediatrics 2023 / National Academy of Sciences',
-  },
-  {
-    stageId: 14,
-    title: 'ปัด TikTok แบบนักสืบ',
-    emoji: '📱',
-    difficulty: 'ยาก',
-    concept: 'ตรวจ 3 อย่างก่อนเชื่อ — ใคร ที่มา ผลประโยชน์',
-    points: [
-      'ใคร: คนพูดเป็นใคร? ผู้เชี่ยวชาญ หรืออินฟลูเอนเซอร์ที่รับโฆษณา',
-      'ที่มา: อ้างอิงงานวิจัยไหม? หรือแค่ "ฉันเคยลอง"',
-      'ผลประโยชน์: เขาจะได้อะไรจากการให้คนเชื่อ? ขายของหรือเปล่า?',
-      'ถ้าเช็ค 3 อย่างนี้ไม่ได้ → ปัดซ้าย (ไม่เชื่อ) ก่อน',
-    ],
-    example: {
-      situation: 'คลิป "เด็กนี้ใช้ vape แล้วเรียนเก่งขึ้น"',
-      response: 'ใคร? เด็กไม่รู้จัก. ที่มา? ไม่มีงานวิจัย. ผลประโยชน์? อาจขาย vape → ปัดซ้าย',
-    },
-    source: 'TikTok Transparency Report 2023 / CDC Youth Vaping Report',
-  },
-  {
-    stageId: 15,
-    title: 'พฤติกรรม → ผลที่ตามมา',
-    emoji: '📓',
-    difficulty: 'ยาก',
-    concept: 'มองทุกการกระทำเป็นโซ่เหตุ-ผล',
-    points: [
-      'ทุกพฤติกรรมเล็กๆ มีผลตามมา — ไม่ทันที ก็ระยะยาว',
-      'มองภาพใหญ่: ลอง vape 1 ครั้ง อาจจะเริ่มเสพติด → ปอดเสีย → กระทบเรียน/กีฬา',
-      'ทางบวกก็เหมือนกัน: ฟังเพื่อน 1 ครั้ง → เพื่อนเชื่อใจ → เปิดใจให้ช่วย',
-      'นักสืบคิด 2-3 ก้าวข้างหน้า ทำให้ตัดสินใจดีกว่าคนทั่วไป',
-    ],
-    example: {
-      situation: 'เพื่อนชวน "ลองครั้งเดียวไม่เป็นไร"',
-      response: 'คิดต่อ: ลอง 1 → ครั้งที่ 2 ง่ายกว่า → ติดใน 30 วัน (สถิติจริง) → ปอด/เกรด/กีฬากระทบ',
-    },
-    source: 'WHO Behaviour Change Framework / ศจย. งานติดตามนักเรียน 2567',
-  },
-
-  // ===== Expert Arc (16-20) =====
-  {
-    stageId: 16,
-    title: 'นิโคตินกับสมองวัยรุ่น',
-    emoji: '🧠',
-    difficulty: 'ยาก',
-    concept: 'นิโคติน hijack ระบบ dopamine ของสมองที่ยังโตไม่จบ',
-    points: [
-      'สมองพัฒนาถึงอายุ ~25 ปี — ส่วนควบคุมตัวเอง (prefrontal) โตช้าสุด',
-      'นิโคตินกระตุ้น dopamine → สมองเรียนรู้ว่า "นิโคติน = ความสุข"',
-      'วัยรุ่นจึงติดง่ายกว่าผู้ใหญ่ 4 เท่า และเสี่ยงติดสารอื่นตามมา',
-      'ข่าวดี: เลิกได้เร็ว สมองฟื้นตัวได้ใน 3-6 เดือน',
-    ],
-    example: {
-      situation: 'เพื่อนบอก "สูบนิดเดียวไม่ติดหรอก"',
-      response: '"สมองเรายังโตไม่จบ — นิโคตินแค่ครั้งเดียวก็สร้าง receptor ใหม่ทันที"',
-    },
-    source: 'NIDA — Tobacco, Nicotine & E-Cigarettes / U.S. Surgeon General 2023',
-  },
-  {
-    stageId: 17,
-    title: 'รับมือคนขายในเกมออนไลน์',
-    emoji: '🎮',
-    difficulty: 'ยาก',
-    concept: 'รู้ทัน grooming — คำชม → สร้างสนิท → ขายของ',
-    points: [
-      'คนขายเริ่มจากชมว่า "เล่นเก่ง" เพื่อสร้างความไว้ใจ',
-      'อย่ารับเพื่อนแปลกหน้า — ตั้งค่า DM = friends only',
-      'ถ้าชวนคุย "นอกเกม" (LINE/IG) = สัญญาณอันตราย',
-      'รายงานในแอป (Roblox/Discord Report) + บอกพ่อแม่',
-    ],
-    example: {
-      situation: 'คนใน Discord ทัก "มีพ๊อตรสองุ่นถูกๆ สนใจมั้ย"',
-      response: 'ไม่ตอบ → block → screenshot → แจ้งครู (พ.ร.บ.คอมฯ มาตรา 14)',
-    },
-    source: 'FBI — Online Predators & Gaming 2022 / พ.ร.บ.คอมพิวเตอร์ 2560',
-  },
-  {
-    stageId: 18,
-    title: 'สื่อสารกับครอบครัวเมื่อเจอเรื่องยาก',
-    emoji: '💬',
-    difficulty: 'ยาก',
-    concept: 'บอกความจริง 5 ขั้น ดีกว่าโกหก/ซ่อน',
-    points: [
-      'พ่อแม่ react แรงเพราะ "กลัว" ไม่ใช่ "อยากลงโทษ"',
-      'หยิบของให้เห็น → ขอโทษ → บอกสาเหตุ → ขอช่วยเลิก → ขอโอกาส',
-      'โกหกแล้วจับได้ = พังความเชื่อใจถาวร',
-      'โทร 1600 ด้วยกัน (พ่อแม่+ลูก) — บริการครอบครัวฟรี',
-    ],
-    example: {
-      situation: 'แม่เจอพ๊อตในกระเป๋า',
-      response: '"ของหนูเองครับ หนูผิดที่ซ่อน — ช่วยหนูเลิกได้มั้ย"',
-    },
-    source: 'CDC — Talking to Your Teen About Tobacco / Quitline 1600',
-  },
-  {
-    stageId: 19,
-    title: 'EVALI — ปอดอักเสบจากบุหรี่ไฟฟ้า',
-    emoji: '🫁',
-    difficulty: 'ยาก',
-    concept: 'รู้อาการเตือน + เกณฑ์ฉุกเฉิน ก่อนสาย',
-    points: [
-      'EVALI = ปอดอักเสบเฉียบพลัน ลามเร็วใน 2-3 วัน',
-      'อาการต่างจากหวัด: ไอแห้ง + เหนื่อยแม้นั่งเฉยๆ + ไข้',
-      'สาเหตุหลัก: Vitamin E acetate, โลหะหนัก, Diacetyl (ปอดป๊อปคอร์น)',
-      'เคยสูบ + มีอาการ → โทร 1669 ไป ER ทันที อย่ารอดูอาการ',
-    ],
-    example: {
-      situation: 'เพื่อนเคยสูบ vape แล้วไอ+เหนื่อยมา 2 วัน',
-      response: 'พาไป ER ทันที / โทร 1669 — บอกหมอตรงๆ ว่าเคยสูบ',
-    },
-    source: 'CDC EVALI Report / NEJM 2019 / กรมการแพทย์ กระทรวงสาธารณสุข',
-  },
-  {
-    stageId: 20,
-    title: 'สูตรเลิก 4D + ตั้งทีมป้องกัน',
-    emoji: '🌟',
-    difficulty: 'ยาก',
-    concept: '4D เมื่ออยากสูบ + สร้างเครือข่ายป้องกันในโรงเรียน',
-    points: [
-      'Delay: หน่วงเวลา 5 นาที — ความอยากสูงสุดแค่ 3-5 นาที',
-      'Deep breath: หายใจลึก 10 ครั้ง — ลดฮอร์โมนเครียด cortisol',
-      'Drink water: ดื่มน้ำเย็น แทนการ inhale',
-      'Do something: ทำกิจกรรมอื่น — เดิน/ฟังเพลง/โทรเพื่อน',
-    ],
-    example: {
-      situation: 'กำลังเลิก แต่ "อยากสูบ" ขึ้นมา',
-      response: 'หน่วง 5 นาที → หายใจลึก → ดื่มน้ำ → ออกไปเดิน',
-    },
-    source: 'American Cancer Society — 4D Method / สสส. โรงเรียนปลอดบุหรี่ 2566',
+    source: 'AAD: Melasma treatment; StatPearls: Melasma treatment options; PubMed reviews',
   },
 ];
 

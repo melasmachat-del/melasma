@@ -10,27 +10,21 @@ import { SHOP_ITEMS } from './lib/shopItems';
 import Toaster from './components/Toaster';
 import LevelUpModal from './components/LevelUpModal';
 import Onboarding from './pages/Onboarding';
-import Home from './pages/Home';
+import Home from './pages/Home.tsx';
 import Skeleton from './components/ui/Skeleton';
 import SkeletonCard from './components/ui/SkeletonCard';
+import TopNavigation from './components/TopNavigation';
 
 // ===== Lazy-loaded routes — โหลดเฉพาะตอนเปิดหน้านั้นๆ =====
-const ScenarioPage = lazy(() => import('./pages/ScenarioPage'));
-const Profile      = lazy(() => import('./pages/Profile'));
-const Certificate  = lazy(() => import('./pages/Certificate'));
-const Verify       = lazy(() => import('./pages/Verify'));
-const Shop         = lazy(() => import('./pages/Shop'));
-const Settings     = lazy(() => import('./pages/Settings'));
-const Stats        = lazy(() => import('./pages/Stats'));
-const Knowledge    = lazy(() => import('./pages/Knowledge'));
-const Journal      = lazy(() => import('./pages/Journal'));
-const Daily        = lazy(() => import('./pages/Daily'));
-const Exam         = lazy(() => import('./pages/Exam'));
-const Achievements = lazy(() => import('./pages/Achievements'));
-const Assessment   = lazy(() => import('./pages/Assessment'));
-const Leaderboard  = lazy(() => import('./pages/Leaderboard'));
-const Arcade       = lazy(() => import('./pages/Arcade'));
-const MissionMap   = lazy(() => import('./pages/MissionMap'));
+const ScenarioPage = lazy(() => import('./pages/ScenarioPage.tsx'));
+const MissionMap   = lazy(() => import('./pages/MissionMap.tsx'));
+const StageReview  = lazy(() => import('./pages/StageReview.tsx'));
+const Profile      = lazy(() => import('./pages/Profile.tsx'));
+const Certificate  = lazy(() => import('./pages/Certificate.tsx'));
+const Verify       = lazy(() => import('./pages/Verify.tsx'));
+const Settings     = lazy(() => import('./pages/Settings.tsx'));
+const Knowledge    = lazy(() => import('./pages/Knowledge.tsx'));
+const Chatbot      = lazy(() => import('./pages/Chatbot.tsx'));
 
 function PageLoader() {
   return (
@@ -53,6 +47,7 @@ export default function App() {
   const setUserHash = usePlayerStore(s => s.setUserHash);
   const fontSize = useSettingsStore(s => s.fontSize);
   const musicEnabled = useSettingsStore(s => s.musicEnabled);
+  const eyeComfortEnabled = useSettingsStore(s => s.eyeComfortEnabled);
   const equippedTheme = usePlayerStore(s => s.equippedTheme);
 
   useEffect(() => {
@@ -61,6 +56,11 @@ export default function App() {
     };
     document.documentElement.style.fontSize = sizeMap[fontSize] || '16px';
   }, [fontSize]);
+
+  useEffect(() => {
+    document.documentElement.classList.toggle('eye-comfort', eyeComfortEnabled);
+    return () => document.documentElement.classList.remove('eye-comfort');
+  }, [eyeComfortEnabled]);
 
   // === Apply equipped theme CSS variables on <html> ===
   // ส่งผลกับ: body bg, .rainbow-header, .btn-primary
@@ -202,36 +202,39 @@ export default function App() {
           <circle cx="26" cy="26" r="16" stroke="#008FFF" strokeWidth="4" fill="rgba(255,255,255,0.7)" />
           <line x1="38" y1="38" x2="54" y2="54" stroke="#008FFF" strokeWidth="5" strokeLinecap="round" />
         </svg>
-        <p className="text-detective-700 font-display font-bold text-base">กำลังเตรียมเกม</p>
-        <p className="text-slate-500 text-sm mt-1">กำลังโหลดข้อมูลผู้เล่น...</p>
+        <p className="text-detective-700 font-display font-bold text-base">กำลังเตรียม Melasma</p>
+        <p className="text-slate-500 text-sm mt-1">กำลังโหลดข้อมูลการเรียนรู้...</p>
       </div>
     );
   }
 
   return (
     <>
+      <TopNavigation />
       <Suspense fallback={<PageLoader />}>
         <Routes>
           <Route path="/" element={<HomeOrOnboarding />} />
           <Route path="/onboarding" element={<Onboarding />} />
           <Route path="/scenario/:id" element={<ScenarioPage />} />
+          <Route path="/scenario/:id/review" element={<StageReview />} />
           <Route path="/profile" element={<Profile />} />
-          <Route path="/shop" element={<Shop />} />
           <Route path="/settings" element={<Settings />} />
           <Route path="/certificate" element={<Certificate />} />
+          <Route path="/chatbot" element={<Chatbot />} />
+          <Route path="/daily" element={<Navigate to="/chatbot" replace />} />
           <Route path="/verify" element={<Verify />} />
-          <Route path="/stats" element={<Stats />} />
           <Route path="/knowledge" element={<Knowledge />} />
-          <Route path="/journal" element={<Journal />} />
-          <Route path="/daily" element={<Daily />} />
-          <Route path="/arcade" element={<Arcade />} />
+          <Route path="/stats" element={<Navigate to="/knowledge" replace />} />
+          <Route path="/journal" element={<Navigate to="/knowledge" replace />} />
+          <Route path="/arcade" element={<Navigate to="/knowledge" replace />} />
           <Route path="/map" element={<MissionMap />} />
-          <Route path="/exam" element={<Exam />} />
-          <Route path="/achievements" element={<Achievements />} />
-          <Route path="/assessment" element={<Assessment />} />
-          <Route path="/leaderboard" element={<Leaderboard />} />
-          {/* legacy /room → redirect ไปที่ Journal เพื่อไม่ให้ลิงก์เก่าเสีย */}
-          <Route path="/room" element={<Navigate to="/journal" replace />} />
+          <Route path="/exam" element={<Navigate to="/knowledge" replace />} />
+          <Route path="/achievements" element={<Navigate to="/knowledge" replace />} />
+          <Route path="/assessment" element={<Navigate to="/knowledge" replace />} />
+          <Route path="/leaderboard" element={<Navigate to="/knowledge" replace />} />
+          <Route path="/shop" element={<Navigate to="/knowledge" replace />} />
+          {/* legacy /room → redirect ไปที่ Knowledge เพื่อไม่ให้ลิงก์เก่าเสีย */}
+          <Route path="/room" element={<Navigate to="/knowledge" replace />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Suspense>

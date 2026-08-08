@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { getScenarioById, SCENARIO_META, isStageUnlocked, CERT_STAGE_COUNT, getStageDifficulty } from '../scenarios';
+import { getScenarioById, SCENARIO_META, isStageUnlocked, getStageDifficulty, hasCompletedCertificatePath } from '../scenarios';
 import { getBadge } from '../lib/badges';
 import { usePlayerStore } from '../store/playerStore';
 import { useCertNameStore } from '../store/certNameStore';
@@ -38,6 +38,7 @@ import {
   type PendingChallenge,
 } from '../lib/challenge';
 import type { Choice, ScenarioNode } from '../types';
+import PageHeader from '../components/PageHeader';
 
 // ===== เฉลยจบด่าน — รองรับทั้งข้อเลือกคำตอบ (choice) และมินิเกม =====
 type ReviewRow = { q: string; a: string; note?: string; source?: string };
@@ -69,22 +70,30 @@ const DIFFICULTY_LABEL: Record<string, { label: string; cls: string }> = {
 };
 
 const GAME_REVIEW_LABEL: Record<string, string> = {
-  'spot-the-lie': '🕵️ จับโกหก',
+  'spot-the-lie': '🕵️ จับผิดข้อความ',
   'order-cards':  '🃏 เรียงลำดับ',
   'word-match':   '🔗 จับคู่คำ',
   'fill-blank':   '✍️ เติมคำ',
   'swipe-decide': '👆 ปัดจริง-เท็จ',
   'memory-match': '🧠 จับคู่ภาพ',
-  'risk-rank':    '📊 จัดอันดับเสี่ยง',
-  'runner':       '🏃 วิ่งหนีบุหรี่ไฟฟ้า',
-  'tap-ads':      '👆 ทุบโฆษณาหลอก',
+  'risk-rank':    '📊 จัดอันดับความเสี่ยง',
+  'runner':       '🏃 วิ่งหลบภัยกระตุ้น',
+  'tap-ads':      '👆 จับสื่อชวนเชื่อ',
   'catch-lungs':  '🫁 ปอดสะอาด',
-  'shoot-myth':   '🎯 ยิงจับเท็จ',
-  'quick-fire':   '⚡ ตอบเร็วจับเวลา',
+  'shoot-myth':   '🎯 ยิงจับผิดความเชื่อ',
+  'quick-fire':   '⚡ ตอบให้ไว',
   'lane-run':     '🛹 รูดหลบ 3 เลน',
-  'snake':        '🐍 งูกินของดี',
-  'maze':         '🌫️ หนีควันหาทางออก',
+  'snake':        '🐍 งูกินสิ่งดี',
+  'maze':         '🌫️ หนีหมอกหาทางออก',
   'reaction':     '✋ แตะให้ไว',
+};
+
+const STAGE_SCENE: Record<number, { image: string; eyebrow: string; accent: string }> = {
+  1: { image: 'images/stages/stage-01-melasma.png', eyebrow: 'ส่องรอยบนผิวให้ชัด', accent: 'from-amber-400 to-orange-500' },
+  2: { image: 'images/stages/stage-02-melanocyte.png', eyebrow: 'ซูมเข้าไปดูโลกของเซลล์', accent: 'from-mint-400 to-emerald-500' },
+  3: { image: 'images/stages/stage-03-triggers.png', eyebrow: 'ตามหาตัวกระตุ้นที่ซ่อนอยู่', accent: 'from-orange-400 to-rose-500' },
+  4: { image: 'images/stages/stage-04-protection.png', eyebrow: 'สร้างเกราะป้องกันให้ผิว', accent: 'from-sky-400 to-blue-600' },
+  5: { image: 'images/stages/stage-05-long-term-care.png', eyebrow: 'วางแผนดูแลผิวระยะยาว', accent: 'from-violet-400 to-indigo-600' },
 };
 
 /** เกมอาร์เคดในด่าน — เล่นจนถึง goalScore แล้วผ่าน (เลี่ยงให้สั้น ไม่ล้า) */
@@ -275,7 +284,7 @@ export default function ScenarioPage() {
       const completedAfter = p.stagesCompleted.includes(stageId)
         ? p.stagesCompleted
         : [...p.stagesCompleted, stageId];
-      const eligible = completedAfter.length >= CERT_STAGE_COUNT || p.totalXP >= 1500;
+      const eligible = hasCompletedCertificatePath(completedAfter);
       const hasRealName = useCertNameStore.getState().realName.trim().length > 0;
       let t2: ReturnType<typeof setTimeout> | undefined;
       if (eligible && !p.certNamePrompted && !hasRealName) {
@@ -325,6 +334,7 @@ export default function ScenarioPage() {
   }
 
   const currentNode = scenario.nodes.find(n => n.id === currentNodeId);
+  const stageScene = STAGE_SCENE[scenario.id] ?? STAGE_SCENE[1];
 
   const goToNext = (nextId: string) => {
     const next = scenario.nodes.find(n => n.id === nextId);
@@ -542,73 +552,87 @@ export default function ScenarioPage() {
       'maze':          { emoji: '🌫️',  label: 'หนีควัน' },
       'reaction':      { emoji: '✋',  label: 'แตะให้ไว' },
     };
+    const difficulty = DIFFICULTY_LABEL[getStageDifficulty(scenario.id)];
 
     return (
-      <div className="min-h-screen flex flex-col p-4 max-w-md md:max-w-2xl mx-auto relative">
-        <button
-          onClick={() => nav('/')}
-          className="self-start text-detective-500 font-semibold mb-3 active:opacity-70 px-2 py-1"
-        >
-          ← กลับ
-        </button>
-
-        <div className="flex-1 flex flex-col">
+      <div className="min-h-screen">
+        <PageHeader
+          title="เตรียมภารกิจ"
+          subtitle={`ด่าน ${scenario.id} · ประมาณ ${scenario.estMinutes} นาที`}
+          backTo="/"
+          sticky={false}
+          actions={<span className={`rounded-full px-3 py-1.5 text-xs font-bold ${difficulty.cls}`}>{difficulty.label}</span>}
+        />
+        <div className="relative mx-auto flex max-w-md flex-col px-4 pb-4 pt-5 md:max-w-2xl">
+          <div className="flex flex-1 flex-col">
           {/* === Hero: ปกแฟ้มคดี === */}
-          <motion.div
+          <motion.section
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4 }}
-            className="card-hero mb-3 relative overflow-hidden"
+            className="relative mb-4 overflow-hidden rounded-[30px] border border-white/80 bg-white shadow-clay"
+            aria-labelledby="stage-title"
           >
-            {/* ลวดลายเล็กๆ มุมขวา (case file vibe) */}
-            <div className="absolute -top-2 -right-2 text-7xl opacity-[0.06] rotate-12 pointer-events-none"
-                 aria-hidden>🔍</div>
-
-            <motion.div
-              initial={{ scale: 0.6, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ delay: 0.1, type: 'spring', stiffness: 220, damping: 16 }}
-              className="inline-flex items-center gap-1.5 bg-gradient-to-r from-detective-500 to-detective-700
-                         text-white text-[11px] font-bold px-3 py-1 rounded-full shadow-glow-sm"
-            >
-              <span>🎯</span> ด่าน {scenario.id} · ⏱ ~{scenario.estMinutes} นาที
-            </motion.div>
-            <span className={`ml-2 inline-block text-[11px] font-bold px-2 py-1 rounded-full
-                              ${DIFFICULTY_LABEL[getStageDifficulty(scenario.id)].cls}`}>
-              {DIFFICULTY_LABEL[getStageDifficulty(scenario.id)].label}
-            </span>
-            {scenario.basedOnRealEvents && (
-              <span className="ml-2 inline-block text-[11px] font-bold px-2 py-1 rounded-full bg-danger-100 text-danger-700">
-                📰 อิงเหตุการณ์จริง
-              </span>
-            )}
-
-            <motion.h1
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-              className="text-2xl md:text-3xl font-display font-extrabold text-detective-800 mt-2 leading-tight"
-            >
-              {scenario.title}
-            </motion.h1>
-            {scenario.subtitle && (
-              <motion.p
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.3 }}
-                className="text-sm text-slate-600 mt-1 leading-relaxed"
+            <div className="relative h-44 overflow-hidden sm:h-56">
+              <img
+                src={asset('images/skin-detective-stage-hero.png')}
+                alt="นักสืบสุขภาพผิวกำลังตรวจสอบเบาะแสด้วยแว่นขยาย"
+                className="h-full w-full object-cover object-center"
+                fetchPriority="high"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-slate-950/45 via-transparent to-transparent" />
+              <motion.div
+                initial={{ scale: 0.85, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ delay: 0.12, type: 'spring', stiffness: 220, damping: 18 }}
+                className="absolute left-3 top-3 inline-flex items-center gap-1.5 rounded-full border border-white/50 bg-white/90 px-3 py-1.5 text-[11px] font-extrabold text-detective-700 shadow-lg backdrop-blur-md"
               >
-                {scenario.subtitle}
-              </motion.p>
-            )}
-          </motion.div>
+                <span>🔍</span> ภารกิจนักสืบผิวหนัง
+              </motion.div>
+              <div className="absolute bottom-3 left-3 flex items-center gap-2">
+                <span className="rounded-full bg-slate-950/60 px-3 py-1 text-[11px] font-bold text-white backdrop-blur-sm">
+                  ด่าน {scenario.id}
+                </span>
+                {scenario.basedOnRealEvents && (
+                  <span className="rounded-full bg-danger-600/90 px-3 py-1 text-[11px] font-bold text-white backdrop-blur-sm">
+                    📰 อิงเหตุการณ์จริง
+                  </span>
+                )}
+              </div>
+            </div>
+
+            <div className="relative px-5 pb-5 pt-4">
+              <div className="absolute -top-5 right-5 flex h-10 w-10 items-center justify-center rounded-2xl border-2 border-white bg-mint-100 text-xl shadow-md" aria-hidden>
+                🧩
+              </div>
+              <motion.h1
+                id="stage-title"
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+                className="pr-10 font-display text-2xl font-extrabold leading-tight text-detective-800 md:text-3xl"
+              >
+                {scenario.title}
+              </motion.h1>
+              {scenario.subtitle && (
+                <motion.p
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.3 }}
+                  className="mt-1.5 text-sm leading-relaxed text-slate-600"
+                >
+                  {scenario.subtitle}
+                </motion.p>
+              )}
+            </div>
+          </motion.section>
 
           {/* === Pre-game briefing — เล่นยังไง + เจออะไร === */}
           <motion.div
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.35 }}
-            className="card mb-3"
+            className="mb-4 rounded-[24px] border border-sky-100 bg-white/85 p-4 shadow-sm backdrop-blur-sm"
           >
             <div className="flex items-center gap-2 mb-2">
               <div className="icon-tile-sm bg-mint-50 text-mint-600">📋</div>
@@ -633,10 +657,13 @@ export default function ScenarioPage() {
                 );
               })}
             </div>
-            <p className="text-xs text-slate-600 mt-2.5 leading-relaxed
-                          bg-slate-50 rounded-lg px-2.5 py-1.5 border border-slate-100">
-              อ่านสถานการณ์ → เลือกคำตอบหรือเล่นมินิเกม → รับแต้ม & เหรียญ 🪙
-            </p>
+            <div className="mt-3 grid grid-cols-[1fr_auto_1fr_auto_1fr] items-center gap-1 rounded-2xl bg-sky-50/80 px-3 py-3 text-center">
+              <span className="text-[11px] font-semibold leading-tight text-slate-600">อ่าน<br />สถานการณ์</span>
+              <span className="text-detective-300" aria-hidden>›</span>
+              <span className="text-[11px] font-semibold leading-tight text-slate-600">ลงมือ<br />ไขคดี</span>
+              <span className="text-detective-300" aria-hidden>›</span>
+              <span className="text-[11px] font-semibold leading-tight text-slate-600">ดูเฉลย<br />สรุปบทเรียน</span>
+            </div>
           </motion.div>
 
           {/* === Story intro — case file style + numbered timeline === */}
@@ -645,8 +672,8 @@ export default function ScenarioPage() {
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.45 }}
-              className="relative rounded-[24px]
-                         bg-[#F3EADD] shadow-clay-pressed p-4 pt-5 mb-3"
+              className="relative z-0 h-auto rounded-[24px]
+                         bg-[#F3EADD] shadow-clay-pressed px-4 pb-5 pt-6 mb-3"
             >
               {/* "stamp" label หัวมุม */}
               <span className="absolute -top-3 left-4 bg-[#FFFCF7]
@@ -663,10 +690,10 @@ export default function ScenarioPage() {
                 {(scenario.intro || []).map((line, i) => (
                   <motion.div
                     key={i}
-                    initial={{ opacity: 0, x: -8 }}
-                    animate={{ opacity: 1, x: 0 }}
+                    initial={{ x: -8 }}
+                    animate={{ x: 0 }}
                     transition={{ delay: 0.55 + i * 0.12 }}
-                    className="relative"
+                    className="relative z-10 h-auto opacity-100"
                   >
                     {/* number dot บนเส้น */}
                     <span className="absolute -left-[26px] top-0 w-6 h-6 rounded-full
@@ -675,7 +702,7 @@ export default function ScenarioPage() {
                                      flex items-center justify-center shadow-clay-blue">
                       {i + 1}
                     </span>
-                    <p className="text-sm text-slate-700 leading-relaxed pt-0.5">{line}</p>
+                    <p className="relative z-10 break-words pt-0.5 text-sm font-medium leading-relaxed text-slate-800 opacity-100">{line}</p>
                   </motion.div>
                 ))}
               </div>
@@ -710,10 +737,7 @@ export default function ScenarioPage() {
           )}
         </div>
 
-        <div className="sticky bottom-0 -mx-4 px-4 pt-3
-                        pb-[max(0.75rem,env(safe-area-inset-bottom))]
-                        bg-gradient-to-t from-[#FBF3EA] via-[#FBF3EA]/95 to-transparent
-                        backdrop-blur-sm">
+        <div className="mt-3 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-2">
           {askResume ? (
             <div className="space-y-2">
               <div className="card text-center py-2 bg-detective-50">
@@ -735,6 +759,7 @@ export default function ScenarioPage() {
               เริ่มภารกิจ →
             </button>
           )}
+          </div>
         </div>
       </div>
     );
@@ -742,56 +767,78 @@ export default function ScenarioPage() {
 
   // ---- Game loop ----
   return (
-    <div className="min-h-full pb-8 relative">
+    <div className="relative min-h-full overflow-hidden bg-[radial-gradient(circle_at_top_right,rgba(110,231,183,0.12),transparent_30%),radial-gradient(circle_at_bottom_left,rgba(56,189,248,0.13),transparent_35%)] pb-8">
       <Confetti active={confettiActive} count={100} duration={2600} />
-      <header className="sticky top-0 z-10 bg-detective-50/90 backdrop-blur-md border-b border-detective-100
-                         px-3 pt-3 pb-2">
-        <div className="flex items-center gap-3">
-          <button
-            onClick={() => nav('/')}
-            className="text-detective-500 px-3 py-1.5 rounded-lg hover:bg-detective-50 active:scale-95"
-          >
-            ←
-          </button>
-          <div className="flex-1 min-w-0">
-            <p className="text-[11px] text-detective-400 font-semibold">ด่าน {scenario.id}</p>
-            <p className="font-semibold text-sm text-detective-700 truncate">{scenario.title}</p>
-          </div>
-          {coinX2Remaining > 0 && (
-            <span className="flex-shrink-0 text-[10px] font-bold bg-warning-100 text-warning-700
-                             border border-warning-300 px-2 py-1 rounded-full"
-                  title="โบนัสเหรียญ x2 กำลังทำงาน">
-              💰 x2 · {coinX2Remaining}
+      <PageHeader
+        title={`ด่าน ${scenario.id}: ${scenario.title}`}
+        subtitle="กำลังทำภารกิจการเรียนรู้"
+        backTo="/"
+        actions={(
+          <span className={`rounded-full px-3 py-1.5 text-xs font-bold ${DIFFICULTY_LABEL[getStageDifficulty(scenario.id)].cls}`}>
+            {DIFFICULTY_LABEL[getStageDifficulty(scenario.id)].label}
+          </span>
+        )}
+      />
+
+      <section className="border-b border-sky-100 bg-white/75 backdrop-blur-sm" aria-label="สถานะภารกิจ">
+        <div className="mx-auto max-w-2xl px-4 py-3">
+          <div className="flex items-center gap-3">
+            <div className="progress-track h-2 flex-1">
+              <div
+                className="progress-fill transition-all duration-500"
+                style={{ width: `${stageProgress * 100}%` }}
+              />
+            </div>
+            <span className="flex-shrink-0 text-xs font-bold tabular-nums text-detective-600">
+              {Math.round(stageProgress * 100)}%
             </span>
+            {coinX2Remaining > 0 && (
+              <span
+                className="flex-shrink-0 rounded-full border border-warning-300 bg-warning-100 px-2.5 py-1 text-[10px] font-bold text-warning-700"
+                title="โบนัสเหรียญ x2 กำลังทำงาน"
+              >
+                💰 x2 · {coinX2Remaining}
+              </span>
+            )}
+          </div>
+          {challenge && (
+            <div className="mt-2 flex items-center gap-2 rounded-full border border-warning-300 bg-warning-50 px-3 py-1.5 text-[11px] font-semibold text-warning-700">
+              <span>🎯</span>
+              <span className="min-w-0 flex-1 truncate">
+                คำท้าจาก <b>{challenge.by}</b> — ทำให้เกิน <b>{challenge.score}</b> แต้ม!
+              </span>
+              <span className="flex-shrink-0 tabular-nums">คุณ {stageScore}</span>
+            </div>
           )}
         </div>
-        {/* แถบความคืบหน้าในด่าน — ให้ผู้เล่นเห็นว่าใกล้จบแค่ไหน */}
-        <div className="flex items-center gap-2 mt-2">
-          <div className="progress-track flex-1 h-1.5">
-            <div
-              className="progress-fill transition-all duration-500"
-              style={{ width: `${stageProgress * 100}%` }}
-            />
-          </div>
-          <span className="text-[10px] font-bold text-detective-500 flex-shrink-0 tabular-nums">
-            {Math.round(stageProgress * 100)}%
-          </span>
-        </div>
-        {/* แบนเนอร์คำท้า — ถ้ามาจากลิงก์ท้าเพื่อน */}
-        {challenge && (
-          <div className="mt-2 flex items-center gap-2 text-[11px] font-semibold
-                          bg-warning-50 border border-warning-300 text-warning-700
-                          rounded-full px-3 py-1">
-            <span>🎯</span>
-            <span className="flex-1 min-w-0 truncate">
-              คำท้าจาก <b>{challenge.by}</b> — ทำให้เกิน <b>{challenge.score}</b> แต้ม!
-            </span>
-            <span className="flex-shrink-0 tabular-nums">คุณ {stageScore}</span>
-          </div>
-        )}
-      </header>
+      </section>
 
-      <main className="max-w-md md:max-w-2xl mx-auto p-4">
+      <main className="mx-auto max-w-md p-4 md:max-w-2xl">
+        <motion.aside
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="relative mb-5 overflow-hidden rounded-[28px] border border-white/80 bg-white shadow-lg"
+          aria-label={`ภาพประกอบด่าน ${scenario.id}`}
+        >
+          <div className="relative h-32 sm:h-40">
+            <img
+              src={asset(stageScene.image)}
+              alt={`ภาพประกอบ ${scenario.title}`}
+              className="h-full w-full object-cover object-center"
+            />
+            <div className="absolute inset-0 bg-gradient-to-r from-slate-950/65 via-slate-950/15 to-transparent" />
+            <div className="absolute inset-y-0 left-0 flex max-w-[70%] flex-col justify-center p-4 text-white sm:p-5">
+              <span className="mb-1 text-[10px] font-extrabold uppercase tracking-[0.18em] text-white/80">
+                เบาะแสประจำด่าน
+              </span>
+              <p className="font-display text-lg font-extrabold leading-tight drop-shadow-sm sm:text-xl">
+                {stageScene.eyebrow}
+              </p>
+              <span className={`mt-2 h-1 w-14 rounded-full bg-gradient-to-r ${stageScene.accent}`} />
+            </div>
+          </div>
+        </motion.aside>
+
         {/* แสดง history dialogue/feedback — ย่อรายการเก่าไว้ให้หน้าสั้น */}
         <div className="space-y-1 mb-4">
           {olderNodes.length > 0 && (
@@ -820,13 +867,13 @@ export default function ScenarioPage() {
         {/* current node */}
         {currentNode && (
           <AnimatePresence mode="wait">
-            <motion.div key={currentNode.id} ref={currentRef} className="scroll-mt-20"
+            <motion.div key={currentNode.id} ref={currentRef} className="relative scroll-mt-20 rounded-[28px] border border-white/70 bg-white/45 p-3 shadow-sm backdrop-blur-sm sm:p-4"
               initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
               {currentNode.type === 'dialogue' && (
                 <>
                   <DialogueBubble speaker={currentNode.speaker} text={currentNode.text} />
                   <button onClick={() => goToNext(currentNode.next)}
-                    className="btn-primary w-full mt-2">ต่อไป →</button>
+                    className="btn-primary mt-2 w-full text-base shadow-lg">ต่อไป <span className="ml-2">→</span></button>
                 </>
               )}
 
@@ -836,11 +883,11 @@ export default function ScenarioPage() {
                 const hintShown = hintRevealedNode === currentNode.id;
                 return (
                   <div>
-                    <div className="surface-soft border-l-4 border-l-detective-400
-                                    px-3 py-2.5 mb-3 flex items-start gap-2">
+                    <div className="mb-3 flex items-start gap-3 rounded-[22px] border border-detective-100 bg-gradient-to-br from-detective-50 to-white px-4 py-3 shadow-sm">
+                      <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-2xl bg-detective-600 text-lg text-white shadow-md" aria-hidden>?</div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-[11px] text-detective-500 font-semibold mb-0.5">เลือกคำตอบ</p>
-                        <p className="text-sm text-detective-700 font-semibold leading-snug">
+                        <p className="mb-0.5 text-[11px] font-bold uppercase tracking-wider text-detective-500">เลือกคำตอบที่ดีที่สุด</p>
+                        <p className="text-[15px] font-bold leading-snug text-detective-800">
                           {currentNode.prompt}
                         </p>
                       </div>
@@ -853,7 +900,7 @@ export default function ScenarioPage() {
                             }
                           }}
                           className="flex-shrink-0 bg-warning-100 text-warning-700 text-[11px]
-                                     font-bold px-2 py-1 rounded-lg border border-warning-300
+                                     font-bold px-2.5 py-1 rounded-full border border-warning-300
                                      active:scale-95 hover:bg-warning-200"
                           title={`ใช้บัตรใบ้คำตอบ (เหลือ ${hintTokens})`}
                         >
@@ -1140,6 +1187,12 @@ export default function ScenarioPage() {
                         ▶ ไปด่าน {nextMeta.id}: {nextMeta.title}
                       </button>
                     )}
+                    <button
+                      onClick={() => { sfx.click(); nav(`/scenario/${scenario.id}/review`); }}
+                      className="btn-outline w-full"
+                    >
+                      📖 เปิดสมุดบทเรียนและเฉลย
+                    </button>
                     <button
                       onClick={() => handleShareChallenge(stageScore + currentNode.xp)}
                       className="btn-secondary w-full"

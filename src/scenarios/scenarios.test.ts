@@ -1,5 +1,11 @@
 import { describe, it, expect } from 'vitest';
-import { SCENARIO_META, getScenarioById } from './index';
+import {
+  CERT_STAGE_COUNT,
+  SCENARIO_META,
+  certificateStageProgress,
+  getScenarioById,
+  hasCompletedCertificatePath,
+} from './index';
 import type { ScenarioNode } from '../types';
 
 // รวบรวม id ปลายทาง (next) ทั้งหมดของ node หนึ่งๆ
@@ -58,4 +64,22 @@ describe('scenario graph integrity', () => {
       expect(scenario.nodes.some(n => n.type === 'end' && seen.has(n.id))).toBe(true);
     });
   }
+});
+
+describe('certificate eligibility', () => {
+  it('unlocks immediately after all five course stages are complete', () => {
+    expect(CERT_STAGE_COUNT).toBe(5);
+    expect(certificateStageProgress([1, 2, 3, 4, 5])).toBe(5);
+    expect(hasCompletedCertificatePath([1, 2, 3, 4, 5])).toBe(true);
+  });
+
+  it('stays locked when any one of the five stages is missing', () => {
+    expect(certificateStageProgress([1, 2, 3, 4])).toBe(4);
+    expect(hasCompletedCertificatePath([1, 2, 3, 4])).toBe(false);
+  });
+
+  it('ignores duplicate and legacy stage IDs', () => {
+    expect(certificateStageProgress([1, 1, 2, 3, 4, 6, 7, 8])).toBe(4);
+    expect(hasCompletedCertificatePath([1, 1, 2, 3, 4, 6, 7, 8])).toBe(false);
+  });
 });

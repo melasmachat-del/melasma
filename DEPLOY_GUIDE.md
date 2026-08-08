@@ -16,7 +16,7 @@
 
 1. ไปที่ https://github.com/new
 2. กรอก:
-   - **Repository name:** `saynovaping` (สำคัญ — ต้องตรงเป๊ะ)
+   - **Repository name:** `melasma` (สำคัญ — ต้องตรงกับ base path)
    - **Description:** เกมสอนปฏิเสธบุหรี่ไฟฟ้า
    - **Public** (ไม่ใช่ Private — เพราะ GitHub Pages ฟรีต้อง public)
    - **อย่าติ๊ก** "Add a README" / "Add .gitignore" / "Choose a license"
@@ -74,7 +74,7 @@
 หลัง build สำเร็จ:
 
 ```
-https://saynovapingedu-ops.github.io/saynovaping/
+https://saynovapingedu-ops.github.io/melasma/
 ```
 
 เปิดใน browser → ควรเห็นหน้า onboarding "นักสืบสุขภาพ"
@@ -94,7 +94,7 @@ https://saynovapingedu-ops.github.io/saynovaping/
 
 ## 🏆 ทดสอบ Certificate (วิธี cheat)
 
-อยากทดสอบ Certificate โดยไม่ต้องเล่นครบ 8 ด่าน:
+อยากทดสอบ Certificate โดยไม่ต้องเล่นครบ 5 ด่าน:
 
 1. เปิด DevTools (F12) → Console tab
 2. พิมพ์:
@@ -116,7 +116,7 @@ https://saynovapingedu-ops.github.io/saynovaping/
 | GitHub Actions ❌ | ลืมตั้ง Variables | ทำขั้น 4 แล้ว Re-run |
 | เปิด URL ขึ้น 404 | Pages ยังไม่เปิด | ทำขั้น 3 + รอ build |
 | ข้อมูลไม่เข้า Sheet | URL Backend ผิด | เช็ค `VITE_SYNC_URL` ใน Variables |
-| หน้าจอขาวเปล่า | base path ผิด | ตรวจชื่อ repo = `saynovaping` |
+| หน้าจอขาวเปล่า | base path ผิด | ตรวจชื่อ repo และ `VITE_BASE_PATH` ให้เป็น `/melasma/` |
 | Cert ออกไม่ได้ | ยังไม่ครบเงื่อนไข | ใช้วิธี cheat ด้านบน |
 
 ## 📞 ติดต่อช่วยเหลือ

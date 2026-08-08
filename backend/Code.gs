@@ -4,7 +4,7 @@
  * ============================================================================
  *  Project    : นักสืบสุขภาพ: ภารกิจปกป้องลมหายใจ
  *  Account    : saynovaping.edu@gmail.com
- *  Frontend   : https://saynovapingedu-ops.github.io/saynovaping/
+ *  Frontend   : https://saynovapingedu-ops.github.io/melasma/
  *  Version    : 1.3.0  (เพิ่ม funRating — ดาวประเมินความพึงพอใจ/ความสนุกหลังจบด่าน)
  *
  *  Endpoints  :
@@ -37,8 +37,7 @@
 const CONFIG = {
   CERT_PREFIX: 'HD',
   CERT_YEAR: new Date().getFullYear(),
-  STAGES_REQUIRED: 8,
-  MIN_XP_FOR_CERT: 1500,
+  STAGES_REQUIRED: 5,
   SHEET_NAMES: {
     PLAYERS: 'Players',
     EVENTS: 'Events',
@@ -272,7 +271,7 @@ function handleIssueCert_(p) {
   const nickname = playerSheet.getRange(row, COL.NICKNAME).getValue();
   const totalXP = Number(playerSheet.getRange(row, COL.TOTAL_XP).getValue()) || 0;
   const stagesStr = String(playerSheet.getRange(row, COL.STAGES_COMPLETED).getValue() || '');
-  const stages = stagesStr ? stagesStr.split(',').filter(Boolean) : [];
+  const stages = stagesStr ? stagesStr.split(',').filter(Boolean).map(Number) : [];
   const existingCert = playerSheet.getRange(row, COL.CERTIFICATE_NO).getValue();
 
   if (existingCert) {
@@ -291,13 +290,13 @@ function handleIssueCert_(p) {
     }
   }
 
-  const allDone = stages.length >= CONFIG.STAGES_REQUIRED;
-  const enoughXP = totalXP >= CONFIG.MIN_XP_FOR_CERT;
-  if (!allDone && !enoughXP) {
+  const requiredStages = [1, 2, 3, 4, 5];
+  const allDone = requiredStages.every(stageId => stages.indexOf(stageId) !== -1);
+  if (!allDone) {
     return jsonResponse_({
       ok:false, error:'requirements_not_met',
-      message:'ต้องจบครบ ' + CONFIG.STAGES_REQUIRED + ' ด่าน หรือมี XP ≥ ' + CONFIG.MIN_XP_FOR_CERT,
-      currentStages: stages.length, currentXP: totalXP,
+      message:'ต้องจบครบทั้ง ' + CONFIG.STAGES_REQUIRED + ' ด่าน',
+      currentStages: requiredStages.filter(stageId => stages.indexOf(stageId) !== -1).length,
     });
   }
 

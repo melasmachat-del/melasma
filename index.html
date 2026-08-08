@@ -2,10 +2,11 @@
 <html lang="th">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/saynovaping/favicon.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0, viewport-fit=cover" />
-    <meta name="theme-color" content="#8B5CF6" />
-    <title>นักสืบสุขภาพ: ภารกิจสู้บุหรี่ไฟฟ้า</title>
+    <link rel="icon" type="image/svg+xml" href="%BASE_URL%favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#0369A1" />
+    <meta name="description" content="แพลตฟอร์มเรียนรู้เรื่องฝ้า การป้องกัน และการดูแลผิวด้วยข้อมูลอ้างอิงทางการแพทย์" />
+    <title>Melasma Education Platform | เรียนรู้เรื่องฝ้า</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=Bai+Jamjuree:wght@500;700&family=Noto+Sans+Thai:wght@300;500;600;700&display=swap" rel="stylesheet">
@@ -25,7 +26,8 @@
         var redirect = sessionStorage.getItem('hd_spa_redirect');
         if (redirect && redirect !== '/') {
           sessionStorage.removeItem('hd_spa_redirect');
-          history.replaceState(null, '', '/saynovaping' + redirect);
+          var basePath = '%BASE_URL%'.replace(/\/$/, '');
+          history.replaceState(null, '', basePath + redirect);
         }
       })();
     </script>

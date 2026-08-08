@@ -15,10 +15,16 @@ import SkeletonCard from '../components/ui/SkeletonCard';
 import EmptyState from '../components/ui/EmptyState';
 import Ribbon from '../components/ui/Ribbon';
 import CertSeal from '../components/ui/CertSeal';
+import { CERT_STAGE_COUNT, certificateStageProgress, hasCompletedCertificatePath } from '../scenarios';
 
 // ขนาดออกแบบคงที่ของใบ (A-ratio 1:1.414) — เรนเดอร์ที่ขนาดนี้เสมอแล้วย่อให้พอดีจอ
 const CERT_W = 420;
 const CERT_H = Math.round(CERT_W * 1.414); // 594
+
+function buildVerifyUrl(code: string) {
+  const basePath = import.meta.env.BASE_URL.replace(/\/$/, '');
+  return `${location.origin}${basePath}/verify?code=${encodeURIComponent(code)}`;
+}
 
 export default function Certificate() {
   const nav = useNavigate();
@@ -51,7 +57,7 @@ export default function Certificate() {
   }, [certNo, loading, error]);
 
   useEffect(() => {
-    const eligible = player.stagesCompleted.length >= 8 || player.totalXP >= 1500;
+    const eligible = hasCompletedCertificatePath(player.stagesCompleted);
     if (!eligible) return;
     if (player.certificateNo) {
       (async () => {
@@ -76,18 +82,19 @@ export default function Certificate() {
         setError(res.message || res.error || 'ไม่สามารถออกเกียรติบัตรได้');
       }
     });
-  }, [player.userIdHash, player.certificateNo, player.stagesCompleted.length, player.totalXP, setCertificate, player.certificateIssuedAt]);
+  }, [player.userIdHash, player.certificateNo, player.stagesCompleted, setCertificate, player.certificateIssuedAt]);
 
   useEffect(() => {
     if (!verifyCode) return;
-    const verifyUrl = `${location.origin}/saynovaping/verify?code=${verifyCode}`;
+    const verifyUrl = buildVerifyUrl(verifyCode);
     QRCode.toDataURL(verifyUrl, { width: 220, margin: 1, color: { dark: '#003C73', light: '#FFFFFF' } })
       .then(setQrDataUrl)
       .catch(() => { /* ignore */ });
   }, [verifyCode]);
 
-  const eligible = player.stagesCompleted.length >= 8 || player.totalXP >= 1500;
-  const verifyUrl = verifyCode ? `${location.origin}/saynovaping/verify?code=${verifyCode}` : '';
+  const completedCount = certificateStageProgress(player.stagesCompleted);
+  const eligible = hasCompletedCertificatePath(player.stagesCompleted);
+  const verifyUrl = verifyCode ? buildVerifyUrl(verifyCode) : '';
 
   const [saving, setSaving] = useState(false);
 
@@ -122,7 +129,7 @@ export default function Certificate() {
             await navigator.share({
               files: [file],
               title: 'ประกาศนียบัตร',
-              text: `${displayName} ผ่านการอบรม "นักสืบสู้บุหรี่ไฟฟ้า"`,
+              text: `${displayName} completed the Melasma learning path.`,
             });
             setSaving(false);
             return;
@@ -146,7 +153,7 @@ export default function Certificate() {
 
   const handleShare = async () => {
     sfx.click();
-    const text = `${displayName} ผ่านการอบรม "นักสืบสู้บุหรี่ไฟฟ้า"`;
+    const text = `${displayName} completed the Melasma learning path.`;
     if (navigator.share && verifyUrl) {
       try {
         await navigator.share({
@@ -178,9 +185,9 @@ export default function Certificate() {
             title="ยังไม่ถึงเกณฑ์"
             description={
               <>
-                ต้องจบครบ 8 ด่าน หรือเก็บแต้มครบ 1,500
+                เรียนให้ครบทั้ง {CERT_STAGE_COUNT} หัวข้อหลักเพื่อปลดล็อกเกียรติบัตร
                 <br />
-                (ตอนนี้ {player.stagesCompleted.length}/8 ด่าน, {player.totalXP.toLocaleString()} แต้ม)
+                (ตอนนี้ {completedCount}/{CERT_STAGE_COUNT} หัวข้อ)
               </>
             }
             action={
@@ -274,7 +281,7 @@ export default function Certificate() {
                   <div className="text-left">
                     <p className="text-[10px] text-slate-500 font-medium tracking-wide">ผู้รับทุน</p>
                     <p className="text-detective-800 font-bold text-sm leading-tight">
-                      โครงการ SayNo<br/>สู้บุหรี่ไฟฟ้า
+                      Melasma<br/>Learning Project
                     </p>
                   </div>
                 </div>
@@ -300,14 +307,13 @@ export default function Certificate() {
 
                 {/* === Description === */}
                 <p className="text-slate-700 text-sm leading-relaxed max-w-xs mt-1">
-                  เป็นผู้ผ่านการเข้าร่วมกิจกรรม
+                  completed the Melasma learning path
                 </p>
                 <p className="text-detective-700 font-semibold text-base leading-tight mt-1">
-                  "นักสืบสู้บุหรี่ไฟฟ้า"
+                  "Melasma Knowledge Path"
                 </p>
                 <p className="text-slate-600 text-xs mt-1.5 leading-relaxed max-w-xs">
-                  หลักสูตรการเรียนรู้ทักษะปฏิเสธ
-                  และรู้เท่าทันภัยจากบุหรี่ไฟฟ้า สำหรับเยาวชน
+                  A concise medical learning certificate for completing the melasma education journey.
                 </p>
 
                 {/* === Seal (ตราประทับ) === */}
@@ -405,7 +411,7 @@ export default function Certificate() {
 
             <p className="text-[10px] text-center text-slate-500 mt-4 print:hidden leading-relaxed">
               ตรวจสอบความถูกต้องได้ที่ /verify โดยใช้รหัสยืนยัน
-              หรือสแกน QR Code มุมขวาล่างของประกาศนียบัตร
+              หรือสแกน QR Code มุมขวาล่างของเกียรติบัตร
             </p>
           </motion.div>
         )}

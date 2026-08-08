@@ -1,14 +1,11 @@
 // ============================================================================
-//  PageHeader — แถบหัวข้อหน้า (รวม brand pill + back btn + title ใน bar เดียว)
-//
-//  ใช้แทน <BrandHeader/> + <header> ที่เคยซ้อนกัน 2 แถบ — เหมาะกับทุกหน้า
-//  ยกเว้นหน้าแรก (Home) ที่มี layout เฉพาะ
+//  PageHeader — standardized sub-header below the global navigation.
+//  Home intentionally does not render this component.
 // ============================================================================
 
 import type { ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { sfx } from '../lib/sound';
-import BrandHeader from './BrandHeader';
 
 interface Props {
   title: string;
@@ -19,7 +16,7 @@ interface Props {
   onBack?: () => void;
   /** sticky บนสุดของหน้า */
   sticky?: boolean;
-  /** ปุ่ม/ชิปด้านขวา (เช่น เหรียญ, ลิงก์) — วางข้างชื่อ ก่อนโลโก้แบรนด์ */
+  /** Optional controls or status chips aligned to the right. */
   actions?: ReactNode;
 }
 
@@ -35,39 +32,32 @@ export default function PageHeader({ title, subtitle, backTo = '/', onBack, stic
   return (
     <header
       className={`${sticky ? 'sticky top-0 z-20' : ''}
-                  px-3.5 py-2.5 flex items-center gap-2.5
-                  liquid-header rounded-b-[28px]
-                  shadow-[0_6px_18px_-10px_rgba(176,138,104,0.5)]
-                  pt-[max(0.625rem,calc(env(safe-area-inset-top)+0.3rem))]`}
+                  liquid-header border-b border-sky-100
+                  shadow-[0_8px_24px_-20px_rgba(15,76,117,0.55)]`}
     >
-      {/* Back button */}
-      <button
-        onClick={handleBack}
-        className="bg-[#FFFCF7] hover:bg-detective-50 text-detective-700 w-9 h-9 rounded-2xl
-                   flex items-center justify-center shadow-clay-sm
-                   active:scale-95 active:shadow-clay-pressed transition-all flex-shrink-0"
-        aria-label="กลับ"
-      >
-        <span className="text-lg leading-none">←</span>
-      </button>
+      <div className="mx-auto flex min-h-[72px] max-w-5xl items-center gap-3 px-4 py-3 sm:px-6 lg:px-8">
+        <button
+          onClick={handleBack}
+          className="btn-outline !min-h-10 flex-shrink-0 !px-4 !py-2 text-sm"
+          aria-label="กลับหน้าแรก"
+        >
+          <span className="mr-2 text-base leading-none" aria-hidden="true">←</span>กลับ
+        </button>
 
-      {/* Title */}
-      <div className="flex-1 min-w-0 px-0.5">
-        <h2 className="font-display font-bold text-detective-800 text-sm leading-tight truncate">
-          {title}
-        </h2>
-        {subtitle && (
-          <p className="text-[11px] text-slate-500 leading-tight truncate">{subtitle}</p>
+        <div className="min-w-0 flex-1">
+          <h1 className="truncate font-display text-base font-extrabold leading-tight text-slate-900 sm:text-lg">
+            {title}
+          </h1>
+          {subtitle && (
+            <p className="mt-1 truncate text-xs leading-tight text-slate-500">{subtitle}</p>
+          )}
+        </div>
+
+        {actions && (
+          <div className="flex flex-shrink-0 items-center gap-2">{actions}</div>
         )}
       </div>
 
-      {/* ปุ่ม/ชิปด้านขวา (ออปชัน) — เช่น เหรียญ/ลิงก์ */}
-      {actions && (
-        <div className="flex items-center gap-1.5 flex-shrink-0">{actions}</div>
-      )}
-
-      {/* Brand pill (TMF + SayNo) */}
-      <BrandHeader variant="pill" />
     </header>
   );
 }

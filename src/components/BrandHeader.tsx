@@ -44,10 +44,10 @@ function LogoPill() {
       {/* SayNo — text เล็ก */}
       <div className="leading-tight">
         <p className="font-display font-extrabold text-detective-700 text-[11px] leading-tight tracking-tight">
-          SayNo
+          Melasma
         </p>
         <p className="text-[9px] font-bold text-slate-500 mt-0.5 leading-tight">
-          สู้บุหรี่ไฟฟ้า
+          เรียนรู้ฝ้าอย่างเข้าใจ
         </p>
       </div>
     </div>

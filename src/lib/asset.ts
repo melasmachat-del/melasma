@@ -1,11 +1,11 @@
 // ============================================================================
 //  asset() — สร้าง URL สำหรับไฟล์ใน public/ ที่ทำงานได้ถูกทั้งบน
-//  dev (BASE = /) และ production (BASE = /saynovaping/)
+//  dev (BASE = /) และ production (BASE = /melasma/)
 //
 //  Vite serves public/ files at BASE_URL/* — ดังนั้นถ้าโค้ดฮาร์ดโค้ด '/path'
-//  จะเรียกผิดในโปรดักชัน (โหลด /tmf-logo.png แทน /saynovaping/tmf-logo.png)
+//  จะเรียกผิดในโปรดักชัน (โหลด /tmf-logo.png แทน /melasma/tmf-logo.png)
 //
-//  วิธีใช้: asset('brand/tmf-logo.png') → '/saynovaping/brand/tmf-logo.png'
+//  วิธีใช้: asset('brand/tmf-logo.png') → '/melasma/brand/tmf-logo.png'
 // ============================================================================
 
 export function asset(relative: string): string {

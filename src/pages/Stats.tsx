@@ -156,7 +156,7 @@ export default function Stats() {
                   <span className={`text-sm flex-1 truncate ${done ? 'text-success-700 font-semibold' : 'text-gray-500'}`}>
                     {meta.title}
                   </span>
-                  {meta.arc === 'master' && (
+                  {(meta.arc as unknown) === 'master' && (
                     <span className="text-[10px] font-bold text-warning-600">MASTER</span>
                   )}
                 </div>
@@ -214,7 +214,7 @@ export default function Stats() {
         </div>
 
         <p className="text-[10px] text-center text-slate-400 mt-4 leading-relaxed">
-          สนับสนุนโดย กองทุนพัฒนาสื่อฯ • รับรองโดย ม.วลัยลักษณ์
+          โครงการเพื่อการเรียนรู้เรื่องฝ้า • เกียรติบัตรแสดงการผ่านบทเรียน ไม่ใช่คุณวุฒิทางการแพทย์
         </p>
       </main>
     </div>

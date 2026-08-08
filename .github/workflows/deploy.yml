@@ -30,16 +30,31 @@ jobs:
           cache: npm
 
       - name: Install
-        run: npm install
+        run: npm ci
+
+      - name: Validate production configuration
+        shell: bash
+        env:
+          VITE_LIFF_ID: ${{ vars.VITE_LIFF_ID }}
+          VITE_SYNC_URL: ${{ vars.VITE_SYNC_URL }}
+          VITE_MOCK_LIFF: ${{ vars.VITE_MOCK_LIFF }}
+        run: |
+          test -n "$VITE_LIFF_ID" || { echo "::error::Missing VITE_LIFF_ID"; exit 1; }
+          test "$VITE_LIFF_ID" != "2000000000-AbCdEfGh" || { echo "::error::Placeholder LIFF ID is not allowed"; exit 1; }
+          test -n "$VITE_SYNC_URL" || { echo "::error::Missing VITE_SYNC_URL"; exit 1; }
+          test "$VITE_MOCK_LIFF" = "false" || { echo "::error::VITE_MOCK_LIFF must be false"; exit 1; }
+
+      - name: Test
+        run: npm test
 
       - name: Build
         run: npm run build
         env:
-          VITE_LIFF_ID: ${{ vars.VITE_LIFF_ID || '2000000000-AbCdEfGh' }}
+          VITE_LIFF_ID: ${{ vars.VITE_LIFF_ID }}
           VITE_SYNC_URL: ${{ vars.VITE_SYNC_URL }}
           # ค่า default เป็น 'false' (fail-safe) — production ต้องไม่รัน mock โดยไม่ตั้งใจ
           # ตั้งจริงที่ Settings → Variables: VITE_MOCK_LIFF=false, VITE_LIFF_ID=<LIFF ID จริง>
-          VITE_MOCK_LIFF: ${{ vars.VITE_MOCK_LIFF || 'false' }}
+          VITE_MOCK_LIFF: ${{ vars.VITE_MOCK_LIFF }}
 
       - name: Add 404.html (SPA fallback)
         run: cp dist/index.html dist/404.html

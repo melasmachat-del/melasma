@@ -10,7 +10,7 @@ import { NPC_CHARACTERS } from '../lib/characters';
 const SPEAKERS: Record<SpeakerKey, { name: string; emoji: string; align: 'left' | 'right'; bg: string }> = {
   narrator:      { name: 'เล่าเรื่อง',    emoji: '📖', align: 'left',  bg: 'bg-slate-100 text-slate-700 border border-slate-200' },
   player:        { name: 'คุณ',          emoji: '🧒', align: 'right', bg: 'bg-detective-600 text-white shadow-sm' },
-  doctor:        { name: 'พี่หมอเก๋',     emoji: '👩‍⚕️', align: 'left',  bg: 'bg-mint-50 text-slate-800 border border-mint-200' },
+  doctor:        { name: 'หมอนุ่น',        emoji: '👩‍⚕️', align: 'left',  bg: 'bg-gradient-to-br from-white to-mint-50 text-slate-800 border border-mint-200' },
   baitoey:       { name: 'น้องใบเตย',    emoji: '🌿', align: 'left',  bg: 'bg-warning-50 text-slate-800 border border-warning-200' },
   vapor:         { name: 'Vapor (ตัวร้าย)', emoji: '👤', align: 'left',  bg: 'bg-danger-50 text-slate-800 border border-danger-200' },
   friend1:       { name: 'เพื่อน',       emoji: '🧑', align: 'left',  bg: 'bg-detective-50 text-slate-800 border border-detective-200' },
@@ -41,29 +41,29 @@ export default function DialogueBubble({ speaker, text }: Props) {
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ type: 'spring', stiffness: 220, damping: 22 }}
-      className={`flex gap-2 mb-3 ${s.align === 'right' ? 'flex-row-reverse' : ''}`}
+      className={`group flex gap-3 mb-4 ${s.align === 'right' ? 'flex-row-reverse' : ''}`}
     >
       <div className="flex-shrink-0">
         {isPlayer ? (
           <Avatar preset={player.avatar} customId={player.customAvatarId} size={36} />
         ) : npc ? (
           // ใช้รูป PNG จริงของหมอ/Vapor
-          <div className="w-9 h-9 rounded-full overflow-hidden bg-[#FFFCF7] shadow-clay-sm">
+          <div className="h-12 w-12 overflow-hidden rounded-2xl border-2 border-white bg-[#FFFCF7] shadow-md ring-1 ring-mint-100 transition-transform group-hover:-translate-y-0.5">
             <img src={npc.src} alt={npc.label} className="w-full h-full object-cover" loading="lazy" />
           </div>
         ) : (
           // NPC ที่เหลือใช้ emoji
-          <div className="w-9 h-9 rounded-full bg-[#FFFCF7] shadow-clay-sm flex items-center justify-center text-xl">
+          <div className="flex h-12 w-12 items-center justify-center rounded-2xl border-2 border-white bg-[#FFFCF7] text-2xl shadow-md">
             {s.emoji}
           </div>
         )}
       </div>
-      <div className={`flex flex-col ${s.align === 'right' ? 'items-end' : 'items-start'} max-w-[80%]`}>
-        <span className="text-xs text-slate-500 mb-1 px-1">
+      <div className={`flex max-w-[82%] flex-col ${s.align === 'right' ? 'items-end' : 'items-start'}`}>
+        <span className="mb-1 px-1 text-xs font-bold text-slate-500">
           {isPlayer ? player.nickname || s.name : s.name}
         </span>
-        <div className={`px-4 py-3 rounded-[20px] shadow-clay-sm ${s.bg} ${s.align === 'right' ? 'rounded-br-md' : 'rounded-bl-md'}`}>
-          <p className="leading-loose whitespace-pre-line break-words">{text}</p>
+        <div className={`relative rounded-[24px] px-5 py-4 shadow-md ring-1 ring-black/[0.02] ${s.bg} ${s.align === 'right' ? 'rounded-br-md' : 'rounded-bl-md'}`}>
+          <p className="whitespace-pre-line break-words text-[15px] leading-7">{text}</p>
         </div>
         {showTts && (
           <button

@@ -48,6 +48,7 @@ interface PlayerState extends PlayerProfile {
   /** เรียกตอนเล่นเกม — อัพเดท streak ถ้าเล่นต่อเนื่องได้ */
   pingDailyPlay: () => void;
   reset: () => void;
+  resetLearningProgress: () => void;
 
   // ----- internal -----
   isInitialized: boolean;
@@ -308,6 +309,26 @@ export const usePlayerStore = create<PlayerState>()(
         set({ ...blankProfile(), isInitialized: false });
         // ลบชื่อจริงบนเกียรติบัตร (local-only) ออกด้วยเมื่อล้างข้อมูล
         try { useCertNameStore.getState().clearRealName(); } catch { /* ignore */ }
+      },
+
+      resetLearningProgress: () => {
+        set({
+          totalXP: 0,
+          level: 1,
+          stagesCompleted: [],
+          badges: [],
+          preTestScore: undefined,
+          postTestScore: undefined,
+          preTestAt: undefined,
+          postTestAt: undefined,
+          examBestScore: undefined,
+          examBonusClaimed: false,
+          dailyDoneCount: 0,
+          dailyBestScore: undefined,
+          lastDailyDate: undefined,
+          lastActiveAt: new Date().toISOString(),
+        });
+        get().syncIfReady();
       },
 
       // ส่ง progress ไป Backend (เรียกอัตโนมัติทุกครั้งที่ state เปลี่ยน)

@@ -3,20 +3,19 @@ import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { usePlayerStore } from '../store/playerStore';
 import AvatarFolder from '../components/AvatarFolder';
-import BrandHeader from '../components/BrandHeader';
 
 function PDPAAccordion({ title, children }: { title: string; children: ReactNode }) {
   const [open, setOpen] = useState(false);
   return (
-    <div className="bg-[#FFFCF7] rounded-2xl shadow-clay-sm overflow-hidden">
+    <div className="bg-white rounded-2xl shadow-sm border border-blue-100 overflow-hidden">
       <button
         type="button"
         onClick={() => setOpen(v => !v)}
-        className="w-full text-left p-3 flex items-center gap-2 active:bg-detective-50"
+        className="w-full text-left p-3 flex items-center gap-2 active:bg-blue-50 transition-colors"
       >
-        <span className="text-detective-400 text-sm transition-transform"
+        <span className="text-blue-500 text-sm transition-transform"
               style={{ transform: open ? 'rotate(90deg)' : 'rotate(0)' }}>▸</span>
-        <span className="font-semibold text-sm text-detective-700 flex-1">{title}</span>
+        <span className="font-semibold text-sm text-blue-800 flex-1">{title}</span>
       </button>
       <AnimatePresence>
         {open && (
@@ -27,7 +26,7 @@ function PDPAAccordion({ title, children }: { title: string; children: ReactNode
             transition={{ duration: 0.2 }}
             className="overflow-hidden"
           >
-            <div className="px-3 pb-3 text-xs text-gray-700 leading-relaxed">{children}</div>
+            <div className="px-4 pb-3 text-xs text-gray-600 leading-relaxed">{children}</div>
           </motion.div>
         )}
       </AnimatePresence>
@@ -56,7 +55,7 @@ export default function Onboarding() {
 
   const handleFinish = () => {
     initProfile({
-      nickname: nickname.trim() || 'นักสืบ',
+      nickname: nickname.trim() || 'ผู้ใช้งาน',
       grade: '',
       school: '',
       avatar,
@@ -68,23 +67,19 @@ export default function Onboarding() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col max-w-md md:max-w-lg mx-auto relative">
-      {/* โลโก้แบรนด์ลอยกลางบน — ไม่ใช้แถบฟ้าเต็มกว้าง (ดูโล่ง) */}
-      <div className="flex justify-center pt-[max(1rem,calc(env(safe-area-inset-top)+0.5rem))] pb-1">
-        <BrandHeader variant="pill" />
-      </div>
-
-      <div className="flex flex-col flex-1 p-6 pt-2">
+    <div className="min-h-screen flex flex-col max-w-md md:max-w-lg mx-auto relative bg-slate-50">
+      <div className="flex flex-col flex-1 p-6 pt-8">
+      {/* Progress Bar สีฟ้า */}
       <div className="flex justify-center gap-2 mb-6">
         {[0, 1, 2].map(i => (
           <div
             key={i}
             className={`h-2 rounded-full transition-all duration-500 ${
               i === step
-                ? 'w-12 bg-gradient-to-r from-detective-500 to-detective-600 shadow-glow-sm'
+                ? 'w-12 bg-gradient-to-r from-blue-500 to-sky-400 shadow-md'
                 : i < step
-                ? 'w-6 bg-detective-300'
-                : 'w-6 bg-detective-100'
+                ? 'w-6 bg-blue-300'
+                : 'w-6 bg-blue-100'
             }`}
           />
         ))}
@@ -99,26 +94,26 @@ export default function Onboarding() {
               transition={{ repeat: Infinity, duration: 3, ease: 'easeInOut' }}
               className="text-8xl mb-4 drop-shadow-lg"
             >
-              🔍
+              🩺
             </motion.div>
-            <h1 className="text-4xl font-display font-bold bg-gradient-to-r from-detective-600
-                           to-mint-500 bg-clip-text text-transparent mb-2
+            <h1 className="text-4xl font-display font-bold bg-gradient-to-r from-blue-700
+                           to-sky-500 bg-clip-text text-transparent mb-2
                            leading-[1.4] pt-1 pb-2 overflow-visible">
-              นักสืบสุขภาพ
+              Melasma WebLine
             </h1>
-            <p className="text-gray-600 mb-1 font-medium">🚭 ภารกิจรู้ทันบุหรี่ไฟฟ้า</p>
-            <div className="card-hero mt-6 mx-2">
-              <p className="text-sm text-gray-700 leading-relaxed">
-                เกมสนุก ฝึกทักษะปฏิเสธ <b>บุหรี่ไฟฟ้า</b><br/>
-                สำหรับเยาวชน ม.ต้น<br/>
-                เล่นจบรับเกียรติบัตรน่ารักๆ 🏆
+            <p className="text-slate-600 mb-1 font-medium">✨ ผู้ช่วยดูแลผิว และให้ความรู้เรื่องฝ้า</p>
+            
+            <div className="bg-blue-50 border border-blue-100 rounded-2xl p-4 mt-6 mx-2 shadow-sm w-full">
+              <p className="text-sm text-blue-900 leading-relaxed">
+                เรียนรู้สาเหตุ ปัจจัยกระตุ้น <br/>และวิธีการดูแลรักษา <b>ฝ้า (Melasma)</b><br/>
+                อย่างถูกวิธี อ้างอิงจากข้อมูลทางการแพทย์ 📘
               </p>
-              <p className="text-[11px] text-detective-500 font-semibold mt-3">
-                🚭 SayNo:สู้บุหรี่ไฟฟ้า
+              <p className="text-[11px] text-blue-600 font-semibold mt-3">
+                เพื่อผิวที่แข็งแรงและสุขภาพดี
               </p>
             </div>
-            <button onClick={() => setStep(1)} className="btn-primary mt-8 w-full text-base">
-              เริ่มเลย! ✨
+            <button onClick={() => setStep(1)} className="mt-8 w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-xl shadow-lg transition-colors text-base">
+              เริ่มต้นใช้งาน ✨
             </button>
           </motion.div>
         )}
@@ -126,30 +121,30 @@ export default function Onboarding() {
         {step === 1 && (
           <motion.div key="1" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}
             className="flex-1 flex flex-col">
-            <h2 className="text-2xl font-display font-bold text-detective-700 mb-1">✏️ ตั้งชื่อเล่นของเรา</h2>
-            <p className="text-sm text-gray-500 mb-5">แค่ชื่อเล่นก็พอ ไม่ต้องบอกชื่อจริง</p>
+            <h2 className="text-2xl font-display font-bold text-blue-800 mb-1">📝 ข้อมูลสำหรับสนทนา</h2>
+            <p className="text-sm text-slate-500 mb-5">ตั้งชื่อเล่นสำหรับแสดงในบทเรียนและความคืบหน้าของคุณ</p>
 
-            <label className="text-sm font-semibold text-gray-700">ชื่อในเกม</label>
+            <label className="text-sm font-semibold text-slate-700">ชื่อของคุณ</label>
             <input
               value={nickname}
               onChange={e => setNickname(e.target.value)}
               maxLength={20}
-              placeholder="เช่น น้องเอ, นักสืบจุก"
-              className="w-full p-3 mt-1 mb-4 rounded-2xl bg-[#F3EADD] shadow-clay-pressed
-                         focus:bg-[#FBF6EE] outline-none transition-all"
+              placeholder="เช่น คุณบิวตี้, ผิวสวย"
+              className="w-full p-3 mt-1 mb-4 rounded-xl bg-white border border-blue-200 shadow-sm
+                         focus:border-blue-400 focus:ring-2 focus:ring-blue-100 outline-none transition-all"
             />
 
-            <label className="text-sm font-semibold text-gray-700 mb-2 block">เลือกอวตารน่ารักๆ</label>
+            <label className="text-sm font-semibold text-slate-700 mb-2 block">เลือกอวตารตัวแทนของคุณ</label>
             <div className="mb-24">
               <AvatarFolder preset={avatar} customId={customAvatarId} onPick={handlePickAvatar} />
             </div>
 
             <div className="sticky bottom-0 -mx-6 px-6 pt-3
                             pb-[max(0.75rem,env(safe-area-inset-bottom))]
-                            mt-auto bg-gradient-to-t from-[#FBF3EA] via-[#FBF3EA]/95 to-transparent
+                            mt-auto bg-gradient-to-t from-slate-50 via-slate-50/95 to-transparent
                             backdrop-blur-sm">
               <button onClick={() => setStep(2)} disabled={!nickname.trim()}
-                className="btn-primary w-full">
+                className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 text-white font-semibold py-3 rounded-xl shadow-md transition-colors">
                 ต่อไป →
               </button>
             </div>
@@ -159,66 +154,65 @@ export default function Onboarding() {
         {step === 2 && (
           <motion.div key="2" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}
             className="flex-1 flex flex-col">
-            <h2 className="text-xl font-display font-bold text-detective-700 mb-1">🛡️ ความเป็นส่วนตัว (PDPA)</h2>
-            <p className="text-xs text-gray-500 mb-3">กดแถบเพื่ออ่านรายละเอียดเพิ่มเติม แต่ละหัวข้อ</p>
+            <h2 className="text-xl font-display font-bold text-blue-800 mb-1">🛡️ นโยบายความเป็นส่วนตัว (PDPA)</h2>
+            <p className="text-xs text-slate-500 mb-3">กดที่แถบเพื่ออ่านรายละเอียดแต่ละหัวข้อ</p>
 
-            {/* TL;DR ใหญ่ๆ อยู่ด้านบน — เห็นทันทีไม่ต้อง scroll */}
-            <div className="card-hero mb-3">
-              <p className="text-sm text-gray-700 leading-relaxed">
-                <b className="text-detective-700">🚫 เราไม่เก็บข้อมูลส่วนตัว</b><br/>
-                เกมเพื่อการศึกษาเรื่อง <b>บุหรี่ไฟฟ้า</b> สำหรับ ม.ต้น
-                เก็บแค่ "ชื่อเล่น" และ "คะแนน" เพื่อบันทึกความคืบหน้า
+            <div className="bg-blue-50 border border-blue-100 rounded-2xl p-4 mb-4 shadow-sm">
+              <p className="text-sm text-blue-900 leading-relaxed">
+                <b className="text-blue-700">🩺 เราให้ความสำคัญกับข้อมูลของคุณ</b><br/>
+                ระบบนี้จัดทำขึ้นเพื่อให้ความรู้เบื้องต้นเรื่อง <b>ฝ้า (Melasma)</b> 
+                ข้อมูลที่ให้ไม่ใช่การวินิจฉัยโรคแทนแพทย์ ระบบบันทึกข้อมูลโปรไฟล์และความคืบหน้าเท่าที่จำเป็นต่อการใช้งาน
               </p>
             </div>
 
-            <div className="space-y-1.5 mb-3">
-              <PDPAAccordion title="🚫 ไม่ส่งอะไรออกจากเครื่อง?">
-                <ul className="space-y-0.5 pl-1">
-                  <li>• เบอร์โทร อีเมล ที่อยู่ โรงเรียน</li>
-                  <li>• รูปถ่าย เอกสารยืนยันตัวตน</li>
-                  <li>• ไม่บังคับกรอกชื่อจริง</li>
-                  <li>• ไม่ขายข้อมูลให้บุคคลที่สาม</li>
+            <div className="space-y-2 mb-3">
+              <PDPAAccordion title="🚫 ไม่เก็บข้อมูลส่วนตัวที่ระบุตัวตนได้">
+                <ul className="space-y-1 pl-1">
+                  <li>• ไม่เก็บเบอร์โทรศัพท์ อีเมล หรือที่อยู่</li>
+                  <li>• ไม่บังคับกรอกชื่อ-นามสกุลจริง</li>
+                  <li>• ไม่มีการนำข้อมูลไปขายหรือส่งต่อให้บุคคลที่สาม</li>
                 </ul>
               </PDPAAccordion>
 
-              <PDPAAccordion title="📦 เก็บแค่อะไร?">
-                <ul className="space-y-0.5 pl-1">
-                  <li>• <b>ชื่อเล่น</b> ที่น้องตั้งเอง (เป็นชื่อสมมุติได้)</li>
-                  <li>• <b>คะแนนเกม</b> และด่านที่ผ่าน</li>
-                  <li>• User ID เข้ารหัส SHA-256 ระบุตัวตนไม่ได้</li>
-                  <li>• <b>ชื่อจริง</b> (เฉพาะถ้าเลือกใส่เพื่อพิมพ์เกียรติบัตร) — เก็บ<b>ในเครื่องนี้เท่านั้น</b> เข้ารหัสไว้ ลบได้ทุกเมื่อ</li>
+              <PDPAAccordion title="📦 ข้อมูลอะไรที่เราจัดเก็บ?">
+                <ul className="space-y-1 pl-1">
+                  <li>• <b>ชื่อเล่น</b> หรือชื่อสมมุติที่คุณตั้งขึ้น</li>
+                  <li>• <b>ความคืบหน้าการเรียนรู้</b> เช่น ด่านที่ผ่าน คะแนน เหรียญ และวันที่ใช้งาน</li>
+                  <li>• รหัสบัญชี LINE ในรูปแบบแฮชเพื่อเชื่อมความคืบหน้ากับบัญชีเดิม รหัสดังกล่าวเป็นข้อมูลนามแฝง ไม่ใช่ข้อมูลนิรนาม</li>
                 </ul>
               </PDPAAccordion>
 
-              <PDPAAccordion title="🎯 ใช้ข้อมูลทำอะไร?">
-                <ul className="space-y-0.5 pl-1">
-                  <li>• บันทึกความคืบหน้าของเกม</li>
-                  <li>• ออกเกียรติบัตรน่ารักๆ ตอนเล่นจบ</li>
-                  <li>• ไม่ใช้เพื่อการตลาด/ส่งข้อความรบกวน</li>
+              <PDPAAccordion title="🎯 ข้อควรระวังทางการแพทย์">
+                <ul className="space-y-1 pl-1">
+                  <li>• ข้อมูลในแชทบอทนี้อ้างอิงจากบทความทางการแพทย์ทั่วไป</li>
+                  <li>• <b>ไม่สามารถใช้ทดแทนการตรวจวินิจฉัยจากแพทย์ผิวหนังได้</b></li>
+                  <li>• หากคุณตั้งครรภ์ หรือมีอาการผิดปกติทางผิวหนังรุนแรง ควรปรึกษาแพทย์โดยตรง</li>
                 </ul>
               </PDPAAccordion>
 
-              <PDPAAccordion title="🗑️ อยากลบข้อมูลออก?">
-                <p>กดปุ่ม "ลบข้อมูล" ในหน้าโปรไฟล์ได้ตลอด ข้อมูลจะหายทันที</p>
+              <PDPAAccordion title="🗑️ สิทธิในการลบข้อมูล">
+                <p>ปุ่มล้างข้อมูลในเว็บไซต์จะลบข้อมูลบนอุปกรณ์นี้เท่านั้น การขอลบข้อมูลที่ซิงก์บนระบบกลางต้องติดต่อผู้ดูแลระบบ จนกว่าจะมีระบบลบข้อมูลออนไลน์โดยตรง</p>
               </PDPAAccordion>
             </div>
 
-            <label className="flex items-start gap-3 mb-24 cursor-pointer surface-soft p-3">
+            <label className="flex items-start gap-3 mb-24 cursor-pointer bg-white border border-slate-200 rounded-xl p-3 shadow-sm hover:border-blue-300 transition-colors">
               <input type="checkbox" checked={consent} onChange={e => setConsent(e.target.checked)}
-                className="mt-1 w-5 h-5 accent-detective-500" />
-              <span className="text-sm text-gray-700 font-medium">
-                ฉันเข้าใจ <b>ยินยอม</b>ให้เก็บข้อมูลตามที่ระบุ เพื่อใช้กับเกมนี้เท่านั้น
+                className="mt-1 w-5 h-5 accent-blue-600 rounded text-blue-600 focus:ring-blue-500" />
+              <span className="text-sm text-slate-700 font-medium leading-relaxed">
+                ฉันเข้าใจและ <b>ยินยอม</b> ให้ประมวลผลข้อมูลตามที่ระบุ และรับทราบว่านี่ไม่ใช่บริการวินิจฉัยทางการแพทย์
               </span>
             </label>
 
             <div className="sticky bottom-0 -mx-6 px-6 pt-3
                             pb-[max(0.75rem,env(safe-area-inset-bottom))]
-                            mt-auto bg-gradient-to-t from-[#FBF3EA] via-[#FBF3EA]/95 to-transparent
+                            mt-auto bg-gradient-to-t from-slate-50 via-slate-50/95 to-transparent
                             backdrop-blur-sm">
               <div className="flex gap-2">
-                <button onClick={() => setStep(1)} className="btn-secondary flex-1">← กลับ</button>
-                <button onClick={handleFinish} disabled={!consent} className="btn-primary flex-1">
-                  เริ่มเล่น ✨
+                <button onClick={() => setStep(1)} className="flex-1 bg-white border-2 border-slate-200 text-slate-600 font-semibold py-3 rounded-xl hover:bg-slate-50 transition-colors">
+                  ← กลับ
+                </button>
+                <button onClick={handleFinish} disabled={!consent} className="flex-1 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 text-white font-semibold py-3 rounded-xl shadow-md transition-colors">
+                  เข้าสู่ระบบ ✨
                 </button>
               </div>
             </div>

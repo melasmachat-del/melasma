@@ -2,7 +2,7 @@
 
 เกม chatbot แบบเกมมิฟิเคชัน สอนความรู้และทักษะปฏิเสธบุหรี่ไฟฟ้าสำหรับนักเรียน ม.ต้น
 
-🌐 **เล่นเกม:** https://saynovapingedu-ops.github.io/saynovaping/
+🌐 **เว็บไซต์:** https://saynovapingedu-ops.github.io/melasma/
 
 > โครงสร้างจริงมี 2 ชั้นใน LINE: (1) LINE chatbot Q&A (ตั้งใน LINE OA — อยู่นอก repo นี้) → (2) repo นี้ = เกมเว็บ LIFF ที่เปิดจาก chatbot
 
@@ -56,7 +56,7 @@ push ขึ้น `main` → GitHub Actions auto-build → GitHub Pages (ดู 
 
 > ⚠️ **สำคัญ:** ถ้าไม่ตั้ง `VITE_MOCK_LIFF=false` + `VITE_LIFF_ID` จริง แอปอาจรันเป็น **mock mode** กับผู้ใช้จริง → ความก้าวหน้าจะไม่ผูกกับบัญชี LINE ตอนนี้ค่า default ใน CI เป็น `false` (fail-safe) และแอปจะขึ้น **แบนเนอร์เตือน** ถ้า production ยังรัน mock อยู่
 >
-> `base` path ใน `vite.config.ts` คือ `/saynovaping/` ต้องตรงกับชื่อ repo (เปลี่ยนชื่อ repo = ต้องแก้ค่านี้)
+> `base` path ใน `vite.config.ts` คือ `/melasma/` ต้องตรงกับชื่อ repository หรือกำหนดผ่าน `VITE_BASE_PATH`
 
 ## 📁 โครงสร้างหลัก
 

@@ -1,140 +1,207 @@
-import { useSettingsStore } from '../store/settingsStore';
+import { useState } from 'react';
+import { motion } from 'framer-motion';
+import { clearChatSession } from '../lib/chatSession';
 import { sfx } from '../lib/sound';
-import { startBgm, stopBgm } from '../lib/bgm';
+import { usePlayerStore } from '../store/playerStore';
+import { useProgressStore } from '../store/progressStore';
+import { type FontSize, useSettingsStore } from '../store/settingsStore';
+import { CERT_STAGE_COUNT, certificateStageProgress } from '../scenarios';
 import PageHeader from '../components/PageHeader';
-import { SCENARIO_META } from '../scenarios';
 
-interface ToggleProps {
-  label: string;
+interface SwitchRowProps {
+  icon: string;
+  title: string;
   description: string;
-  value: boolean;
-  onToggle: () => void;
-  emoji: string;
+  checked: boolean;
+  onChange: () => void;
 }
 
-function Toggle({ label, description, value, onToggle, emoji }: ToggleProps) {
+function SwitchRow({ icon, title, description, checked, onChange }: SwitchRowProps) {
   return (
     <button
-      onClick={() => { sfx.click(); onToggle(); }}
-      className="w-full card flex items-center gap-3 active:scale-[0.99] transition-all"
+      type="button"
+      role="switch"
+      aria-checked={checked}
+      onClick={() => { sfx.click(); onChange(); }}
+      className="flex h-auto w-full items-center gap-4 rounded-[22px] border border-sky-100 bg-sky-50/60 p-4 text-left transition hover:bg-sky-50 active:translate-y-px"
     >
-      <span className="text-2xl">{emoji}</span>
-      <div className="flex-1 text-left min-w-0">
-        <p className="font-semibold text-detective-700">{label}</p>
-        <p className="text-xs text-gray-500">{description}</p>
-      </div>
-      <div
-        className={`w-12 h-7 rounded-full p-0.5 transition-colors flex-shrink-0 ${
-          value ? 'bg-gradient-to-r from-detective-500 to-detective-600' : 'bg-gray-300'
-        }`}
-      >
-        <div
-          className={`w-6 h-6 bg-white rounded-full shadow transform transition-transform ${
-            value ? 'translate-x-5' : 'translate-x-0'
-          }`}
-        />
-      </div>
+      <span className="flex h-11 w-11 flex-none items-center justify-center rounded-2xl bg-white text-xl shadow-clay-sm" aria-hidden="true">{icon}</span>
+      <span className="min-w-0 flex-1">
+        <span className="block text-sm font-bold text-slate-900">{title}</span>
+        <span className="mt-1 block text-xs leading-relaxed text-slate-500">{description}</span>
+      </span>
+      <span className={`relative h-7 w-12 flex-none rounded-full p-1 transition-colors ${checked ? 'bg-sky-600 shadow-clay-blue' : 'bg-slate-200 shadow-clay-pressed'}`}>
+        <span className={`block h-5 w-5 rounded-full bg-white shadow transition-transform ${checked ? 'translate-x-5' : 'translate-x-0'}`} />
+      </span>
     </button>
   );
 }
 
+const FONT_OPTIONS: Array<{ value: FontSize; label: string; sample: string; detail: string }> = [
+  { value: 'sm', label: 'เล็ก', sample: 'ก', detail: 'กระชับ' },
+  { value: 'md', label: 'ปกติ', sample: 'ก', detail: 'แนะนำ' },
+  { value: 'lg', label: 'ใหญ่', sample: 'ก', detail: 'อ่านง่าย' },
+];
+
 export default function Settings() {
-  const s = useSettingsStore();
+  const settings = useSettingsStore();
+  const completedCount = usePlayerStore(state => certificateStageProgress(state.stagesCompleted));
+  const resetLearningProgress = usePlayerStore(state => state.resetLearningProgress);
+  const clearAllProgress = useProgressStore(state => state.clearAllProgress);
+  const [confirmReset, setConfirmReset] = useState(false);
+  const [statusMessage, setStatusMessage] = useState<string | null>(null);
+
+  const handleResetLearning = () => {
+    sfx.click();
+    resetLearningProgress();
+    clearAllProgress();
+    setConfirmReset(false);
+    setStatusMessage('ล้างสถิติการเรียนรู้แล้ว คุณสามารถเริ่มเรียนใหม่ได้ตั้งแต่หัวข้อแรก');
+  };
+
+  const handleClearChat = () => {
+    sfx.click();
+    clearChatSession();
+    setStatusMessage('ล้างข้อความ รูปภาพ และผลวิเคราะห์ในเซสชันแชตแล้ว');
+  };
 
   return (
-    <div className="min-h-full pb-8 relative">
-      <PageHeader title="⚙️ ตั้งค่า" backTo="/" />
+    <div className="min-h-screen bg-[#EEF6FF] pb-12">
+      <PageHeader title="ตั้งค่าระบบ" subtitle="การเข้าถึง ข้อมูลการเรียนรู้ และความเป็นส่วนตัว" backTo="/" />
+      <main className="mx-auto max-w-5xl px-4 pt-6 sm:px-6 sm:pt-8 lg:px-8">
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="overflow-hidden rounded-[32px] border border-white/90 bg-white shadow-clay"
+        >
+          <div className="flex flex-col gap-6 p-5 sm:p-7 lg:gap-8 lg:p-8">
+            {statusMessage && (
+              <div role="status" className="flex items-start gap-3 rounded-[20px] border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm leading-relaxed text-emerald-800">
+                <span aria-hidden="true">✓</span>
+                <span className="flex-1">{statusMessage}</span>
+                <button type="button" onClick={() => setStatusMessage(null)} className="font-bold" aria-label="ปิดข้อความ">×</button>
+              </div>
+            )}
 
-      <main className="max-w-md md:max-w-2xl mx-auto px-4 pt-4 space-y-3">
-        <p className="text-xs text-gray-500 px-1">เสียงและการสั่น</p>
-        <Toggle
-          emoji="🔊"
-          label="เสียงประกอบ"
-          description="คลิก / ตอบถูก-ผิด / ได้คะแนน"
-          value={s.soundEnabled}
-          onToggle={s.toggleSound}
-        />
-        <Toggle
-          emoji="🎵"
-          label="เพลงประกอบ"
-          description="เพลงนักสืบเบาๆ ขณะเล่น — สังเคราะห์ในเครื่อง ไม่กินเน็ต"
-          value={s.musicEnabled}
-          onToggle={() => {
-            const next = !s.musicEnabled;
-            s.toggleMusic();
-            if (next) startBgm();
-            else stopBgm();
-          }}
-        />
-        <Toggle
-          emoji="📳"
-          label="สั่นมือถือ"
-          description="สั่นเบาๆ ตอนเลือกหรือได้แบดจ์"
-          value={s.vibrationEnabled}
-          onToggle={s.toggleVibration}
-        />
-        <Toggle
-          emoji="🔊"
-          label="อ่านบทสนทนาออกเสียง"
-          description="โชว์ปุ่ม 'ฟังเสียง' ใต้บทสนทนา (ต้องมีเสียงไทยในเครื่อง)"
-          value={s.ttsEnabled}
-          onToggle={s.toggleTts}
-        />
+            <section aria-labelledby="display-heading">
+              <div className="mb-4 flex items-start gap-3">
+                <span className="flex h-10 w-10 flex-none items-center justify-center rounded-2xl bg-sky-100 text-lg text-sky-800" aria-hidden="true">◐</span>
+                <div>
+                  <h2 id="display-heading" className="text-base font-extrabold text-slate-900">การเข้าถึงและการแสดงผล</h2>
+                  <p className="mt-0.5 text-xs leading-relaxed text-slate-500">ปรับการอ่านบทความทางการแพทย์ให้สบายตาและเหมาะกับคุณ</p>
+                </div>
+              </div>
 
-        <p className="text-xs text-gray-500 px-1 pt-3">การแสดงผล</p>
-        <div className="card">
-          <p className="font-semibold text-detective-700 mb-2 flex items-center gap-2">
-            <span className="text-xl">🅰️</span> ขนาดตัวอักษร
-          </p>
-          <div className="grid grid-cols-3 gap-2">
-            {(['sm', 'md', 'lg'] as const).map(size => (
-              <button
-                key={size}
-                onClick={() => { sfx.click(); s.setFontSize(size); }}
-                className={`py-2 rounded-xl font-semibold transition-all ${
-                  s.fontSize === size
-                    ? 'bg-gradient-to-br from-detective-500 to-detective-600 text-white shadow-glow-sm'
-                    : 'bg-white border-2 border-detective-100 text-gray-600'
-                }`}
-              >
-                <span className={size === 'sm' ? 'text-sm' : size === 'md' ? 'text-base' : 'text-lg'}>
-                  Aa
-                </span>
-                <p className="text-[10px] mt-0.5">
-                  {size === 'sm' ? 'เล็ก' : size === 'md' ? 'ปกติ' : 'ใหญ่'}
-                </p>
-              </button>
-            ))}
+              <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+                <div className="rounded-[24px] border border-sky-100 bg-white p-4 shadow-clay-sm sm:p-5">
+                  <div className="flex items-center justify-between gap-3">
+                    <div>
+                      <h3 className="text-sm font-bold text-slate-900">ขนาดตัวอักษร</h3>
+                      <p className="mt-1 text-xs text-slate-500">เลือกขนาดที่อ่านได้ต่อเนื่องโดยไม่ต้องเพ่ง</p>
+                    </div>
+                    <span className="rounded-full bg-sky-50 px-3 py-1 text-xs font-bold text-sky-700">Aa</span>
+                  </div>
+                  <div className="mt-4 grid grid-cols-3 gap-2" role="radiogroup" aria-label="ขนาดตัวอักษร">
+                    {FONT_OPTIONS.map(option => {
+                      const selected = settings.fontSize === option.value;
+                      return (
+                        <button
+                          key={option.value}
+                          type="button"
+                          role="radio"
+                          aria-checked={selected}
+                          onClick={() => { sfx.click(); settings.setFontSize(option.value); }}
+                          className={`rounded-[18px] border px-2 py-3 text-center transition active:translate-y-px ${selected ? 'border-sky-500 bg-sky-600 text-white shadow-clay-blue' : 'border-sky-100 bg-sky-50/60 text-slate-700 hover:bg-sky-50'}`}
+                        >
+                          <span className={`block font-extrabold ${option.value === 'sm' ? 'text-base' : option.value === 'md' ? 'text-xl' : 'text-2xl'}`}>{option.sample}</span>
+                          <span className="mt-1 block text-xs font-bold">{option.label}</span>
+                          <span className={`mt-0.5 block text-[10px] ${selected ? 'text-white/80' : 'text-slate-400'}`}>{option.detail}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <SwitchRow
+                  icon="🌙"
+                  title="โหมดถนอมสายตา"
+                  description="เพิ่มชั้นสีอุ่นเพื่อลดโทนฟ้าของหน้าจอ เหมาะกับการอ่านช่วงกลางคืน"
+                  checked={settings.eyeComfortEnabled}
+                  onChange={settings.toggleEyeComfort}
+                />
+              </div>
+            </section>
+
+            <div className="h-px bg-gradient-to-r from-transparent via-sky-100 to-transparent" />
+
+            <section aria-labelledby="data-heading">
+              <div className="mb-4 flex items-start gap-3">
+                <span className="flex h-10 w-10 flex-none items-center justify-center rounded-2xl bg-slate-100 text-lg" aria-hidden="true">🗂️</span>
+                <div>
+                  <h2 id="data-heading" className="text-base font-extrabold text-slate-900">การจัดการข้อมูลการเรียนรู้</h2>
+                  <p className="mt-0.5 text-xs leading-relaxed text-slate-500">ควบคุมความคืบหน้าและบริบทแชตที่เก็บอยู่ในเบราว์เซอร์นี้</p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                <div className="rounded-[24px] border border-rose-100 bg-rose-50/40 p-5 shadow-clay-sm">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <h3 className="text-sm font-bold text-slate-900">ล้างสถิติการเรียนรู้</h3>
+                      <p className="mt-1 text-xs leading-relaxed text-slate-500">ความคืบหน้าปัจจุบัน {completedCount}/{CERT_STAGE_COUNT} หัวข้อ</p>
+                    </div>
+                    <span className="rounded-full bg-white px-3 py-1 text-xs font-bold text-rose-700 shadow-clay-sm">{completedCount}/{CERT_STAGE_COUNT}</span>
+                  </div>
+                  <p className="mt-3 text-xs leading-relaxed text-slate-600">ล้างด่าน คะแนน และแบบประเมินเพื่อเริ่มเส้นทางใหม่ โดยไม่ลบโปรไฟล์หรือเกียรติบัตรที่ออกแล้ว</p>
+                  {!confirmReset ? (
+                    <button type="button" onClick={() => { sfx.click(); setConfirmReset(true); }} className="btn-secondary mt-4 w-full text-sm font-bold">ล้างสถิติการเรียนรู้</button>
+                  ) : (
+                    <div className="mt-4 rounded-[18px] border border-rose-200 bg-white p-3">
+                      <p className="text-xs font-bold text-rose-800">ยืนยันการล้างความคืบหน้า 0/{CERT_STAGE_COUNT}?</p>
+                      <div className="mt-3 grid grid-cols-2 gap-2">
+                        <button type="button" onClick={() => setConfirmReset(false)} className="btn-outline !min-h-10 !px-3 !py-2 text-xs font-bold">ยกเลิก</button>
+                        <button type="button" onClick={handleResetLearning} className="btn-primary !min-h-10 !bg-rose-600 !px-3 !py-2 text-xs font-bold hover:!bg-rose-700">ยืนยันล้างข้อมูล</button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                <div className="rounded-[24px] border border-sky-100 bg-sky-50/50 p-5 shadow-clay-sm">
+                  <div className="flex items-start gap-3">
+                    <span className="flex h-10 w-10 flex-none items-center justify-center rounded-2xl bg-white text-lg shadow-clay-sm" aria-hidden="true">💬</span>
+                    <div>
+                      <h3 className="text-sm font-bold text-slate-900">ล้างข้อมูลผู้ช่วยเรียนรู้</h3>
+                      <p className="mt-1 text-xs leading-relaxed text-slate-500">ลบข้อความร่าง รูปใบหน้า ค่าพิกเซล และคำตอบที่อยู่ในเซสชันปัจจุบัน</p>
+                    </div>
+                  </div>
+                  <button type="button" onClick={handleClearChat} className="btn-outline mt-5 w-full text-sm font-bold">ล้างประวัติแชตปัจจุบัน</button>
+                </div>
+              </div>
+            </section>
+
+            <div className="h-px bg-gradient-to-r from-transparent via-sky-100 to-transparent" />
+
+            <section aria-labelledby="privacy-heading" className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+              <div className="rounded-[24px] border border-sky-100 bg-gradient-to-br from-sky-50 to-white p-5 shadow-clay-sm">
+                <p className="text-xs font-bold uppercase tracking-[0.16em] text-sky-600">โครงการเพื่อสังคม</p>
+                <h2 id="privacy-heading" className="mt-2 text-base font-extrabold text-slate-900">ได้รับการสนับสนุนจาก</h2>
+                <p className="mt-2 text-sm font-bold leading-relaxed text-sky-800">กองทุนพัฒนาสื่อปลอดภัยและสร้างสรรค์</p>
+                <p className="mt-1 text-xs leading-relaxed text-slate-500">เพื่อส่งเสริมความรู้สุขภาพผิวที่เข้าถึงง่าย ปลอดภัย และอ้างอิงข้อมูลทางการแพทย์</p>
+              </div>
+
+              <div className="rounded-[24px] border border-emerald-100 bg-emerald-50/60 p-5 shadow-clay-sm">
+                <div className="flex items-center gap-3">
+                  <span className="flex h-11 w-11 flex-none items-center justify-center rounded-2xl bg-white text-xl shadow-clay-sm" aria-hidden="true">🛡️</span>
+                  <div>
+                    <p className="text-xs font-bold uppercase tracking-[0.16em] text-emerald-700">Privacy by design</p>
+                    <h2 className="mt-1 text-base font-extrabold text-slate-900">รูปภาพอยู่บนอุปกรณ์ของคุณ</h2>
+                  </div>
+                </div>
+                <p className="mt-3 text-xs leading-6 text-slate-600">รูปใบหน้าถูกอ่านด้วย Canvas และวิเคราะห์พิกเซลภายในเบราว์เซอร์เท่านั้น ไม่มีการส่งไฟล์รูปไปยังเซิร์ฟเวอร์ เมื่อออกจากหน้าแชตหรือล้างบริบท URL ชั่วคราวของรูปจะถูกยกเลิกทันที</p>
+              </div>
+            </section>
           </div>
-        </div>
-
-        <Toggle
-          emoji="🎬"
-          label="ลดการเคลื่อนไหว"
-          description="ปิดกระดาษโปรยฉลองและเอฟเฟ็กต์เคลื่อนไหว — ดีสำหรับคนเวียนหัว"
-          value={s.reducedMotion}
-          onToggle={s.toggleReducedMotion}
-        />
-
-        <p className="text-xs text-gray-500 px-1 pt-3">เกี่ยวกับ</p>
-        <div className="card text-sm text-gray-700 space-y-1">
-          <p className="flex justify-between"><span>เวอร์ชัน</span><span className="font-mono">v0.8.0</span></p>
-          <p className="flex justify-between"><span>มินิเกม</span><span>หลายแบบ</span></p>
-          <p className="flex justify-between"><span>ด่านทั้งหมด</span><span>{SCENARIO_META.length} ด่าน (หลัก 10 + โบนัส 10)</span></p>
-        </div>
-
-        {/* === TMF funding credit === */}
-        <div className="card border-2 border-detective-200 bg-detective-50/60 text-center mt-2">
-          <p className="text-xs text-slate-700 leading-relaxed">
-            โครงการ <b className="text-detective-700">"SayNo:สู้บุหรี่ไฟฟ้า"</b>
-            <br/>
-            <span className="text-[11px] text-slate-600">ได้รับทุนสนับสนุนจาก</span>
-          </p>
-          <p className="font-display font-bold text-detective-700 text-sm mt-1.5 leading-tight">
-            กองทุนพัฒนาสื่อปลอดภัยและสร้างสรรค์
-          </p>
-          <p className="text-[11px] text-slate-500 italic">THAI MEDIA FUND</p>
-        </div>
+        </motion.div>
       </main>
     </div>
   );

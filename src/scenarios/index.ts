@@ -4,21 +4,7 @@ import { scenario02 } from './scenario-02';
 import { scenario03 } from './scenario-03';
 import { scenario04 } from './scenario-04';
 import { scenario05 } from './scenario-05';
-import { scenario06 } from './scenario-06';
-import { scenario07 } from './scenario-07';
-import { scenario08 } from './scenario-08';
-import { scenario09 } from './scenario-09';
-import { scenario10 } from './scenario-10';
-import { scenario11 } from './scenario-11';
-import { scenario12 } from './scenario-12';
-import { scenario13 } from './scenario-13';
-import { scenario14 } from './scenario-14';
-import { scenario15 } from './scenario-15';
-import { scenario16 } from './scenario-16';
-import { scenario17 } from './scenario-17';
-import { scenario18 } from './scenario-18';
-import { scenario19 } from './scenario-19';
-import { scenario20 } from './scenario-20';
+// ลบ import scenario 06 - 20 ออกเรียบร้อยแล้วครับ
 
 export interface ScenarioMeta {
   id: number;
@@ -27,80 +13,64 @@ export interface ScenarioMeta {
   estMinutes: number;
   available: boolean;
   unlockAfter?: number;
-  /** กลุ่มของด่าน — ใช้แบ่งบนแผนที่ */
-  arc?: 'hero' | 'master' | 'pro' | 'expert';
+  /** กลุ่มของด่าน — ใช้แบ่งบนแผนที่ (อิงตามหมวดหมู่เรื่องฝ้า) */
+  arc?: 'basic' | 'prevent' | 'treat';
 }
 
 export const SCENARIO_META: ScenarioMeta[] = [
-  // === Hero Arc (1-8) ===
-  { id: 1,  arc: 'hero',   title: 'ความจริงที่ถูกซ่อน',     subtitle: 'แยกแยะข้อมูลจริง-เท็จ',  estMinutes: 5,  available: true },
-  { id: 2,  arc: 'hero',   title: 'เพื่อนคนใหม่ในห้องน้ำ', subtitle: 'สูตรปฏิเสธ 3 ขั้น',      estMinutes: 6,  available: true,  unlockAfter: 1 },
-  { id: 3,  arc: 'hero',   title: 'ปาร์ตี้วันเกิด',         subtitle: 'ใช้เหตุผลโน้มน้าว',        estMinutes: 7,  available: true,  unlockAfter: 2 },
-  { id: 4,  arc: 'hero',   title: 'ห้างใหญ่หลังเลิกเรียน',  subtitle: 'ยืนยันคำเดิมไม่หวั่น',     estMinutes: 6,  available: true,  unlockAfter: 3 },
-  { id: 5,  arc: 'hero',   title: 'ข้อความส่วนตัวในเกมออนไลน์', subtitle: 'รู้จักถอย',          estMinutes: 7,  available: true,  unlockAfter: 4 },
-  { id: 6,  arc: 'hero',   title: 'น้องใบเตยกำลังจะลอง',  subtitle: 'ช่วยเพื่อน',              estMinutes: 7,  available: true,  unlockAfter: 5 },
-  { id: 7,  arc: 'hero',   title: 'คุณลุงที่ร้านสะดวกซื้อ', subtitle: 'รู้กฎหมาย — เติมคำ + จับคู่', estMinutes: 6, available: true,  unlockAfter: 6 },
-  { id: 8,  arc: 'hero',   title: 'บุก Vapor Corp (ด่านบอสใหญ่)', subtitle: 'รวมทุกทักษะ 5 ช่วง',   estMinutes: 12, available: true,  unlockAfter: 7 },
-  // === Master Arc (9-12) ===
-  { id: 9,  arc: 'master', title: 'เพื่อนเริ่มติดแล้ว',      subtitle: 'ขั้นสูง 1 — สูตร 5A ช่วยเลิก',     estMinutes: 8,  available: true, unlockAfter: 8 },
-  { id: 10, arc: 'master', title: 'รหัสลับใน TikTok',     subtitle: 'ขั้นสูง 2 — รู้เท่าทันสื่อ',          estMinutes: 7,  available: true, unlockAfter: 9 },
-  { id: 11, arc: 'master', title: 'พี่ในครอบครัวสูบ',      subtitle: 'ขั้นสูง 3 — รับมือคนในบ้าน',        estMinutes: 7,  available: true, unlockAfter: 10 },
-  { id: 12, arc: 'master', title: 'นักสืบระดับครู',         subtitle: 'ขั้นสูง รวบยอด — ส่งต่อรุ่นน้อง',    estMinutes: 10, available: true, unlockAfter: 11 },
-  // === บทเชี่ยวชาญ (13-15) — ทักษะเสริม + เกมเพลย์รูปแบบใหม่ ===
-  { id: 13, arc: 'pro', title: 'ฉลาดเสี่ยง',             subtitle: 'เชี่ยวชาญ 1 — จัดอันดับความเสี่ยง',  estMinutes: 7, available: true, unlockAfter: 12 },
-  { id: 14, arc: 'pro', title: 'TikTok ขุดความจริง',     subtitle: 'เชี่ยวชาญ 2 — ปัดจริง/เท็จแบบเร็ว',  estMinutes: 6, available: true, unlockAfter: 13 },
-  { id: 15, arc: 'pro', title: 'บันทึกนักสืบรุ่นเก่า',     subtitle: 'เชี่ยวชาญ 3 — จับคู่ความจำ',         estMinutes: 7, available: true, unlockAfter: 14 },
-  // === บทเจาะลึก (16-20) — เนื้อหาเชิงลึกเฉพาะเรื่องบุหรี่ไฟฟ้า ===
-  { id: 16, arc: 'expert', title: 'นิโคตินกับสมองวัยรุ่น',   subtitle: 'บทเจาะลึก 1 — เข้าใจกลไก โดปามีน (dopamine)', estMinutes: 7, available: true, unlockAfter: 15 },
-  { id: 17, arc: 'expert', title: 'แชทแปลกใน Discord',     subtitle: 'บทเจาะลึก 2 — รับมือคนขายในเกม',             estMinutes: 6, available: true, unlockAfter: 16 },
-  { id: 18, arc: 'expert', title: 'พ่อแม่จับได้',            subtitle: 'บทเจาะลึก 3 — สื่อสารกับครอบครัว',           estMinutes: 7, available: true, unlockAfter: 17 },
-  { id: 19, arc: 'expert', title: 'EVALI ฉุกเฉิน',           subtitle: 'บทเจาะลึก 4 — ปอดอักเสบจากบุหรี่ไฟฟ้า',       estMinutes: 8, available: true, unlockAfter: 18 },
-  { id: 20, arc: 'expert', title: 'สูตรเลิก 4D ส่งต่อทีม',    subtitle: 'บทเจาะลึก รวบยอด — รวมพลังป้องกัน',           estMinutes: 9, available: true, unlockAfter: 19 },
+  // === บทที่ 1: ทำความรู้จักฝ้า (1-2) ===
+  { id: 1, arc: 'basic',   title: 'ฝ้าคืออะไร?',       subtitle: 'ความรู้ทั่วไปและลักษณะของฝ้า', estMinutes: 5, available: true },
+  { id: 2, arc: 'basic',   title: 'เจาะลึกเซลล์เม็ดสี', subtitle: 'การทำงานของ Melanocyte', estMinutes: 5, available: true, unlockAfter: 1 },
+  
+  // === บทที่ 2: ปัจจัยกระตุ้นและการป้องกัน (3-4) ===
+  { id: 3, arc: 'prevent', title: 'ตัวการทำฝ้าเข้ม',   subtitle: 'ฮอร์โมน ความร้อน และพฤติกรรม', estMinutes: 6, available: true, unlockAfter: 2 },
+  { id: 4, arc: 'prevent', title: 'เกราะป้องกันผิว',   subtitle: 'การเลือกใช้ครีมกันแดดอย่างถูกวิธี', estMinutes: 6, available: true, unlockAfter: 3 },
+  
+  // === บทที่ 3: แนวทางการรักษา (5) ===
+  { id: 5, arc: 'treat',   title: 'ดูแลฝ้าในระยะยาว', subtitle: 'ความเข้าใจในการรักษา (รับเกียรติบัตร)', estMinutes: 7, available: true, unlockAfter: 4 },
 ];
 
 export const TOTAL_STAGES = SCENARIO_META.length;
-/** ผ่าน Hero Arc ครบ = ได้ Certificate */
-export const CERT_STAGE_COUNT = 8;
+/** ผ่านครบ 5 ด่าน = จบเส้นทางการเรียนรู้ */
+export const CERT_STAGE_COUNT = 5;
+export const CERT_STAGE_IDS = SCENARIO_META.slice(0, CERT_STAGE_COUNT).map(stage => stage.id);
 
-/** ระดับความยากของด่าน — ใช้โชว์ป้าย + จัดโครง 10 หลัก / 5 ขั้นกว่า */
-export type Difficulty = 'easy' | 'medium' | 'hard' | 'advance';
-export function getStageDifficulty(id: number): Difficulty {
-  if (id <= 3) return 'easy';
-  if (id <= 7) return 'medium';
-  if (id <= 10) return 'hard';
-  return 'advance';
+/** Base certificate eligibility on the five real course stages, not XP or legacy IDs. */
+export function hasCompletedCertificatePath(completed: number[]): boolean {
+  const completedIds = new Set(completed);
+  return CERT_STAGE_IDS.every(id => completedIds.has(id));
 }
 
-/** โซนบนแผนที่ — ด่านหลัก 1-10 / ขั้นกว่า 11-15 / เจาะลึก(โบนัส) 16-20 */
+export function certificateStageProgress(completed: number[]): number {
+  const completedIds = new Set(completed);
+  return CERT_STAGE_IDS.filter(id => completedIds.has(id)).length;
+}
+
+/** ระดับความยากของด่าน — ปรับให้เหมาะกับ 5 ด่าน */
+export type Difficulty = 'easy' | 'medium' | 'hard' | 'advance';
+export function getStageDifficulty(id: number): Difficulty {
+  if (id <= 2) return 'easy';      // ด่าน 1-2 ง่าย
+  if (id === 3) return 'medium';   // ด่าน 3 ปานกลาง
+  if (id === 4) return 'hard';     // ด่าน 4 ยาก
+  return 'advance';                // ด่าน 5 ขั้นกว่า (ประเมินความรู้รวบยอด)
+}
+
+/** โซนบนแผนที่ — ปรับให้เหลือ 3 โซนตามเนื้อหาของฝ้า */
 export type StageSection = 'core' | 'advance' | 'deep';
 export function getStageSection(id: number): StageSection {
-  if (id <= 10) return 'core';
-  if (id <= 15) return 'advance';
+  if (id <= 2) return 'core';
+  if (id <= 4) return 'advance';
   return 'deep';
 }
 
 export function getScenarioById(id: number): Scenario | null {
+  // ลบ case 6 - 20 ออก เพื่อไม่ให้เกิด Error หาไฟล์ไม่เจอ
   switch (id) {
     case 1: return scenario01;
     case 2: return scenario02;
     case 3: return scenario03;
     case 4: return scenario04;
     case 5: return scenario05;
-    case 6: return scenario06;
-    case 7: return scenario07;
-    case 8: return scenario08;
-    case 9: return scenario09;
-    case 10: return scenario10;
-    case 11: return scenario11;
-    case 12: return scenario12;
-    case 13: return scenario13;
-    case 14: return scenario14;
-    case 15: return scenario15;
-    case 16: return scenario16;
-    case 17: return scenario17;
-    case 18: return scenario18;
-    case 19: return scenario19;
-    case 20: return scenario20;
     default: return null;
   }
 }

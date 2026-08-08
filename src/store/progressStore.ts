@@ -20,6 +20,7 @@ interface ProgressState {
   saveProgress: (data: Omit<StageProgress, 'savedAt'>) => void;
   getProgress:  (stageId: number) => StageProgress | undefined;
   clearProgress:(stageId: number) => void;
+  clearAllProgress: () => void;
   hasProgress:  (stageId: number) => boolean;
 }
 
@@ -44,6 +45,8 @@ export const useProgressStore = create<ProgressState>()(
         delete next[stageId];
         set({ saves: next });
       },
+
+      clearAllProgress: () => set({ saves: {} }),
 
       hasProgress: (stageId) => !!get().saves[stageId],
     }),

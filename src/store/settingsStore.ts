@@ -14,6 +14,7 @@ interface SettingsState {
   ttsEnabled: boolean;         // ปุ่มอ่านบทสนทนาออกเสียง (Thai TTS)
   fontSize: FontSize;
   reducedMotion: boolean;      // ลด animation สำหรับคนที่เวียนหัว
+  eyeComfortEnabled: boolean;  // warm visual filter for night reading
 
   toggleSound: () => void;
   toggleMusic: () => void;
@@ -21,6 +22,7 @@ interface SettingsState {
   toggleTts: () => void;
   setFontSize: (size: FontSize) => void;
   toggleReducedMotion: () => void;
+  toggleEyeComfort: () => void;
 }
 
 export const useSettingsStore = create<SettingsState>()(
@@ -32,6 +34,7 @@ export const useSettingsStore = create<SettingsState>()(
       ttsEnabled: true,            // เปิดเริ่มต้น (ถ้าเครื่องมีเสียงไทย ปุ่มจะโผล่)
       fontSize: 'md',
       reducedMotion: false,
+      eyeComfortEnabled: false,
 
       toggleSound:        () => set(s => ({ soundEnabled: !s.soundEnabled })),
       toggleMusic:        () => set(s => ({ musicEnabled: !s.musicEnabled })),
@@ -39,6 +42,7 @@ export const useSettingsStore = create<SettingsState>()(
       toggleTts:          () => set(s => ({ ttsEnabled: !s.ttsEnabled })),
       setFontSize:        (fontSize) => set({ fontSize }),
       toggleReducedMotion:() => set(s => ({ reducedMotion: !s.reducedMotion })),
+      toggleEyeComfort:    () => set(s => ({ eyeComfortEnabled: !s.eyeComfortEnabled })),
     }),
     {
       name: 'hd_settings',
