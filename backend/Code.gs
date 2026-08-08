@@ -1,10 +1,10 @@
 /**
  * ============================================================================
- *  Health Detective — Backend (Google Apps Script)
+ *  Melasma — Backend (Google Apps Script)
  * ============================================================================
- *  Project    : นักสืบสุขภาพ: ภารกิจปกป้องลมหายใจ
- *  Account    : saynovaping.edu@gmail.com
- *  Frontend   : https://saynovapingedu-ops.github.io/melasma/
+ *  Project    : Melasma learning game for skin health
+ *  Account    : melasmachat@gmail.com
+ *  Frontend   : https://melasmachat-del.github.io/melasma/
  *  Version    : 1.3.0  (เพิ่ม funRating — ดาวประเมินความพึงพอใจ/ความสนุกหลังจบด่าน)
  *
  *  Endpoints  :
@@ -35,7 +35,7 @@
  */
 
 const CONFIG = {
-  CERT_PREFIX: 'HD',
+  CERT_PREFIX: 'MEL',
   CERT_YEAR: new Date().getFullYear(),
   STAGES_REQUIRED: 5,
   SHEET_NAMES: {
