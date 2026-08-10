@@ -38,7 +38,7 @@ const CONFIG = {
   CERT_PREFIX: 'MEL',
   CERT_YEAR: new Date().getFullYear(),
   STAGES_REQUIRED: 5,
-  BACKEND_VERSION: '1.4.0',
+  BACKEND_VERSION: '1.5.0',
   SHEET_NAMES: {
     PLAYERS: 'Players',
     EVENTS: 'Events',
@@ -138,6 +138,7 @@ const GEMINI_DEFAULT_MODEL = 'gemini-3.6-flash';
 const GEMINI_MAX_QUESTION_CHARS = 1000;
 const GEMINI_MAX_CONTEXT_CHARS = 12000;
 const GEMINI_MAX_OUTPUT_TOKENS = 700;
+const GEMINI_MAX_IMAGE_BASE64_CHARS = 4000000;
 
 function clampText_(value, maxChars) {
   return String(value || '').trim().slice(0, maxChars);
@@ -222,6 +223,78 @@ function handleAskAi_(payload) {
     return jsonResponse_({ ok: true, answer: answer, model: model, source: 'gemini' });
   } catch (error) {
     console.error('Gemini request exception: ' + String(error));
+    return jsonResponse_({ ok: false, error: 'gemini_request_failed' });
+  }
+}
+
+function handleAskAiImage_(payload) {
+  const image = payload && payload.image ? payload.image : null;
+  const mimeType = image && String(image.mimeType || '').trim();
+  const imageData = image && String(image.data || '').trim();
+  const allowedMimeTypes = ['image/jpeg', 'image/png', 'image/webp'];
+  if (!mimeType || allowedMimeTypes.indexOf(mimeType) === -1 || !imageData) {
+    return jsonResponse_({ ok: false, error: 'invalid_image' });
+  }
+  if (imageData.length > GEMINI_MAX_IMAGE_BASE64_CHARS) {
+    return jsonResponse_({ ok: false, error: 'image_too_large' });
+  }
+
+  const properties = PropertiesService.getScriptProperties();
+  const apiKey = String(properties.getProperty('GEMINI_API_KEY') || '').trim();
+  if (!apiKey) {
+    return jsonResponse_({
+      ok: false,
+      error: 'gemini_not_configured',
+      message: 'GEMINI_API_KEY is not configured in Script Properties',
+    });
+  }
+
+  const model = String(properties.getProperty('GEMINI_MODEL') || GEMINI_DEFAULT_MODEL).trim();
+  const systemInstruction = [
+    'คุณเป็นผู้ช่วย AI สำหรับการเรียนรู้เรื่องฝ้าและการดูแลผิว',
+    'ภาพนี้เป็นข้อมูลส่วนบุคคล ให้ใช้เพื่อการตอบครั้งนี้เท่านั้นและอย่าขอข้อมูลระบุตัวตนเพิ่มเติม',
+    'ห้ามวินิจฉัยว่าเป็นฝ้า มะเร็ง หรือโรคใด ห้ามให้คะแนนความรุนแรง ห้ามสั่งยา และห้ามบอกผลการรักษา',
+    'ให้รายงานเฉพาะคุณภาพภาพและสิ่งที่มองเห็นได้อย่างระมัดระวัง โดยใช้คำว่าอาจ/ดูเหมือน และบอกข้อจำกัดของภาพ',
+    'หากเห็นแผล เลือดออก ก้อน นูนเร็ว สีไม่สม่ำเสมอมาก หรือการเปลี่ยนแปลงที่น่ากังวล ให้แนะนำพบแพทย์ผิวหนัง',
+    'ให้ตอบภาษาไทยแบบเข้าใจง่าย 3 หัวข้อ: คุณภาพภาพ, สิ่งที่มองเห็นเบื้องต้น, ขั้นตอนถัดไป',
+    'ขึ้นต้นคำตอบด้วย “ผลวิเคราะห์โดย AI (ไม่ใช่การวินิจฉัย)” และลงท้ายด้วยคำเตือนว่าไม่แทนการตรวจโดยแพทย์',
+  ].join('\n');
+  const requestBody = {
+    system_instruction: { parts: [{ text: systemInstruction }] },
+    contents: [{
+      role: 'user',
+      parts: [
+        { inline_data: { mime_type: mimeType, data: imageData } },
+        { text: 'ช่วยประเมินภาพนี้เพื่อการเรียนรู้เท่านั้น โดยไม่วินิจฉัยโรค' },
+      ],
+    }],
+    generationConfig: { maxOutputTokens: 800 },
+  };
+  const url = 'https://generativelanguage.googleapis.com/v1beta/models/'
+    + encodeURIComponent(model) + ':generateContent';
+
+  try {
+    const response = UrlFetchApp.fetch(url, {
+      method: 'post',
+      contentType: 'application/json',
+      headers: { 'x-goog-api-key': apiKey },
+      payload: JSON.stringify(requestBody),
+      muteHttpExceptions: true,
+    });
+    const status = response.getResponseCode();
+    const bodyText = response.getContentText();
+    let data = null;
+    try { data = JSON.parse(bodyText); } catch (parseError) { data = null; }
+
+    if (status < 200 || status >= 300) {
+      console.error('Gemini image request failed with status ' + status);
+      return jsonResponse_({ ok: false, error: 'gemini_request_failed' });
+    }
+    const answer = extractGeminiText_(data);
+    if (!answer) return jsonResponse_({ ok: false, error: 'gemini_empty_response' });
+    return jsonResponse_({ ok: true, answer: answer, model: model, source: 'gemini-image' });
+  } catch (error) {
+    console.error('Gemini image request exception: ' + String(error));
     return jsonResponse_({ ok: false, error: 'gemini_request_failed' });
   }
 }
@@ -574,6 +647,7 @@ function doPost(e) {
     if (payload.action === 'sync')      return handleSync_(payload);
     if (payload.action === 'issueCert') return handleIssueCert_(payload);
     if (payload.action === 'ask_ai')    return handleAskAi_(payload);
+    if (payload.action === 'ask_ai_image') return handleAskAiImage_(payload);
     return jsonResponse_({ok:false, error:'unknown_action'});
   } catch (err) {
     return jsonResponse_({ok:false, error:'server_error', message:String(err)});

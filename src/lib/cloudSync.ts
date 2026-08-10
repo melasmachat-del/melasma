@@ -78,6 +78,11 @@ export interface AiAnswerResponse {
   message?: string;
 }
 
+export interface AiImageInput {
+  mimeType: 'image/jpeg' | 'image/png' | 'image/webp';
+  data: string;
+}
+
 export interface VerifyResponse {
   ok: boolean;
   valid: boolean;
@@ -259,6 +264,27 @@ export async function askAi(question: string, context = ''): Promise<AiAnswerRes
     return data;
   } catch (err) {
     console.warn('[cloudSync] AI request failed:', err);
+    return { ok: false, error: 'network_error', message: String(err) };
+  }
+}
+
+/** Send a compressed image to the backend for non-diagnostic visual observations. */
+export async function askAiImage(image: AiImageInput): Promise<AiAnswerResponse> {
+  if (!SYNC_URL) return { ok: false, error: 'no_sync_url' };
+  try {
+    const res = await fetch(SYNC_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({
+        action: 'ask_ai_image',
+        image,
+      }),
+    });
+    const data = await res.json() as AiAnswerResponse;
+    if (!res.ok) return { ok: false, error: 'network_error' };
+    return data;
+  } catch (err) {
+    console.warn('[cloudSync] AI image request failed:', err);
     return { ok: false, error: 'network_error', message: String(err) };
   }
 }

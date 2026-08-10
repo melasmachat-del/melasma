@@ -6,7 +6,7 @@ import { sfx } from '../lib/sound';
 import { CHAT_CLEAR_EVENT, clearChatSession } from '../lib/chatSession';
 import { getFaqAnswer } from '../lib/melasmaFaq';
 import { assessPhotoQuality } from '../lib/photoQuality';
-import { askAi } from '../lib/cloudSync';
+import { askAi, askAiImage, type AiImageInput } from '../lib/cloudSync';
 import {
   assessObservedAppearance,
   type ObservedArea,
@@ -440,6 +440,22 @@ function buildAnswer(question: string, imageAnalysis: ImageFeatures | null): Ans
   };
 }
 
+async function prepareImageForAi(src: string): Promise<AiImageInput> {
+  const image = await loadImage(src);
+  const maxDimension = 1024;
+  const scale = Math.min(1, maxDimension / Math.max(image.width, image.height));
+  const canvas = document.createElement('canvas');
+  canvas.width = Math.max(1, Math.round(image.width * scale));
+  canvas.height = Math.max(1, Math.round(image.height * scale));
+  const context = canvas.getContext('2d');
+  if (!context) throw new Error('Unable to prepare image');
+  context.drawImage(image, 0, 0, canvas.width, canvas.height);
+  const dataUrl = canvas.toDataURL('image/jpeg', 0.72);
+  const [, data = ''] = dataUrl.split(',', 2);
+  if (!data) throw new Error('Unable to encode image');
+  return { mimeType: 'image/jpeg', data };
+}
+
 function buildAiContext(answer: AnswerBlock): string {
   return [
     `สรุปจากคลังความรู้: ${answer.summary}`,
@@ -505,6 +521,10 @@ export default function Chatbot() {
   const [aiAnswer, setAiAnswer] = useState<string | null>(null);
   const [isAiWorking, setIsAiWorking] = useState(false);
   const [aiError, setAiError] = useState<string | null>(null);
+  const [aiImageConsent, setAiImageConsent] = useState(false);
+  const [aiImageAnswer, setAiImageAnswer] = useState<string | null>(null);
+  const [isAiImageWorking, setIsAiImageWorking] = useState(false);
+  const [aiImageError, setAiImageError] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [observedArea, setObservedArea] = useState<ObservedArea | null>(null);
   const [observedVisibility, setObservedVisibility] = useState<ObservedVisibility | null>(null);
@@ -533,6 +553,10 @@ export default function Chatbot() {
       setAiAnswer(null);
       setIsAiWorking(false);
       setAiError(null);
+      setAiImageConsent(false);
+      setAiImageAnswer(null);
+      setIsAiImageWorking(false);
+      setAiImageError(null);
       setError(null);
       setObservedArea(null);
       setObservedVisibility(null);
@@ -573,6 +597,9 @@ export default function Chatbot() {
     setAiAnswer(null);
     setAiError(null);
     setIsAiWorking(false);
+    setAiImageAnswer(null);
+    setIsAiImageWorking(false);
+    setAiImageError(null);
     setImageAnalysis(null);
     setObservedArea(null);
     setObservedVisibility(null);
@@ -597,6 +624,27 @@ export default function Chatbot() {
       setError('อ่านข้อมูลพิกเซลจากรูปไม่สำเร็จ กรุณาลองไฟล์อื่นหรือถ่ายรูปใหม่');
     } finally {
       if (requestId === analysisRequestRef.current) setIsWorking(false);
+    }
+  };
+
+  const handleAiImageAnalysis = async () => {
+    if (!previewUrl || !aiImageConsent || isAiImageWorking) return;
+    setAiImageAnswer(null);
+    setAiImageError(null);
+    setIsAiImageWorking(true);
+    try {
+      const image = await prepareImageForAi(previewUrl);
+      const response = await askAiImage(image);
+      if (response.ok && response.answer) {
+        setAiImageAnswer(response.answer);
+      } else {
+        setAiImageError('ยังวิเคราะห์ภาพด้วย AI ไม่สำเร็จ ระบบยังแสดงผลตรวจคุณภาพภาพบนอุปกรณ์ให้แทน');
+      }
+    } catch (err) {
+      console.warn('[Chatbot] AI image analysis failed:', err);
+      setAiImageError('เตรียมภาพเพื่อส่งให้ AI ไม่สำเร็จ กรุณาลองเลือกรูปใหม่');
+    } finally {
+      setIsAiImageWorking(false);
     }
   };
 
@@ -768,6 +816,36 @@ export default function Chatbot() {
                 </div>
               )}
 
+              {previewUrl && selectedTopic === 'photo' && (
+                <div className="rounded-[22px] border border-violet-100 bg-violet-50/70 p-4">
+                  <div className="flex items-center gap-2">
+                    <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-white text-lg shadow-sm" aria-hidden="true">✨</span>
+                    <p className="text-sm font-extrabold text-violet-950">วิเคราะห์ภาพด้วย AI</p>
+                  </div>
+                  <label className="mt-3 flex items-start gap-2 text-xs leading-relaxed text-violet-900">
+                    <input
+                      type="checkbox"
+                      checked={aiImageConsent}
+                      onChange={event => setAiImageConsent(event.target.checked)}
+                      className="mt-0.5 h-4 w-4 accent-violet-600"
+                    />
+                    <span>ยินยอมให้ส่งภาพที่ย่อและบีบอัดแล้วไปให้ Gemini วิเคราะห์เพื่อการเรียนรู้</span>
+                  </label>
+                  <p className="mt-2 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-[11px] leading-relaxed text-amber-900">
+                    AI ช่วยดูคุณภาพภาพและสิ่งที่มองเห็นเบื้องต้นเท่านั้น ไม่สามารถยืนยันว่าเป็นฝ้าหรือวินิจฉัยโรคแทนแพทย์ได้
+                  </p>
+                  <button
+                    type="button"
+                    onClick={handleAiImageAnalysis}
+                    disabled={!aiImageConsent || isAiImageWorking || isWorking}
+                    className="btn-primary mt-3 w-full disabled:cursor-not-allowed disabled:opacity-45"
+                  >
+                    {isAiImageWorking ? 'กำลังให้ AI วิเคราะห์ภาพ...' : 'เริ่มวิเคราะห์โดย AI'}
+                  </button>
+                  {aiImageError && <p className="mt-2 text-xs leading-relaxed text-rose-700">{aiImageError}</p>}
+                </div>
+              )}
+
               {previewUrl && !isWorking && (
                 <div className="space-y-4 rounded-[24px] border border-violet-100 bg-violet-50/50 p-4">
                   <div>
@@ -910,6 +988,19 @@ export default function Chatbot() {
                       {isAiWorking && <p className="mt-3 text-sm text-violet-700">คุณหมอกำลังเรียบเรียงคำตอบจากคลังความรู้...</p>}
                       {aiAnswer && <p className="mt-3 whitespace-pre-line text-sm leading-relaxed text-slate-800">{aiAnswer}</p>}
                       {aiError && <p className="mt-3 text-xs leading-relaxed text-violet-800">{aiError}</p>}
+                    </div>
+                  )}
+
+                  {(isAiImageWorking || aiImageAnswer || aiImageError) && (
+                    <div className="rounded-[22px] border border-violet-100 bg-violet-50/70 p-4">
+                      <div className="flex items-center gap-2">
+                        <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-white text-lg shadow-sm" aria-hidden="true">✨</span>
+                        <p className="text-sm font-extrabold text-violet-950">ผลวิเคราะห์ภาพโดย AI</p>
+                      </div>
+                      <p className="mt-2 text-[11px] leading-relaxed text-amber-800">ไม่ใช่การวินิจฉัยโรค และไม่แทนการตรวจโดยแพทย์</p>
+                      {isAiImageWorking && <p className="mt-3 text-sm text-violet-700">AI กำลังประเมินคุณภาพภาพและสิ่งที่มองเห็น...</p>}
+                      {aiImageAnswer && <p className="mt-3 whitespace-pre-line text-sm leading-relaxed text-slate-800">{aiImageAnswer}</p>}
+                      {aiImageError && <p className="mt-3 text-xs leading-relaxed text-rose-700">{aiImageError}</p>}
                     </div>
                   )}
 

@@ -79,6 +79,20 @@ The website sends a `POST` request to the existing `VITE_SYNC_URL`:
 }
 ```
 
+For consent-based image observation, the frontend sends a compressed image only after the user agrees:
+
+```json
+{
+  "action": "ask_ai_image",
+  "image": {
+    "mimeType": "image/jpeg",
+    "data": "base64..."
+  }
+}
+```
+
+This endpoint is limited to image quality and visible observations. It must not be presented as a medical diagnosis.
+
 Successful response:
 
 ```json
