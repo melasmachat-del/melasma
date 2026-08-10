@@ -728,7 +728,7 @@ export default function Chatbot() {
                 )}
               </div>
 
-                {selectedTopic && selectedTopic !== 'photo' && (
+                {selectedTopic !== 'photo' && (
                   <form onSubmit={submitCustomQuestion} className="mt-3 rounded-[22px] border border-violet-100 bg-violet-50/60 p-3">
                     <label htmlFor="custom-melasma-question" className="text-xs font-bold text-violet-900">อยากถามคุณหมอเพิ่มไหม?</label>
                     <div className="mt-2 flex gap-2">
