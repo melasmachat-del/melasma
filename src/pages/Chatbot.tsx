@@ -66,7 +66,8 @@ const FAQ_GROUPS = [
   { id: 'triggers', icon: '☀️', title: 'ทำไมฝ้าถึงเข้มขึ้น?', detail: 'แดด ฮอร์โมน ความร้อน และการระคายเคือง', questions: ['ฝ้าเข้มขึ้นเพราะอะไร?', 'แสงผ่านหน้าต่างหรือแสงหน้าจอทำให้ฝ้าเข้มไหม?', 'การตั้งครรภ์หรือยาคุมเกี่ยวข้องกับฝ้าไหม?', 'การขัดหน้าและสกินแคร์ที่แสบทำให้ฝ้าแย่ลงไหม?', 'ความร้อนและการทำอาหารทำให้ฝ้ากำเริบไหม?'] },
   { id: 'protect', icon: '🛡️', title: 'ป้องกันอย่างไร?', detail: 'เลือกและใช้กันแดดให้เหมาะกับฝ้า', questions: ['คนเป็นฝ้าควรเลือกกันแดดแบบไหน?', 'ต้องทากันแดดเท่าไรและทาซ้ำเมื่อไร?', 'กันแดดแบบมีสีและ iron oxide ช่วยอย่างไร?', 'อยู่ในบ้านต้องทากันแดดไหม?', 'แต่งหน้าแล้วจะทากันแดดซ้ำอย่างไร?'] },
   { id: 'treat', icon: '🧴', title: 'รักษาและดูแลอย่างไร?', detail: 'ยา สกินแคร์ หัตถการ และการดูแลระยะยาว', questions: ['การรักษาแบบไหนปลอดภัยบ้าง?', 'ฝ้าหายขาดได้ไหมและใช้เวลานานแค่ไหน?', 'ไฮโดรควิโนนและกรดวิตามินเอใช้เองได้ไหม?', 'เลเซอร์หรือ tranexamic acid เหมาะกับทุกคนไหม?', 'ระหว่างรักษาฝ้าควรใช้สกินแคร์ประจำวันอย่างไร?'] },
-  { id: 'photo', icon: '📷', title: 'อยากตรวจคุณภาพภาพ', detail: 'เช็กแสงและความคมชัดเบื้องต้นบนอุปกรณ์', questions: [] },
+  { id: 'ai', icon: '🩺', title: 'ถามคุณหมอ AI', detail: 'พิมพ์คำถามเรื่องฝ้า แล้วรับคำอธิบายจากคลังความรู้', questions: [] },
+  { id: 'photo', icon: '📷', title: 'อยากตรวจคุณภาพภาพ', detail: 'เช็กแสงและความคมชัดเบื้องต้น ไม่ใช่การวินิจฉัย', questions: [] },
 ] as const;
 
 const ACCEPTED_IMAGE_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp']);
@@ -706,9 +707,14 @@ export default function Chatbot() {
                   <div className="grid gap-2 sm:grid-cols-2">
                     {FAQ_GROUPS.map(group => <button key={group.id} type="button" onClick={() => { sfx.click(); setSelectedTopic(group.id); setAnswer(null); }} className="group rounded-[22px] border border-sky-100 bg-gradient-to-br from-white to-sky-50 p-4 text-left transition hover:-translate-y-0.5 hover:border-sky-300 hover:shadow-md"><div className="flex items-start gap-3"><span className="flex h-11 w-11 flex-none items-center justify-center rounded-2xl bg-white text-2xl shadow-sm">{group.icon}</span><div><b className="text-sm text-slate-900">{group.title}</b><p className="mt-1 text-xs leading-relaxed text-slate-500">{group.detail}</p></div></div></button>)}
                   </div>
-                ) : selectedTopic !== 'photo' ? (
+                ) : selectedTopic !== 'photo' && selectedTopic !== 'ai' ? (
                   <div className="space-y-2">
                     {FAQ_GROUPS.find(group => group.id === selectedTopic)?.questions.map((item, index) => <button key={item} type="button" onClick={() => chooseQuestion(item)} className={`flex w-full items-center gap-3 rounded-[20px] border p-3 text-left text-sm font-semibold transition ${question === item ? 'border-sky-400 bg-sky-100 text-sky-900 shadow-sm' : 'border-sky-100 bg-white text-slate-700 hover:border-sky-300'}`}><span className="flex h-7 w-7 flex-none items-center justify-center rounded-full bg-sky-600 text-xs font-bold text-white">{index + 1}</span><span className="flex-1">{item}</span><span className="text-sky-400">→</span></button>)}
+                  </div>
+                ) : selectedTopic === 'ai' ? (
+                  <div className="rounded-[22px] border border-violet-100 bg-violet-50/70 p-4 text-sm leading-relaxed text-violet-950">
+                    <b>คุณหมอ AI พร้อมตอบคำถามแล้ว</b>
+                    <p className="mt-1 text-xs text-violet-800">พิมพ์คำถามในช่องด้านล่างได้เลย ระบบจะใช้คลังความรู้เรื่องฝ้าเป็นหลักและไม่วินิจฉัยโรคแทนแพทย์</p>
                   </div>
                 ) : (
                   <div className="space-y-3">
