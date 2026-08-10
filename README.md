@@ -1,75 +1,122 @@
-# 🔍 Health Detective — นักสืบสุขภาพ
+# Melasma — เรียนรู้ฝ้าอย่างเข้าใจ
 
-เกม chatbot แบบเกมมิฟิเคชัน สอนความรู้และทักษะปฏิเสธบุหรี่ไฟฟ้าสำหรับนักเรียน ม.ต้น
+เว็บแอปเพื่อการเรียนรู้เรื่องฝ้า (Melasma) ผ่านบทเรียนแบบโต้ตอบ เรื่องราวจำลอง เกมฝึกคิด และคำตอบที่อ้างอิงข้อมูลทางการแพทย์ เหมาะสำหรับผู้ที่ต้องการทำความเข้าใจลักษณะฝ้า ปัจจัยกระตุ้น การป้องกัน และแนวทางดูแลเบื้องต้น
 
-🌐 **เว็บไซต์:** https://saynovapingedu-ops.github.io/melasma/
+> ระบบนี้จัดทำขึ้นเพื่อการเรียนรู้ ไม่ใช่เครื่องมือวินิจฉัยโรคหรือคำแนะนำเพื่อใช้แทนการพบแพทย์
 
-> โครงสร้างจริงมี 2 ชั้นใน LINE: (1) LINE chatbot Q&A (ตั้งใน LINE OA — อยู่นอก repo นี้) → (2) repo นี้ = เกมเว็บ LIFF ที่เปิดจาก chatbot
+## เว็บไซต์
 
-## 📦 Stack
+เปิดใช้งานระบบได้ที่: [https://melasmachat-del.github.io/melasma/](https://melasmachat-del.github.io/melasma/)
+
+## ฟีเจอร์หลัก
+
+- **คลังความรู้เรื่องฝ้า** — เรียนรู้ความหมาย ตำแหน่งที่พบบ่อย ประเภทฝ้าตื้น/ฝ้าลึก/ฝ้าผสม ตัวกระตุ้น การป้องกัน และการรักษา พร้อมแหล่งอ้างอิง
+- **เส้นทางภารกิจการเรียนรู้** — มี 5 ด่าน เรียนผ่านบทสนทนา คำถาม ตัวเลือก เกมฝึกคิด เฉลย และบทสรุปหลังจบด่าน
+- **บทเรียนแบบเห็นภาพ** — ใช้ตัวละครคุณหมอและนักเรียนประกอบบทสนทนา พร้อมภาพจำลองเพื่อช่วยทำความเข้าใจเนื้อหา
+- **ผู้ช่วยเรียนรู้เรื่องฝ้า** — เลือกคำถามที่สงสัยและอ่านคำตอบจากชุดความรู้ที่เตรียมไว้ พร้อมแหล่งอ้างอิง โดยไม่สรุปว่าเป็นโรคหรือวินิจฉัยจากภาพ
+- **การสังเกตภาพเบื้องต้น** — ช่วยตรวจคุณภาพภาพและให้คำแนะนำในการถ่ายภาพใหม่ การประมวลผลภาพทำบนอุปกรณ์ และไม่ใช้แทนการตรวจโดยแพทย์
+- **การตั้งค่าและการเข้าถึง** — ปรับขนาดตัวอักษร โหมดถนอมสายตา เสียง/การอ่านออกเสียง และจัดการข้อมูลการเรียนรู้ในเครื่อง
+- **ความคืบหน้าและเกียรติบัตร** — ติดตามด่านที่เรียนจบ ทบทวนเฉลย และสร้างเกียรติบัตรเมื่อผ่านเส้นทางการเรียนรู้ที่กำหนด
+
+## เทคโนโลยี
 
 - React 18 + Vite + TypeScript
 - Tailwind CSS
-- Zustand (state) + persist (มี `version`/`migrate` สำหรับ migrate save)
-- React Router v6
-- Framer Motion (animation)
-- `@line/liff`
-- qrcode
-- Vitest (unit tests)
+- React Router 6
+- Zustand สำหรับ state และการบันทึกความคืบหน้า
+- Framer Motion สำหรับ animation
+- `html-to-image` และ `qrcode` สำหรับการสร้างภาพเกียรติบัตรและ QR code
+- LINE LIFF สำหรับการเชื่อมต่อกับ LINE เมื่อเปิดใช้โหมดจริง
+- Vitest สำหรับการทดสอบ
 
-## 🎮 เนื้อหา & ฟีเจอร์
+## เริ่มต้นใช้งานในเครื่อง
 
-- **20 ด่าน** ใน 4 arc: hero (1–8) · master (9–12) · pro (13–15) · expert (16–20)
-- มินิเกม 7 แบบ: SpotTheLie, OrderCards, WordMatch, FillBlank, SwipeDecide, MemoryMatch, RiskRank
-- Gamification: XP, Level (ระบบแรงค์ ROV-style), Badge/Achievements, Daily Challenge, Shop (cosmetic + booster), Streak, **Leaderboard** (global, กัน PDPA)
-- **ควิซ 3 โหมด**: Daily / Final Exam / Pre-Post Assessment — จบแล้วมีหน้ารวมเฉลยทุกข้อ (ถูก/ผิด + เฉลย + แหล่งอ้างอิง)
-  - Daily โชว์เฉลยทันทีระหว่างทำ · Exam/Assessment ซ่อนระหว่างทำแล้วเฉลยรวมตอนจบ · pre-test ซ่อนเฉลย (กันปนเปื้อนการวัดผล)
-- เกียรติบัตร: ออก + verify ด้วย QR (ชื่อจริงเก็บ local เท่านั้น ไม่ส่งขึ้น cloud)
-
-## 🏗 Backend
-
-- Google Apps Script (Web App) — ฟรี
-- Google Sheets (database) — แท็บ Players / Events / Certificates
-- โค้ดอ้างอิงอยู่ใน `backend/` (`Code.gs`, `leaderboard.gs`, `README.md`) — ต้องวางใน Apps Script editor ของ Google Sheet แล้ว deploy เป็น version ใหม่
-- action ที่รองรับ: `sync`, `issueCert`, `verify`, `restore`, `ping`, `leaderboard`
-
-## 🧪 Run locally
+ต้องติดตั้ง Node.js ก่อน จากนั้นรันคำสั่ง:
 
 ```bash
 npm install
-npm run dev      # เปิด http://localhost:5173 — ใช้ mock mode ทดสอบได้โดยไม่ต้องมี LINE app
-npm test         # รัน unit tests (vitest)
-npm run build    # tsc -b + vite build (typecheck + production build)
+npm run dev
 ```
 
-## 🚀 Deploy
+เปิด URL ที่ Vite แสดงใน terminal โดยทั่วไปคือ `http://localhost:5173/melasma/`
 
-push ขึ้น `main` → GitHub Actions auto-build → GitHub Pages (ดู `.github/workflows/deploy.yml`)
+คำสั่งที่ใช้บ่อย:
 
-ตั้งค่าที่ **Settings → Secrets and variables → Actions → Variables** (Variables ไม่ใช่ Secrets):
-
-| Name | Value | จำเป็น |
-|---|---|---|
-| `VITE_LIFF_ID` | LIFF ID จริงจาก LINE Developers | ✅ สำหรับ production |
-| `VITE_SYNC_URL` | Apps Script Web App URL | ✅ |
-| `VITE_MOCK_LIFF` | `false` ตอน production | ✅ |
-
-> ⚠️ **สำคัญ:** ถ้าไม่ตั้ง `VITE_MOCK_LIFF=false` + `VITE_LIFF_ID` จริง แอปอาจรันเป็น **mock mode** กับผู้ใช้จริง → ความก้าวหน้าจะไม่ผูกกับบัญชี LINE ตอนนี้ค่า default ใน CI เป็น `false` (fail-safe) และแอปจะขึ้น **แบนเนอร์เตือน** ถ้า production ยังรัน mock อยู่
->
-> `base` path ใน `vite.config.ts` คือ `/melasma/` ต้องตรงกับชื่อ repository หรือกำหนดผ่าน `VITE_BASE_PATH`
-
-## 📁 โครงสร้างหลัก
-
+```bash
+npm run test       # รันทดสอบ
+npm run build      # ตรวจ TypeScript และ build production
+npm run preview    # เปิดดู build ที่สร้างแล้ว
 ```
+
+## การตั้งค่า environment
+
+สร้างไฟล์ `.env` จาก `.env.example` แล้วกำหนดค่าตามสภาพแวดล้อมที่ใช้งาน:
+
+```env
+VITE_LIFF_ID=2000000000-AbCdEfGh
+VITE_SYNC_URL=
+VITE_MOCK_LIFF=true
+VITE_BASE_PATH=/melasma/
+```
+
+- `VITE_MOCK_LIFF=true` ใช้สำหรับพัฒนาและทดสอบในเครื่องโดยไม่ต้องเชื่อมต่อ LINE จริง
+- `VITE_MOCK_LIFF=false` ต้องใส่ `VITE_LIFF_ID` ที่ใช้งานจริง
+- `VITE_SYNC_URL` ใช้ระบุ endpoint สำหรับซิงก์ข้อมูลความคืบหน้า หากเปิดใช้ cloud sync
+- `VITE_BASE_PATH=/melasma/` ให้ตรงกับชื่อ repository บน GitHub Pages
+
+## โครงสร้างสำคัญ
+
+```text
 src/
-  pages/        — Home, ScenarioPage, Daily, Exam, Assessment, Leaderboard, Certificate, ...
-  components/   — QuizRunner, QuizReview, minigames/, ...
-  lib/          — quizBank, shuffle, levels, liff, cloudSync, ... (+ *.test.ts)
-  store/        — playerStore (Zustand + persist), settingsStore, ...
-  scenarios/    — scenario-01.ts … scenario-20.ts
-backend/        — Apps Script source (อ้างอิง — deploy แยกใน Google)
+├─ pages/
+│  ├─ Home.tsx          หน้าแรก
+│  ├─ Knowledge.tsx     คลังความรู้เรื่องฝ้า
+│  ├─ MissionMap.tsx    แผนที่ 5 ด่าน
+│  ├─ ScenarioPage.tsx  บทเรียนและเกมในแต่ละด่าน
+│  ├─ StageReview.tsx   เฉลยและทบทวนหลังจบด่าน
+│  ├─ Chatbot.tsx       ผู้ช่วยถามตอบเรื่องฝ้า
+│  ├─ Settings.tsx      ตั้งค่าระบบและข้อมูลส่วนตัว
+│  └─ Certificate.tsx   เกียรติบัตรการเรียนรู้
+├─ components/          ส่วนประกอบ UI และบทสนทนา
+├─ scenarios/           เนื้อหา scenario-01 ถึง scenario-05
+├─ lib/                 ชุดความรู้ FAQ และการเชื่อมต่อระบบ
+└─ store/               state ของผู้ใช้ การตั้งค่า และความคืบหน้า
+public/images/           ภาพประกอบและตัวละครของระบบ
 ```
 
-## 📜 License
+## เส้นทางหลักของระบบ
 
-โครงการเพื่อการศึกษา (วิทยานิพนธ์) ไม่อนุญาตใช้เชิงพาณิชย์
+| เส้นทาง | หน้าที่ |
+|---|---|
+| `/` | หน้าแรก |
+| `/knowledge` | คลังความรู้เรื่องฝ้า |
+| `/map` | เลือกด่านการเรียนรู้ |
+| `/scenario/:id` | เล่นบทเรียนของแต่ละด่าน |
+| `/scenario/:id/review` | เปิดสมุดบทเรียนและเฉลย |
+| `/chatbot` | ถามเรื่องฝ้า |
+| `/settings` | ตั้งค่าระบบ |
+| `/certificate` | ดูหรือสร้างเกียรติบัตร |
+
+## Deploy ไปยัง GitHub Pages
+
+โปรเจกต์มี GitHub Actions ใน `.github/workflows/deploy.yml` สำหรับ build และ deploy อัตโนมัติเมื่อ push ไปยัง branch `main` โดยใช้ base path `/melasma/`
+
+ก่อน deploy ให้ตั้งค่าตัวแปรใน GitHub repository ที่ **Settings → Secrets and variables → Actions → Variables** ตามที่ workflow ต้องการ ได้แก่:
+
+- `VITE_SYNC_URL`
+- `VITE_MOCK_LIFF`
+- `VITE_LIFF_ID` เมื่อใช้ LIFF จริง
+
+หลัง workflow ทำงานสำเร็จ ระบบจะเผยแพร่ที่:
+
+```text
+https://melasmachat-del.github.io/melasma/
+```
+
+## หมายเหตุด้านข้อมูลสุขภาพและความเป็นส่วนตัว
+
+เนื้อหาในระบบมีไว้เพื่อการเรียนรู้ทั่วไป การดูภาพหรือคำตอบจากระบบไม่สามารถยืนยันชนิด ความลึก หรือความรุนแรงของฝ้าได้ หากมีรอยผิดปกติ เปลี่ยนแปลงเร็ว หรือไม่แน่ใจ ควรปรึกษาแพทย์ผิวหนัง ข้อมูลความคืบหน้าบางส่วนจัดเก็บในอุปกรณ์ และการซิงก์ขึ้นระบบภายนอกจะขึ้นอยู่กับการตั้งค่า deployment
+
+## License
+
+โครงการเพื่อการศึกษา ไม่ใช่ซอฟต์แวร์สำหรับการวินิจฉัยหรือการรักษาทางการแพทย์
