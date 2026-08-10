@@ -21,15 +21,15 @@ interface Props {
 // จึงต้องสมดุล: logo กว้างพอเห็นชัด แต่ไม่สูงจนทำให้ pill อ้วน
 function LogoPill() {
   return (
-    <div className="inline-flex items-center gap-2 rounded-[30px] border border-sky-100/80
+    <div className="inline-flex items-center gap-1.5 rounded-[22px] border border-sky-100/80
                     bg-gradient-to-r from-white via-white to-sky-50/55
-                    pl-2.5 pr-2.5 py-1.5 shadow-[0_12px_28px_-15px_rgba(0,86,145,0.42)]
-                    ring-1 ring-white/80 lg:gap-1.5 lg:rounded-[34px] lg:px-2.5 lg:py-1">
+                    px-2 py-1 shadow-[0_12px_28px_-15px_rgba(0,86,145,0.42)]
+                    ring-1 ring-white/80 sm:gap-2 sm:rounded-[30px] sm:px-2.5 sm:py-1.5 lg:gap-1.5 lg:rounded-[34px] lg:py-1">
       {/* TMF logo — clamp ความสูงสูงสุดด้วย max-h เพื่อไม่ให้ pill อ้วน */}
       {/* container ตัด whitespace ของไฟล์ — logo จริงใหญ่ขึ้นแต่ pill ยังเตี้ย
          marginTop ติดลบ shift image ขึ้น เพราะ visual center ของไฟล์เลื่อนล่าง
          (นกพิราบยื่นลงล่างเยอะกว่าด้านบน) */}
-      <div className="flex h-[62px] w-[170px] flex-shrink-0 items-center justify-center overflow-hidden lg:h-[68px] lg:w-[190px]">
+      <div className="flex h-[42px] w-[122px] flex-shrink-0 items-center justify-center overflow-hidden sm:h-[62px] sm:w-[170px] lg:h-[68px] lg:w-[190px]">
         <img
           src={asset('brand/medical-logo.png')}
           alt="สำนักงานสาธารณสุขศาสตร์ มหาวิทยาลัยวลัยลักษณ์"
@@ -39,14 +39,14 @@ function LogoPill() {
       </div>
 
       {/* เส้นคั่นแนวตั้ง */}
-      <div className="h-12 w-[2px] flex-shrink-0 rounded-full bg-gradient-to-b from-transparent via-sky-200 to-transparent" />
+      <div className="h-8 w-px flex-shrink-0 rounded-full bg-gradient-to-b from-transparent via-sky-200 to-transparent sm:h-12 sm:w-[2px]" />
 
       {/* SayNo — text เล็ก */}
-      <div className="flex h-[62px] w-[78px] flex-shrink-0 flex-col justify-end pb-2.5 text-center leading-tight lg:h-[68px] lg:pb-3">
-        <p className="font-display text-[11px] font-extrabold leading-tight tracking-tight text-detective-700 lg:text-[10px]">
+      <div className="flex h-[42px] w-[58px] flex-shrink-0 flex-col justify-end pb-1.5 text-center leading-tight sm:h-[62px] sm:w-[78px] sm:pb-2.5 lg:h-[68px] lg:pb-3">
+        <p className="font-display text-[9px] font-extrabold leading-tight tracking-tight text-detective-700 sm:text-[11px] lg:text-[10px]">
           Melasma
         </p>
-        <p className="mt-0.5 text-[9px] font-bold leading-tight text-slate-500 lg:text-[8px]">
+        <p className="mt-0.5 text-[7px] font-bold leading-tight text-slate-500 sm:text-[9px] lg:text-[8px]">
           เรียนรู้ฝ้าอย่างเข้าใจ
         </p>
       </div>

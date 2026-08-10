@@ -73,14 +73,14 @@ export default function Onboarding() {
       <div className="pointer-events-none absolute -left-24 top-16 h-64 w-64 rounded-full bg-sky-200/35 blur-3xl" />
       <div className="pointer-events-none absolute -right-24 bottom-12 h-72 w-72 rounded-full bg-emerald-200/30 blur-3xl" />
 
-      <main className="relative mx-auto flex min-h-[calc(100vh-80px)] w-full max-w-5xl flex-col px-4 py-5 sm:px-6 sm:py-7 lg:px-8">
-        <div className="mb-5 flex items-center gap-3 rounded-[24px] border border-white/90 bg-white/65 px-3 py-2.5 shadow-clay-sm backdrop-blur-xl sm:px-4">
+      <main className="relative mx-auto flex min-h-[calc(100vh-120px)] w-full max-w-5xl flex-col px-3 py-3 sm:min-h-[calc(100vh-80px)] sm:px-6 sm:py-7 lg:px-8">
+        <div className="mb-3 flex items-center gap-2 rounded-[20px] border border-white/90 bg-white/65 px-2.5 py-2 shadow-clay-sm backdrop-blur-xl sm:mb-5 sm:gap-3 sm:rounded-[24px] sm:px-4 sm:py-2.5">
           <div className="icon-tile-sm bg-sky-100 text-sky-700">✦</div>
           <div className="min-w-0 flex-1">
             <p className="text-[10px] font-extrabold uppercase tracking-[0.16em] text-sky-600">เริ่มต้นใช้งาน Melasma</p>
             <p className="mt-0.5 text-xs font-semibold text-slate-500">ขั้นตอน {step + 1} จาก 3</p>
           </div>
-          <div className="flex w-28 gap-1.5 sm:w-40" aria-label={`ขั้นตอนที่ ${step + 1} จาก 3`}>
+          <div className="flex w-24 gap-1 sm:w-40 sm:gap-1.5" aria-label={`ขั้นตอนที่ ${step + 1} จาก 3`}>
             {[0, 1, 2].map(i => (
               <div key={i} className={`h-2 flex-1 rounded-full transition-all duration-500 ${
                 i <= step ? 'bg-gradient-to-r from-sky-500 to-cyan-400 shadow-clay-blue' : 'bg-sky-100'
@@ -92,43 +92,43 @@ export default function Onboarding() {
       <AnimatePresence mode="wait">
         {step === 0 && (
           <motion.div key="0" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}
-            className="flex flex-1 items-center">
+            className="w-full">
             <motion.div
               initial={{ opacity: 0, scale: 0.98 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.05 }}
-              className="relative mx-auto w-full max-w-5xl overflow-hidden rounded-[32px] border border-white/90 bg-gradient-to-br from-white via-sky-50 to-emerald-50 shadow-clay"
+              className="relative mx-auto min-h-[520px] w-full max-w-5xl overflow-hidden rounded-[28px] border border-white/90 bg-gradient-to-br from-white via-sky-50 to-emerald-50 shadow-clay sm:aspect-[16/10] sm:min-h-0 sm:rounded-[32px]"
             >
-              <img src={asset('images/home-doctor-hero-v2.png')} alt="คุณหมอประจำ Skin Lab แนะนำการเรียนรู้เรื่องฝ้า" className="block aspect-[16/10] w-full object-cover object-center" />
+              <img src={asset('images/home-doctor-hero-v2.png')} alt="คุณหมอประจำ Skin Lab แนะนำการเรียนรู้เรื่องฝ้า" className="absolute inset-0 h-full w-full object-cover object-center" />
               <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-white/90 via-white/62 to-transparent" />
-              <div className="absolute inset-y-0 left-0 flex w-[78%] items-center p-4 sm:w-[61%] sm:p-8 lg:p-10">
+              <div className="absolute inset-y-0 left-0 flex w-[82%] items-start p-4 pt-5 sm:w-[61%] sm:items-center sm:p-8 sm:pt-8 lg:p-10">
                 <div className="max-w-xl">
-                  <span className="pill bg-sky-100/90 text-sky-700 backdrop-blur">🩺 ภารกิจ Skin Lab เริ่มแล้ว!</span>
-                  <h1 className="mt-2 text-xl font-extrabold leading-[1.08] text-slate-900 sm:mt-3 sm:text-3xl">
-                    พร้อมออกเดินทางหรือยัง?<br /><span className="text-lg text-sky-600 sm:text-2xl">ไปเรียนรู้เรื่องฝ้ากับคุณหมอกัน!</span>
+                  <span className="pill bg-sky-100/90 text-[9px] text-sky-700 backdrop-blur sm:text-[10px]">🩺 ภารกิจ Skin Lab เริ่มแล้ว!</span>
+                  <h1 className="mt-2 text-[1.12rem] font-extrabold leading-[1.08] text-slate-900 sm:mt-3 sm:text-3xl">
+                    พร้อมออกเดินทางหรือยัง?<br /><span className="text-base text-sky-600 sm:text-2xl">ไปเรียนรู้เรื่องฝ้ากับคุณหมอกัน!</span>
                   </h1>
-                  <p className="mt-2 text-[11px] leading-relaxed text-slate-700 sm:mt-3 sm:text-sm sm:leading-6">
+                  <p className="mt-2 text-[10px] leading-relaxed text-slate-700 sm:mt-3 sm:text-sm sm:leading-6">
                     คุณหมอจะพาไปรู้จักฝ้าแบบสนุก ๆ ผ่านเรื่องราว เกมฝึกคิด และภารกิจสั้น ๆ รู้ทันตัวกระตุ้น แล้วดูแลผิวได้อย่างมั่นใจ
                   </p>
 
-                  <div className="mt-3 grid grid-cols-3 gap-1.5 sm:mt-5 sm:gap-2">
+                  <div className="mt-3 grid grid-cols-3 gap-1 sm:mt-5 sm:gap-2">
                     {[
                       ['🔎', 'สังเกต', 'เข้าใจลักษณะ'],
                       ['☀️', 'ป้องกัน', 'รู้ทันตัวกระตุ้น'],
                       ['🛡️', 'ดูแล', 'เลือกวิธีที่เหมาะ'],
                     ].map(([icon, title, detail]) => (
-                      <div key={title} className="rounded-[14px] border border-sky-100/90 bg-white/82 p-1.5 text-center shadow-clay-sm sm:rounded-[18px] sm:p-2.5">
-                        <div className="text-base sm:text-xl">{icon}</div>
-                        <p className="mt-0.5 text-[9px] font-extrabold text-slate-800 sm:mt-1 sm:text-[11px]">{title}</p>
-                        <p className="mt-0.5 text-[8px] leading-tight text-slate-500 sm:text-[10px]">{detail}</p>
+                      <div key={title} className="rounded-[12px] border border-sky-100/90 bg-white/82 p-1 text-center shadow-clay-sm sm:rounded-[18px] sm:p-2.5">
+                        <div className="text-sm sm:text-xl">{icon}</div>
+                        <p className="mt-0.5 text-[8px] font-extrabold text-slate-800 sm:mt-1 sm:text-[11px]">{title}</p>
+                        <p className="mt-0.5 text-[7px] leading-tight text-slate-500 sm:text-[10px]">{detail}</p>
                       </div>
                     ))}
                   </div>
 
-                  <button onClick={() => setStep(1)} className="btn-primary mt-3 w-full text-sm sm:mt-5 sm:text-base">
+                  <button onClick={() => setStep(1)} className="btn-primary mt-3 w-full text-xs sm:mt-5 sm:text-base">
                     ออกเดินทางกัน <span className="ml-2">→</span>
                   </button>
-                  <p className="mt-1.5 text-center text-[9px] text-slate-600 sm:mt-3 sm:text-[11px]">ใช้เวลาไม่นาน แล้วมาสะสมความรู้ไปด้วยกัน</p>
+                  <p className="mt-1.5 text-center text-[8px] text-slate-600 sm:mt-3 sm:text-[11px]">ใช้เวลาไม่นาน แล้วมาสะสมความรู้ไปด้วยกัน</p>
                 </div>
               </div>
             </motion.div>

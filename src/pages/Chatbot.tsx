@@ -626,19 +626,19 @@ export default function Chatbot() {
   return (
     <div className="min-h-screen bg-[#EEF6FF] pb-12">
       <canvas ref={analysisCanvasRef} className="hidden" aria-hidden="true" />
-      <main className="mx-auto max-w-5xl px-4 pt-6 sm:px-6 lg:px-8 lg:pt-8">
+      <main className="mx-auto max-w-5xl px-3 pt-3 sm:px-6 sm:pt-6 lg:px-8 lg:pt-8">
         <motion.section
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
-          className="relative mb-4 aspect-[16/9] overflow-hidden rounded-[28px] border border-white/80 bg-sky-100 shadow-clay"
+          className="relative mb-4 min-h-[290px] overflow-hidden rounded-[28px] border border-white/80 bg-sky-100 shadow-clay sm:aspect-[16/9] sm:min-h-0"
         >
-          <BackButton className="absolute left-4 top-4 z-20 sm:left-6 sm:top-6" />
+          <BackButton className="absolute left-3 top-3 z-20 !min-h-9 !px-2.5 !py-1.5 text-xs sm:left-6 sm:top-6 sm:!min-h-10 sm:!px-3.5 sm:!py-2 sm:text-sm" />
           <img src={asset('images/chatbot-hero-v2.png')} alt="คุณหมอพร้อมตอบคำถามเรื่องฝ้า" className="absolute inset-0 h-full w-full object-cover object-center" loading="lazy" />
           <div className="absolute inset-0 bg-gradient-to-r from-white/45 via-white/12 to-transparent" aria-hidden="true" />
-          <div className="relative z-10 flex h-full max-w-md flex-col justify-center p-5 text-slate-950 sm:p-7">
-            <span className="text-xs font-bold uppercase tracking-[.18em] text-[#087EAF]">ผู้ช่วยคุณหมอ</span>
-            <h2 className="mt-2 text-xl font-bold text-slate-950 sm:text-2xl">ถามเรื่องฝ้า รับคำตอบเข้าใจง่าย</h2>
-            <p className="mt-1 text-sm leading-relaxed text-slate-700">
+          <div className="relative z-10 flex h-full max-w-[82%] flex-col justify-start p-4 pt-16 text-slate-950 sm:max-w-md sm:justify-center sm:p-7">
+            <span className="text-[10px] font-bold uppercase tracking-[.14em] text-[#087EAF] sm:text-xs sm:tracking-[.18em]">ผู้ช่วยคุณหมอ</span>
+            <h2 className="mt-1 text-[1.05rem] font-bold leading-tight text-slate-950 sm:mt-2 sm:text-2xl">ถามเรื่องฝ้า รับคำตอบเข้าใจง่าย</h2>
+            <p className="mt-1 text-[11px] leading-5 text-slate-700 sm:text-sm sm:leading-relaxed">
               เลือกหัวข้อที่สงสัย แล้วรับคำอธิบายพร้อมแหล่งอ้างอิงที่อ่านเข้าใจง่าย
             </p>
           </div>
