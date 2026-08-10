@@ -1,9 +1,10 @@
 import { motion } from 'framer-motion';
 import type { SpeakerKey } from '../types';
 import { usePlayerStore } from '../store/playerStore';
+import { useAvatarStore } from '../store/avatarStore';
 import { useSettingsStore } from '../store/settingsStore';
 import { speak, useTtsAvailable } from '../lib/tts';
-import { NPC_CHARACTERS } from '../lib/characters';
+import { getPlayerCharacter, NPC_CHARACTERS } from '../lib/characters';
 import { asset } from '../lib/asset';
 
 // โทนสีบับเบิลของแต่ละ speaker — ใช้คาแรกเตอร์คุณหมอผมสั้นเป็นภาพหลักของแอป
@@ -28,9 +29,13 @@ interface Props {
 export default function DialogueBubble({ speaker, text }: Props) {
   const s = SPEAKERS[speaker];
   const player = usePlayerStore();
+  const customPlayerAvatar = useAvatarStore(state =>
+    player.customAvatarId ? state.avatars.find(avatar => avatar.id === player.customAvatarId) : undefined
+  );
+  const playerCharacter = getPlayerCharacter(player.avatar);
   const isPlayer = speaker === 'player';
   const isDoctor = speaker === 'doctor';
-  // ตัวละครประกอบทั้งหมดใช้ภาพมาสคอตคุณหมอผมสั้นชุดเดียวกัน
+  // ตัวละครประกอบใช้ภาพตามบท ส่วน player ใช้ตัวแทน 3D ที่เลือกจาก onboarding
   const npc = NPC_CHARACTERS[speaker];
   // ปุ่มอ่านออกเสียง — โผล่เฉพาะเมื่อเปิดในตั้งค่า + เครื่องมีเสียงไทย
   const ttsEnabled = useSettingsStore(st => st.ttsEnabled);
@@ -71,11 +76,11 @@ export default function DialogueBubble({ speaker, text }: Props) {
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ type: 'spring', stiffness: 220, damping: 22 }}
-            className="relative flex h-36 w-24 flex-none items-end justify-center sm:h-48 sm:w-28"
+            className="relative flex h-36 w-40 flex-none items-end justify-center sm:h-48 sm:w-44"
           >
             <motion.img
-              src={asset('images/student-dialogue-cutout-v1.png')}
-              alt={player.nickname ? `ตัวละครของ ${player.nickname}` : 'ตัวละครนักเรียน'}
+              src={customPlayerAvatar?.dataUrl || playerCharacter.src}
+              alt={player.nickname ? `ตัวละครของ ${player.nickname}` : playerCharacter.label}
               className="h-full w-full object-contain object-bottom drop-shadow-[0_8px_8px_rgba(0,86,145,0.18)]"
               animate={{ y: [0, -3, 0] }}
               transition={{ duration: 3.2, repeat: Infinity, ease: 'easeInOut' }}

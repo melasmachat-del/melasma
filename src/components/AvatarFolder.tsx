@@ -9,7 +9,7 @@ interface Props {
   onPick: (preset: number, customId?: string) => void;
 }
 
-// โฟลเดอร์รูปอวตาร — 5 ตัวละครเริ่มต้น (PNG) + รูปที่ผู้เล่นอัปโหลดเอง
+// โฟลเดอร์รูปอวตาร — 3 ตัวละคร 3D wide cutout + รูปที่ผู้เล่นอัปโหลดเอง
 export default function AvatarFolder({ preset, customId, onPick }: Props) {
   const fileRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
@@ -57,6 +57,7 @@ export default function AvatarFolder({ preset, customId, onPick }: Props) {
   const activeCharacter = !customId
     ? PLAYER_CHARACTERS.find(c => c.preset === preset)
     : undefined;
+  const activeCustom = customId ? avatars.find(av => av.id === customId) : undefined;
 
   return (
     <div className="space-y-3">
@@ -87,18 +88,30 @@ export default function AvatarFolder({ preset, customId, onPick }: Props) {
         </p>
       )}
 
-      {/* แนะนำตัวละครที่เลือก — โทนเดียวกับตัวละคร */}
-      {activeCharacter && (
-        <div className="surface-soft border border-sky-100 p-3 text-center">
-          <p className="text-xs font-bold text-sky-700">
-            ✨ {activeCharacter.label}
-          </p>
-          <p className="text-[11px] text-slate-600 mt-0.5">{activeCharacter.tagline}</p>
+      {/* Preview ตัวแทนที่เลือก — ภาพ wide จึงครอบได้โดยไม่ตัดตัวละคร */}
+      {(activeCharacter || activeCustom) && (
+        <div className="overflow-hidden rounded-[22px] border border-sky-100 bg-gradient-to-br from-sky-50 via-white to-mint-50 p-3 shadow-clay-sm sm:flex sm:items-center sm:gap-4">
+          <div className="h-36 min-h-36 w-full overflow-hidden rounded-[18px] bg-white/55 sm:h-32 sm:w-56">
+            <img
+              src={activeCharacter?.src || activeCustom?.dataUrl}
+              alt={activeCharacter?.label || activeCustom?.name || 'ตัวแทนของคุณ'}
+              className="h-full w-full object-contain object-center"
+            />
+          </div>
+          <div className="px-1 pt-2 text-center sm:flex-1 sm:px-0 sm:pt-0 sm:text-left">
+            <p className="text-sm font-extrabold text-sky-700">
+              ✨ {activeCharacter?.label || activeCustom?.name}
+            </p>
+            <p className="mt-0.5 text-[11px] leading-relaxed text-slate-600">
+              {activeCharacter?.tagline || 'ตัวละครที่คุณเพิ่มไว้ในเครื่อง'}
+            </p>
+            <p className="mt-2 text-[10px] font-semibold text-emerald-600">ตัวละครนี้จะไปอยู่ในบทสนทนาแต่ละด่าน</p>
+          </div>
         </div>
       )}
 
-      <div className="grid grid-cols-4 gap-2">
-        {/* 5 ตัวละครหลัก — รูป PNG จริง */}
+      <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
+        {/* ตัวละครหลัก — รูป PNG 3D แบบ wide จริง */}
         {PLAYER_CHARACTERS.map(c => {
           const active = !customId && preset === c.preset;
           return (
@@ -107,7 +120,7 @@ export default function AvatarFolder({ preset, customId, onPick }: Props) {
               type="button"
               onClick={() => onPick(c.preset, undefined)}
               title={`${c.label} — ${c.tagline}`}
-              className={`relative aspect-square rounded-2xl overflow-hidden
+              className={`relative aspect-[4/3] overflow-hidden rounded-2xl
                           transition-all border-2 ${
                 active
                   ? 'border-sky-500 shadow-clay-blue scale-105'
@@ -117,7 +130,7 @@ export default function AvatarFolder({ preset, customId, onPick }: Props) {
               <img
                 src={c.src}
                 alt={c.label}
-                className="w-full h-full object-cover"
+                className="h-full w-full object-contain object-center p-1"
                 loading="lazy"
               />
               {active && (
@@ -146,14 +159,14 @@ export default function AvatarFolder({ preset, customId, onPick }: Props) {
                 <button
                   type="button"
                   onClick={() => onPick(0, av.id)}
-                  className={`relative w-full aspect-square rounded-2xl overflow-hidden
+                  className={`relative aspect-[4/3] w-full overflow-hidden rounded-2xl
                               border-2 transition-all ${
                     active
                       ? 'border-sky-500 shadow-clay-blue scale-105'
                       : 'border-sky-100 bg-white shadow-clay-sm active:scale-95'
                   }`}
                 >
-                  <img src={av.dataUrl} alt={av.name} className="w-full h-full object-cover" />
+                  <img src={av.dataUrl} alt={av.name} className="h-full w-full object-contain bg-white/60" />
                   {active && (
                     <span className="absolute -top-1 -right-1 bg-success-500 text-white text-[10px]
                                      rounded-full w-5 h-5 flex items-center justify-center shadow">
@@ -181,7 +194,7 @@ export default function AvatarFolder({ preset, customId, onPick }: Props) {
           type="button"
           onClick={() => fileRef.current?.click()}
           disabled={busy}
-          className="aspect-square rounded-2xl border-2 border-dashed border-slate-300
+          className="aspect-[4/3] rounded-2xl border-2 border-dashed border-slate-300
                      bg-sky-50/60 text-slate-500 flex flex-col items-center justify-center
                      shadow-clay-sm
                      active:scale-95 disabled:opacity-50"
@@ -192,7 +205,7 @@ export default function AvatarFolder({ preset, customId, onPick }: Props) {
       </div>
 
       <p className="text-[11px] text-slate-500 leading-relaxed">
-        💡 มี 5 ตัวละครให้เลือก แต่ละตัวมีบุคลิกของตัวเอง — หรืออัปโหลดรูปอนิเมะ/รูปที่ชอบเป็นอวตารก็ได้
+        💡 มี 3 ตัวละคร 3D ให้เลือก แต่ละตัวมีบุคลิกของตัวเอง — หรืออัปโหลดรูปอนิเมะ/รูปที่ชอบเป็นอวตารก็ได้
         <br />
         ระบบจะย่อรูปให้อัตโนมัติ และเก็บไว้ในเครื่องของคุณเท่านั้น
       </p>

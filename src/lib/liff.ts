@@ -31,24 +31,39 @@ export async function initLiff(): Promise<void> {
     console.info('[LIFF] Forced MOCK mode. UserID:', cachedUserId);
     return;
   }
+
+  if (!LIFF_ID || LIFF_ID === '2000000000-AbCdEfGh') {
+    initialized = true;
+    throw new Error('VITE_LIFF_ID is missing or still uses the placeholder value');
+  }
+
   try {
-    await liff.init({ liffId: LIFF_ID });
-    if (liff.isInClient() && liff.isLoggedIn()) {
-      const profile = await liff.getProfile();
-      cachedUserId = profile.userId;
+    await liff.init({
+      liffId: LIFF_ID,
+      // ให้ LIFF จัดการ login เมื่อเปิดจาก browser ภายนอกแอป LINE
+      withLoginOnExternalBrowser: true,
+    });
+
+    if (!liff.isLoggedIn()) {
       initialized = true;
-      console.info('[LIFF] Real mode in LINE app. UserID:', cachedUserId);
-      return;
+
+      // กรณี SDK ยังไม่ได้ redirect ให้สั่ง login เองเป็น fallback
+      if (!liff.isInClient()) {
+        liff.login({ redirectUri: window.location.href });
+        return;
+      }
+
+      throw new Error('LINE login was not completed');
     }
-    // นอกแอป LINE หรือยังไม่ login → ไม่เรียก liff.login() (กัน redirect loop)
-    // ใช้ mock user แทน เพื่อให้ทดสอบใน browser ปกติได้
-    cachedUserId = getOrCreateMockUserId();
+
+    const profile = await liff.getProfile();
+    cachedUserId = profile.userId;
     initialized = true;
-    console.info('[LIFF] External browser, using MOCK. UserID:', cachedUserId);
+    console.info('[LIFF] Real mode. UserID:', cachedUserId);
   } catch (err) {
-    console.error('[LIFF] init failed, fallback to mock:', err);
-    cachedUserId = getOrCreateMockUserId();
     initialized = true;
+    console.error('[LIFF] init failed:', err);
+    throw err;
   }
 }
 

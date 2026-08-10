@@ -7,7 +7,7 @@
 
 import { asset } from './asset';
 
-export type CharacterId = 'g1' | 'g2' | 'g3' | 'm1' | 'm2';
+export type CharacterId = 'g1' | 'g2' | 'g3';
 
 export interface PlayerCharacter {
   id: CharacterId;
@@ -17,7 +17,7 @@ export interface PlayerCharacter {
   label: string;
   /** เพศ — ใช้แตกบทพูดให้ตรงกับตัวละครได้ในอนาคต */
   gender: 'female' | 'male';
-  /** URL ของรูป PNG (วงกลม, 1000x1000) */
+  /** URL ของรูป PNG แบบ wide cutout สำหรับครอบเป็น thumbnail หรือบทสนทนา */
   src: string;
   /** emoji fallback (ถ้ารูปโหลดไม่ขึ้น) */
   emoji: string;
@@ -27,29 +27,19 @@ export interface PlayerCharacter {
 
 export const PLAYER_CHARACTERS: PlayerCharacter[] = [
   {
-    id: 'g1', preset: 1, label: 'น้องน้ำใส',  gender: 'female',
-    src: asset('images/mascot/doctor-welcome.png'), emoji: '👩‍⚕️',
-    tagline: 'มีน้ำใจ ชอบช่วยเพื่อน',
+    id: 'g1', preset: 1, label: 'น้องน้ำใส', gender: 'female',
+    src: asset('characters/learner-namsai.png'), emoji: '👩',
+    tagline: 'สดใส เป็นมิตร ชอบช่วยเพื่อน',
   },
   {
     id: 'g2', preset: 2, label: 'น้องมิ้นต์', gender: 'female',
-    src: asset('images/mascot/doctor-cell-lab.png'), emoji: '👩‍⚕️',
-    tagline: 'สดใส กล้าพูด กล้าปฏิเสธ',
+    src: asset('characters/learner-mint.png'), emoji: '👩‍🏫',
+    tagline: 'ช่างสังเกต คิดเป็นขั้นตอน',
   },
   {
-    id: 'g3', preset: 3, label: 'น้องดาว',   gender: 'female',
-    src: asset('images/mascot/doctor-sun-protection.png'), emoji: '👩‍⚕️',
-    tagline: 'อ่อนโยน รับฟังเก่ง',
-  },
-  {
-    id: 'm1', preset: 4, label: 'น้องนพ',    gender: 'male',
-    src: asset('images/mascot/doctor-treatment-plan.png'), emoji: '👩‍⚕️',
-    tagline: 'สังเกตเก่ง จับรายละเอียดไม่พลาด',
-  },
-  {
-    id: 'm2', preset: 5, label: 'น้องภูมิ',   gender: 'male',
-    src: asset('images/mascot/doctor-progress.png'), emoji: '👩‍⚕️',
-    tagline: 'มั่นใจ พูดตรง รักความถูกต้อง',
+    id: 'g3', preset: 3, label: 'น้องนพ', gender: 'male',
+    src: asset('characters/learner-nop.png'), emoji: '👦',
+    tagline: 'มั่นใจ กล้าถาม และเรียนรู้ไว',
   },
 ];
 

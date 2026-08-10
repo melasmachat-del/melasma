@@ -67,7 +67,7 @@ export default function Avatar({
     return (
       <div className={wrapperClass} style={{ width: size, height: size }}>
         <div className={innerClass}>
-          <img src={custom.dataUrl} alt={custom.name} className="w-full h-full object-cover" />
+          <img src={custom.dataUrl} alt={custom.name} className="h-full w-full object-cover object-[center_28%]" />
         </div>
         {accessoryNode}
       </div>
@@ -83,7 +83,7 @@ export default function Avatar({
           <img
             src={character.src}
             alt={character.label}
-            className="w-full h-full object-cover"
+            className="h-full w-full object-cover object-[center_28%]"
             onError={() => setPngFailed(true)}
             loading="lazy"
           />

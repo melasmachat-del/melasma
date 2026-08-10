@@ -92,49 +92,46 @@ export default function Onboarding() {
       <AnimatePresence mode="wait">
         {step === 0 && (
           <motion.div key="0" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}
-            className="grid flex-1 items-center gap-5 lg:grid-cols-[1.08fr_0.92fr]">
+            className="flex flex-1 items-center">
             <motion.div
               initial={{ opacity: 0, scale: 0.98 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.05 }}
-              className="relative mx-auto w-full max-w-xl overflow-hidden rounded-[32px] border border-white/90 bg-gradient-to-br from-white via-sky-50 to-emerald-50 shadow-clay"
+              className="relative mx-auto w-full max-w-5xl overflow-hidden rounded-[32px] border border-white/90 bg-gradient-to-br from-white via-sky-50 to-emerald-50 shadow-clay"
             >
-              <div className="absolute left-4 top-4 z-10 pill bg-white/85 text-sky-700 backdrop-blur">🩺 เรียนรู้เรื่องผิว</div>
-              <img src={asset('images/mascot/doctor-welcome.png')} alt="คุณหมอผู้หญิงผมสั้นแนะนำการเรียนรู้เรื่องฝ้า" className="block aspect-square w-full object-fill" />
-              <div className="absolute bottom-4 left-4 right-4 rounded-[20px] border border-white/80 bg-white/75 px-4 py-3 shadow-sm backdrop-blur-md">
-                <p className="text-xs font-extrabold text-slate-800">ค่อย ๆ รู้จักฝ้า แล้วดูแลผิวได้อย่างมั่นใจ</p>
-                <p className="mt-1 text-[11px] leading-relaxed text-slate-500">ข้อมูลเข้าใจง่าย อ้างอิงจากแหล่งความรู้ทางการแพทย์</p>
+              <img src={asset('images/home-doctor-hero-v2.png')} alt="คุณหมอประจำ Skin Lab แนะนำการเรียนรู้เรื่องฝ้า" className="block aspect-[16/10] w-full object-cover object-center" />
+              <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-white/90 via-white/62 to-transparent" />
+              <div className="absolute inset-y-0 left-0 flex w-[78%] items-center p-4 sm:w-[61%] sm:p-8 lg:p-10">
+                <div className="max-w-xl">
+                  <span className="pill bg-sky-100/90 text-sky-700 backdrop-blur">🩺 ภารกิจ Skin Lab เริ่มแล้ว!</span>
+                  <h1 className="mt-2 text-xl font-extrabold leading-[1.08] text-slate-900 sm:mt-3 sm:text-3xl">
+                    พร้อมออกเดินทางหรือยัง?<br /><span className="text-lg text-sky-600 sm:text-2xl">ไปเรียนรู้เรื่องฝ้ากับคุณหมอกัน!</span>
+                  </h1>
+                  <p className="mt-2 text-[11px] leading-relaxed text-slate-700 sm:mt-3 sm:text-sm sm:leading-6">
+                    คุณหมอจะพาไปรู้จักฝ้าแบบสนุก ๆ ผ่านเรื่องราว เกมฝึกคิด และภารกิจสั้น ๆ รู้ทันตัวกระตุ้น แล้วดูแลผิวได้อย่างมั่นใจ
+                  </p>
+
+                  <div className="mt-3 grid grid-cols-3 gap-1.5 sm:mt-5 sm:gap-2">
+                    {[
+                      ['🔎', 'สังเกต', 'เข้าใจลักษณะ'],
+                      ['☀️', 'ป้องกัน', 'รู้ทันตัวกระตุ้น'],
+                      ['🛡️', 'ดูแล', 'เลือกวิธีที่เหมาะ'],
+                    ].map(([icon, title, detail]) => (
+                      <div key={title} className="rounded-[14px] border border-sky-100/90 bg-white/82 p-1.5 text-center shadow-clay-sm sm:rounded-[18px] sm:p-2.5">
+                        <div className="text-base sm:text-xl">{icon}</div>
+                        <p className="mt-0.5 text-[9px] font-extrabold text-slate-800 sm:mt-1 sm:text-[11px]">{title}</p>
+                        <p className="mt-0.5 text-[8px] leading-tight text-slate-500 sm:text-[10px]">{detail}</p>
+                      </div>
+                    ))}
+                  </div>
+
+                  <button onClick={() => setStep(1)} className="btn-primary mt-3 w-full text-sm sm:mt-5 sm:text-base">
+                    ออกเดินทางกัน <span className="ml-2">→</span>
+                  </button>
+                  <p className="mt-1.5 text-center text-[9px] text-slate-600 sm:mt-3 sm:text-[11px]">ใช้เวลาไม่นาน แล้วมาสะสมความรู้ไปด้วยกัน</p>
+                </div>
               </div>
             </motion.div>
-
-            <div className="card-hero w-full">
-              <span className="pill bg-sky-100 text-sky-700">ยินดีต้อนรับ</span>
-              <h1 className="mt-4 text-3xl font-extrabold leading-tight text-slate-900 sm:text-4xl">
-                เรียนรู้เรื่องฝ้า<br /><span className="text-sky-600">อย่างเข้าใจ</span>
-              </h1>
-              <p className="mt-3 text-sm leading-relaxed text-slate-600 sm:text-base">
-                ผู้ช่วยเรียนรู้เรื่อง Melasma ที่พาไปรู้จักสาเหตุ ปัจจัยกระตุ้น และวิธีดูแลผิวในชีวิตประจำวันอย่างเป็นขั้นตอน
-              </p>
-
-              <div className="mt-5 grid grid-cols-3 gap-2">
-                {[
-                  ['🔎', 'สังเกต', 'เข้าใจลักษณะ'],
-                  ['☀️', 'ป้องกัน', 'รู้ทันตัวกระตุ้น'],
-                  ['🛡️', 'ดูแล', 'เลือกวิธีที่เหมาะ'],
-                ].map(([icon, title, detail]) => (
-                  <div key={title} className="rounded-[18px] border border-sky-100 bg-white/80 p-2.5 text-center shadow-clay-sm">
-                    <div className="text-xl">{icon}</div>
-                    <p className="mt-1 text-[11px] font-extrabold text-slate-800">{title}</p>
-                    <p className="mt-0.5 text-[10px] leading-tight text-slate-500">{detail}</p>
-                  </div>
-                ))}
-              </div>
-
-              <button onClick={() => setStep(1)} className="btn-primary mt-5 w-full text-base">
-                เริ่มต้นใช้งาน <span className="ml-2">→</span>
-              </button>
-              <p className="mt-3 text-center text-[11px] text-slate-500">ใช้เวลาเริ่มต้นเพียงเล็กน้อย แล้วไปเรียนรู้กัน</p>
-            </div>
           </motion.div>
         )}
 
