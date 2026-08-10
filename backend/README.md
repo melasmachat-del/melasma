@@ -47,6 +47,59 @@
 
 ถ้าได้ `{"ok":false,"error":"unknown_action"}` แปลว่ายังไม่ได้ deploy เวอร์ชันใหม่ (หรือยังไม่เพิ่ม route)
 
+## Gemini AI assistant
+
+The backend now supports a protected AI endpoint for the Melasma chatbot.
+
+### 1. Add Script Properties
+
+In Apps Script, open **Project Settings -> Script properties** and add:
+
+| Name | Value | Required |
+| --- | --- | --- |
+| `SHEET_ID` | Google Sheet ID used by the existing sync backend | Yes |
+| `GEMINI_API_KEY` | The key created in Google AI Studio | Yes for AI answers |
+| `GEMINI_MODEL` | `gemini-3.6-flash` | Optional |
+
+Keep `GEMINI_API_KEY` only in Script Properties. Do not put it in `.env`, frontend code, GitHub, or the LINE Rich Menu URL.
+
+### 2. Deploy a new web-app version
+
+After saving `Code.gs`, use **Deploy -> Manage deployments -> Edit -> Version: New version -> Deploy**. Keep the same web-app URL and choose access that allows your deployed website to call the backend.
+
+### 3. Endpoint contract
+
+The website sends a `POST` request to the existing `VITE_SYNC_URL`:
+
+```json
+{
+  "action": "ask_ai",
+  "question": "ฝ้าคืออะไร และมักขึ้นตรงไหน?",
+  "context": "ข้อมูลความรู้ที่ผ่านการตรวจสอบของเว็บไซต์..."
+}
+```
+
+Successful response:
+
+```json
+{
+  "ok": true,
+  "answer": "...",
+  "model": "gemini-3.6-flash",
+  "source": "gemini"
+}
+```
+
+Possible setup errors are `gemini_not_configured`, `gemini_request_failed`, and `gemini_empty_response`. The backend never returns the API key.
+
+### 4. Verify the deployment
+
+Open the Apps Script editor, run the `testGemini` function once, and approve the `UrlFetchApp` permission if Google asks. Then open:
+
+```
+<SYNC_URL>?action=ping
+```
+
 ## สัญญา (contract) frontend ↔ backend
 
 Frontend เรียก (ดู [`src/lib/cloudSync.ts`](../src/lib/cloudSync.ts) → `fetchLeaderboard`):

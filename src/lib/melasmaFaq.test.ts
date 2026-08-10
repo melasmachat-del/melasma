@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { FAQ_ANSWERS, getFaqAnswer } from './melasmaFaq';
 
 describe('melasma FAQ knowledge base', () => {
-  it('contains 20 question-specific answers', () => {
-    expect(Object.keys(FAQ_ANSWERS)).toHaveLength(20);
+  it('contains 21 question-specific answers', () => {
+    expect(Object.keys(FAQ_ANSWERS)).toHaveLength(21);
   });
 
   it('provides detailed, referenced content for every answer', () => {

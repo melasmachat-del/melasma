@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ChangeEvent } from 'react';
+import { useEffect, useRef, useState, type ChangeEvent, type FormEvent } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import BackButton from '../components/BackButton';
 import { asset } from '../lib/asset';
@@ -6,6 +6,7 @@ import { sfx } from '../lib/sound';
 import { CHAT_CLEAR_EVENT, clearChatSession } from '../lib/chatSession';
 import { getFaqAnswer } from '../lib/melasmaFaq';
 import { assessPhotoQuality } from '../lib/photoQuality';
+import { askAi } from '../lib/cloudSync';
 import {
   assessObservedAppearance,
   type ObservedArea,
@@ -61,7 +62,7 @@ const MEDICAL_REFERENCES: MedicalReference[] = [
 ];
 
 const FAQ_GROUPS = [
-  { id: 'identify', icon: '🔎', title: 'รอยนี้อาจเป็นอะไร?', detail: 'รู้จักลักษณะฝ้าและรอยที่คล้ายกัน', questions: ['ฝ้ามีลักษณะอย่างไรและมักขึ้นตรงไหน?', 'ฝ้าต่างจากกระและรอยสิวอย่างไร?', 'ฝ้าเป็นโรคติดต่อหรือเป็นมะเร็งไหม?', 'เมื่อไรควรไปพบแพทย์ผิวหนัง?', 'แพทย์วินิจฉัยฝ้าอย่างไร?'] },
+  { id: 'identify', icon: '🔎', title: 'รอยนี้อาจเป็นอะไร?', detail: 'รู้จักลักษณะฝ้าและรอยที่คล้ายกัน', questions: ['ฝ้ามีลักษณะอย่างไรและมักขึ้นตรงไหน?', 'ผู้ชายเป็นฝ้าได้ไหม?', 'ฝ้าต่างจากกระและรอยสิวอย่างไร?', 'ฝ้าเป็นโรคติดต่อหรือเป็นมะเร็งไหม?', 'เมื่อไรควรไปพบแพทย์ผิวหนัง?', 'แพทย์วินิจฉัยฝ้าอย่างไร?'] },
   { id: 'triggers', icon: '☀️', title: 'ทำไมฝ้าถึงเข้มขึ้น?', detail: 'แดด ฮอร์โมน ความร้อน และการระคายเคือง', questions: ['ฝ้าเข้มขึ้นเพราะอะไร?', 'แสงผ่านหน้าต่างหรือแสงหน้าจอทำให้ฝ้าเข้มไหม?', 'การตั้งครรภ์หรือยาคุมเกี่ยวข้องกับฝ้าไหม?', 'การขัดหน้าและสกินแคร์ที่แสบทำให้ฝ้าแย่ลงไหม?', 'ความร้อนและการทำอาหารทำให้ฝ้ากำเริบไหม?'] },
   { id: 'protect', icon: '🛡️', title: 'ป้องกันอย่างไร?', detail: 'เลือกและใช้กันแดดให้เหมาะกับฝ้า', questions: ['คนเป็นฝ้าควรเลือกกันแดดแบบไหน?', 'ต้องทากันแดดเท่าไรและทาซ้ำเมื่อไร?', 'กันแดดแบบมีสีและ iron oxide ช่วยอย่างไร?', 'อยู่ในบ้านต้องทากันแดดไหม?', 'แต่งหน้าแล้วจะทากันแดดซ้ำอย่างไร?'] },
   { id: 'treat', icon: '🧴', title: 'รักษาและดูแลอย่างไร?', detail: 'ยา สกินแคร์ หัตถการ และการดูแลระยะยาว', questions: ['การรักษาแบบไหนปลอดภัยบ้าง?', 'ฝ้าหายขาดได้ไหมและใช้เวลานานแค่ไหน?', 'ไฮโดรควิโนนและกรดวิตามินเอใช้เองได้ไหม?', 'เลเซอร์หรือ tranexamic acid เหมาะกับทุกคนไหม?', 'ระหว่างรักษาฝ้าควรใช้สกินแคร์ประจำวันอย่างไร?'] },
@@ -438,6 +439,20 @@ function buildAnswer(question: string, imageAnalysis: ImageFeatures | null): Ans
   };
 }
 
+function buildAiContext(answer: AnswerBlock): string {
+  return [
+    `สรุปจากคลังความรู้: ${answer.summary}`,
+    ...answer.guidanceSections.flatMap(section => [
+      section.title,
+      ...section.items.map(item => `- ${item}`),
+    ]),
+    'ข้อควรระวัง:',
+    ...answer.caution.map(item => `- ${item}`),
+    'แหล่งอ้างอิง:',
+    ...answer.references.map(reference => `${reference.title}: ${reference.url}`),
+  ].join('\n').slice(0, 12_000);
+}
+
 function ObservationChoice<T extends string>({
   label,
   value,
@@ -485,6 +500,10 @@ export default function Chatbot() {
   const [imageAnalysis, setImageAnalysis] = useState<ImageFeatures | null>(null);
   const [isWorking, setIsWorking] = useState(false);
   const [answer, setAnswer] = useState<AnswerBlock | null>(null);
+  const [customQuestion, setCustomQuestion] = useState('');
+  const [aiAnswer, setAiAnswer] = useState<string | null>(null);
+  const [isAiWorking, setIsAiWorking] = useState(false);
+  const [aiError, setAiError] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [observedArea, setObservedArea] = useState<ObservedArea | null>(null);
   const [observedVisibility, setObservedVisibility] = useState<ObservedVisibility | null>(null);
@@ -509,6 +528,10 @@ export default function Chatbot() {
       setImageAnalysis(null);
       setIsWorking(false);
       setAnswer(null);
+      setCustomQuestion('');
+      setAiAnswer(null);
+      setIsAiWorking(false);
+      setAiError(null);
       setError(null);
       setObservedArea(null);
       setObservedVisibility(null);
@@ -546,6 +569,9 @@ export default function Chatbot() {
     const requestId = ++analysisRequestRef.current;
     setPreviewUrl(objectUrl);
     setAnswer(null);
+    setAiAnswer(null);
+    setAiError(null);
+    setIsAiWorking(false);
     setImageAnalysis(null);
     setObservedArea(null);
     setObservedVisibility(null);
@@ -577,6 +603,28 @@ export default function Chatbot() {
     sfx.click();
     setQuestion(value);
     setAnswer(buildAnswer(value, imageAnalysis));
+    setAiAnswer(null);
+    setAiError(null);
+  };
+
+  const submitCustomQuestion = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const value = customQuestion.trim().slice(0, 1_000);
+    if (!value) return;
+    sfx.click();
+    const staticAnswer = buildAnswer(value, imageAnalysis);
+    setQuestion(value);
+    setAnswer(staticAnswer);
+    setAiAnswer(null);
+    setAiError(null);
+    setIsAiWorking(true);
+    const response = await askAi(value, buildAiContext(staticAnswer));
+    if (response.ok && response.answer) {
+      setAiAnswer(response.answer);
+    } else if (response.error && response.error !== 'no_sync_url') {
+      setAiError('ยังเชื่อมผู้ช่วย AI ไม่สำเร็จ จึงแสดงคำตอบจากคลังความรู้แทน');
+    }
+    setIsAiWorking(false);
   };
 
   const summarizeObservation = () => {
@@ -592,6 +640,8 @@ export default function Chatbot() {
       duration: observedDuration,
     });
     setQuestion('แบบสำรวจลักษณะที่สังเกตจากภาพ');
+    setAiAnswer(null);
+    setAiError(null);
     setAnswer({
       summary: `${result.label} — ${result.summary}`,
       guidanceSections: [
@@ -677,6 +727,24 @@ export default function Chatbot() {
                   </div>
                 )}
               </div>
+
+                {selectedTopic && selectedTopic !== 'photo' && (
+                  <form onSubmit={submitCustomQuestion} className="mt-3 rounded-[22px] border border-violet-100 bg-violet-50/60 p-3">
+                    <label htmlFor="custom-melasma-question" className="text-xs font-bold text-violet-900">อยากถามคุณหมอเพิ่มไหม?</label>
+                    <div className="mt-2 flex gap-2">
+                      <input
+                        id="custom-melasma-question"
+                        value={customQuestion}
+                        onChange={event => setCustomQuestion(event.target.value)}
+                        placeholder="พิมพ์คำถามเรื่องฝ้า..."
+                        maxLength={1000}
+                        className="min-w-0 flex-1 rounded-xl border border-violet-200 bg-white px-3 py-2 text-sm outline-none focus:border-violet-400 focus:ring-2 focus:ring-violet-100"
+                      />
+                      <button type="submit" disabled={!customQuestion.trim() || isAiWorking} className="btn-primary shrink-0 px-3 disabled:cursor-not-allowed disabled:opacity-45">ถาม</button>
+                    </div>
+                    <p className="mt-1.5 text-[11px] leading-relaxed text-violet-700">AI จะใช้คลังความรู้ของเว็บไซต์เป็นหลัก และจะแนะนำให้พบแพทย์เมื่อข้อมูลไม่พอ</p>
+                  </form>
+                )}
 
               {(selectedTopic === 'photo' || previewUrl) && <div>
                 <p className="text-sm font-semibold text-slate-800 mb-2">ตรวจคุณภาพภาพสำหรับติดตาม (ไม่บังคับ)</p>
@@ -826,6 +894,18 @@ export default function Chatbot() {
                     <p className="text-xs font-bold uppercase tracking-wider text-sky-500 mb-2">ข้อมูลจากคลังความรู้</p>
                     <p className="text-base text-slate-800 leading-relaxed">{answer.summary}</p>
                   </div>
+
+                  {(isAiWorking || aiAnswer || aiError) && (
+                    <div className="rounded-[22px] border border-violet-100 bg-violet-50/70 p-4">
+                      <div className="flex items-center gap-2">
+                        <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-white text-lg shadow-sm" aria-hidden="true">🩺</span>
+                        <p className="text-sm font-extrabold text-violet-950">คำอธิบายเพิ่มเติมจากผู้ช่วย AI</p>
+                      </div>
+                      {isAiWorking && <p className="mt-3 text-sm text-violet-700">คุณหมอกำลังเรียบเรียงคำตอบจากคลังความรู้...</p>}
+                      {aiAnswer && <p className="mt-3 whitespace-pre-line text-sm leading-relaxed text-slate-800">{aiAnswer}</p>}
+                      {aiError && <p className="mt-3 text-xs leading-relaxed text-violet-800">{aiError}</p>}
+                    </div>
+                  )}
 
                   {answer.metrics && (
                     <div className="grid grid-cols-2 gap-2 sm:grid-cols-4" aria-label="ค่าที่วัดจากภาพ">

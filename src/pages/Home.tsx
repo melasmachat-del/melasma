@@ -97,8 +97,8 @@ export default function Home() {
           {[
             { icon: '🔎', image: 'images/home-topic-meaning-v2.png', hash: 'what-is-melasma', title: 'ความหมาย', body: 'ฝ้าคืออะไร พบบ่อยตรงไหน และสังเกตอย่างไร' },
             { icon: '☀️', image: 'images/home-topic-triggers-v2.png', hash: 'melasma-triggers', title: 'ตัวกระตุ้น', body: 'แสงแดด ความร้อน ฮอร์โมน การระคายเคือง และปัจจัยอื่น ๆ' },
-            { icon: '🛡️', image: 'images/home-topic-protection-v2.png', hash: 'safe-care', title: 'การป้องกัน', body: 'ทากันแดดทุกวัน ใช้อุปกรณ์ป้องกันแดด และดูแลผิวอย่างอ่อนโยน' },
-            { icon: '🩺', image: 'images/home-topic-treatment-v2.png', hash: 'safe-care', title: 'การรักษา', body: 'แนวทางที่อิงหลักฐานและควรทำร่วมกับแพทย์ผิวหนัง' },
+            { icon: '🛡️', image: 'images/home-topic-protection-v2.png', hash: 'melasma-protection', title: 'การป้องกัน', body: 'ทากันแดดทุกวัน ใช้อุปกรณ์ป้องกันแดด และดูแลผิวอย่างอ่อนโยน' },
+            { icon: '🩺', image: 'images/home-topic-treatment-v2.png', hash: 'melasma-treatment', title: 'การรักษา', body: 'แนวทางที่อิงหลักฐานและควรทำร่วมกับแพทย์ผิวหนัง' },
           ].map(item => (
             <button type="button" onClick={() => goTo(`/knowledge#${item.hash}`)} key={item.title} className="group overflow-hidden rounded-[28px] bg-white text-left shadow-clay transition hover:-translate-y-1 hover:shadow-xl focus-visible:ring-2 focus-visible:ring-sky-400">
               <div className="relative aspect-video w-full overflow-hidden">

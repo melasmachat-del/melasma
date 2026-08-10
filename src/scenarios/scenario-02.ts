@@ -4,7 +4,7 @@ export const scenario02: Scenario = {
   id: 2,
   title: 'เซลล์เม็ดสีทำงานอย่างไร?',
   subtitle: 'เข้าใจบทบาทของ Melanocyte และการสร้างเมลานิน',
-  estMinutes: 5,
+  estMinutes: 6,
   startNode: 'intro1',
   intro: [
     'ด่านนี้จะอธิบายว่าฝ้าเกิดจากกระบวนการสร้างเม็ดสีอย่างไร',
@@ -15,6 +15,12 @@ export const scenario02: Scenario = {
     {
       type: 'dialogue', id: 'intro1', speaker: 'doctor', next: 'intro2',
       text: 'สวัสดีครับ เราจะเริ่มจากคำว่า Melanocyte ซึ่งเป็นเซลล์สำคัญที่สร้างเม็ดสีผิว',
+      visual: {
+        image: 'images/stage-content/stage-02-melanocyte.png',
+        alt: 'ภาพจำลองเมลาโนไซต์สร้างและส่งต่อเม็ดสีในชั้นผิว',
+        title: 'เมลาโนไซต์สร้างเมลานินอย่างไร?',
+        caption: 'เมลาโนไซต์สร้างเมลานินแล้วส่งต่อไปยังเซลล์ผิว เมื่อทำงานมากเกินไปหรือถูกกระตุ้นมากขึ้น สีผิวบางบริเวณจึงดูเข้มเป็นปื้นได้',
+      },
     },
     {
       type: 'dialogue', id: 'intro2', speaker: 'doctor', next: 'choice1',
@@ -36,8 +42,18 @@ export const scenario02: Scenario = {
       source: 'การทำงานของเซลล์เม็ดสี',
     },
     {
-      type: 'dialogue', id: 'right1', speaker: 'doctor', next: 'mg1',
+      type: 'dialogue', id: 'right1', speaker: 'doctor', next: 'truthcheck2',
       text: 'ถูกต้องครับ เซลล์เมลาโนไซต์ทำหน้าที่สร้างเมลานิน ซึ่งเป็นเม็ดสีที่ทำให้ฝ้าเห็นชัดขึ้น',
+    },
+    {
+      type: 'minigame', id: 'truthcheck2', game: 'swipe-decide',
+      title: 'ภารกิจซูมเซลล์: จริงหรือเท็จ?', next: 'mg1', xpOnSuccess: 70,
+      source: 'แบบทดสอบถูก–ผิด: กลไกการเกิดฝ้า',
+      swipeCards: [
+        { text: 'เมลาโนไซต์เป็นเซลล์ที่สร้างเมลานิน', isTrue: true, emoji: '🧬', reveal: 'ถูกต้องครับ เมลาโนไซต์คือเซลล์สร้างเม็ดสีของผิว', source: 'แบบทดสอบถูก–ผิด: ข้อ 1' },
+        { text: 'ฝ้าเกิดจากการติดเชื้อผิวหนัง จึงแพร่ไปยังบริเวณอื่นได้', isTrue: false, emoji: '🦠', reveal: 'ไม่จริงครับ กลไกหลักคือการสร้างเม็ดสีมากขึ้น ไม่ใช่การติดเชื้อ', source: 'แบบทดสอบถูก–ผิด: ข้อ 2' },
+        { text: 'เม็ดสีของฝ้าอาจสะสมอยู่ในชั้นผิวตื้น ชั้นลึก หรือมีทั้งสองส่วนร่วมกัน', isTrue: true, emoji: '🔎', reveal: 'ถูกต้องครับ จึงอธิบายฝ้าได้เป็นแบบตื้น ลึก หรือผสม และต้องให้แพทย์ช่วยประเมิน', source: 'ความรู้เรื่องชนิดของฝ้า' },
+      ],
     },
     {
       type: 'choice', id: 'mg1', speaker: 'player',

@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import type { SpeakerKey } from '../types';
+import type { DialogueVisual, SpeakerKey } from '../types';
 import { usePlayerStore } from '../store/playerStore';
 import { useAvatarStore } from '../store/avatarStore';
 import { useSettingsStore } from '../store/settingsStore';
@@ -24,9 +24,10 @@ const SPEAKERS: Record<SpeakerKey, { name: string; emoji: string; align: 'left' 
 interface Props {
   speaker: SpeakerKey;
   text: string;
+  visual?: DialogueVisual;
 }
 
-export default function DialogueBubble({ speaker, text }: Props) {
+export default function DialogueBubble({ speaker, text, visual }: Props) {
   const s = SPEAKERS[speaker];
   const player = usePlayerStore();
   const customPlayerAvatar = useAvatarStore(state =>
@@ -111,6 +112,25 @@ export default function DialogueBubble({ speaker, text }: Props) {
           )}
           <p className="relative z-10 whitespace-pre-line break-words text-[15px] leading-7">{text}</p>
         </div>
+        {visual && (
+          <motion.figure
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.12 }}
+            className="mt-3 w-full overflow-hidden rounded-[22px] border border-sky-100 bg-white shadow-[0_10px_24px_-16px_rgba(0,86,145,0.45)]"
+          >
+            <div className="relative aspect-video overflow-hidden bg-sky-50">
+              <img src={asset(visual.image)} alt={visual.alt} className="h-full w-full object-cover object-center" loading="lazy" />
+              <span className="absolute bottom-2 left-2 rounded-full bg-white/90 px-2.5 py-1 text-[10px] font-extrabold text-sky-800 shadow-sm">
+                ภาพจำลองเพื่อการเรียนรู้
+              </span>
+            </div>
+            <figcaption className="px-3.5 py-3">
+              <p className="text-xs font-extrabold text-slate-800">{visual.title}</p>
+              <p className="mt-1 text-[11px] leading-relaxed text-slate-500">{visual.caption}</p>
+            </figcaption>
+          </motion.figure>
+        )}
         {showTts && (
           <button
             type="button"

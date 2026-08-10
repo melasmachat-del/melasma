@@ -69,6 +69,15 @@ export interface CertResponse {
   currentXP?: number;
 }
 
+export interface AiAnswerResponse {
+  ok: boolean;
+  answer?: string;
+  model?: string;
+  source?: string;
+  error?: string;
+  message?: string;
+}
+
 export interface VerifyResponse {
   ok: boolean;
   valid: boolean;
@@ -227,6 +236,29 @@ export async function issueCertificate(userIdHash: string): Promise<CertResponse
     });
     return await res.json();
   } catch (err) {
+    return { ok: false, error: 'network_error', message: String(err) };
+  }
+}
+
+/** Ask the Apps Script backend to generate a grounded Melasma explanation. */
+export async function askAi(question: string, context = ''): Promise<AiAnswerResponse> {
+  if (!SYNC_URL) return { ok: false, error: 'no_sync_url' };
+  try {
+    const res = await fetch(SYNC_URL, {
+      method: 'POST',
+      // Keep this a simple request so Apps Script does not need an OPTIONS route.
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({
+        action: 'ask_ai',
+        question: question.trim().slice(0, 1_000),
+        context: context.trim().slice(0, 12_000),
+      }),
+    });
+    const data = await res.json() as AiAnswerResponse;
+    if (!res.ok) return { ok: false, error: 'network_error' };
+    return data;
+  } catch (err) {
+    console.warn('[cloudSync] AI request failed:', err);
     return { ok: false, error: 'network_error', message: String(err) };
   }
 }

@@ -6,12 +6,20 @@ export type SpeakerKey =
   | 'narrator' | 'player' | 'doctor' | 'baitoey' | 'vapor'
   | 'friend1' | 'friend2' | 'shopkeeper' | 'dm-stranger' | 'system';
 
+export interface DialogueVisual {
+  image: string;
+  alt: string;
+  title: string;
+  caption: string;
+}
+
 export interface DialogueNode {
   type: 'dialogue';
   id: string;
   speaker: SpeakerKey;
   text: string;
   next: string;
+  visual?: DialogueVisual;
 }
 
 export interface Choice {
