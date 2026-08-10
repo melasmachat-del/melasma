@@ -1,5 +1,5 @@
 import { useEffect, useState, lazy, Suspense } from 'react';
-import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { initLiff, getUserIdHash, isMockMode } from './lib/liff';
 import { flushQueue, restoreProgress } from './lib/cloudSync';
 import { parseChallengeFromSearch, setPendingChallenge } from './lib/challenge';
@@ -43,8 +43,10 @@ function PageLoader() {
 
 export default function App() {
   const [ready, setReady] = useState(false);
+  const { pathname } = useLocation();
   const navigate = useNavigate();
   const setUserHash = usePlayerStore(s => s.setUserHash);
+  const isInitialized = usePlayerStore(s => s.isInitialized);
   const fontSize = useSettingsStore(s => s.fontSize);
   const musicEnabled = useSettingsStore(s => s.musicEnabled);
   const eyeComfortEnabled = useSettingsStore(s => s.eyeComfortEnabled);
@@ -208,36 +210,43 @@ export default function App() {
     );
   }
 
+  const isOnboardingPath = pathname === '/onboarding';
+  const shouldForceOnboarding = !isInitialized && !isOnboardingPath;
+
   return (
     <>
-      <TopNavigation />
-      <Suspense fallback={<PageLoader />}>
-        <Routes>
-          <Route path="/" element={<HomeOrOnboarding />} />
-          <Route path="/onboarding" element={<Onboarding />} />
-          <Route path="/scenario/:id" element={<ScenarioPage />} />
-          <Route path="/scenario/:id/review" element={<StageReview />} />
-          <Route path="/profile" element={<Profile />} />
-          <Route path="/settings" element={<Settings />} />
-          <Route path="/certificate" element={<Certificate />} />
-          <Route path="/chatbot" element={<Chatbot />} />
-          <Route path="/daily" element={<Navigate to="/chatbot" replace />} />
-          <Route path="/verify" element={<Verify />} />
-          <Route path="/knowledge" element={<Knowledge />} />
-          <Route path="/stats" element={<Navigate to="/knowledge" replace />} />
-          <Route path="/journal" element={<Navigate to="/knowledge" replace />} />
-          <Route path="/arcade" element={<Navigate to="/knowledge" replace />} />
-          <Route path="/map" element={<MissionMap />} />
-          <Route path="/exam" element={<Navigate to="/knowledge" replace />} />
-          <Route path="/achievements" element={<Navigate to="/knowledge" replace />} />
-          <Route path="/assessment" element={<Navigate to="/knowledge" replace />} />
-          <Route path="/leaderboard" element={<Navigate to="/knowledge" replace />} />
-          <Route path="/shop" element={<Navigate to="/knowledge" replace />} />
-          {/* legacy /room → redirect ไปที่ Knowledge เพื่อไม่ให้ลิงก์เก่าเสีย */}
-          <Route path="/room" element={<Navigate to="/knowledge" replace />} />
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </Suspense>
+      {isInitialized && !isOnboardingPath && <TopNavigation />}
+      {shouldForceOnboarding ? (
+        <Onboarding />
+      ) : (
+        <Suspense fallback={<PageLoader />}>
+          <Routes>
+            <Route path="/" element={<HomeOrOnboarding />} />
+            <Route path="/onboarding" element={<Onboarding />} />
+            <Route path="/scenario/:id" element={<ScenarioPage />} />
+            <Route path="/scenario/:id/review" element={<StageReview />} />
+            <Route path="/profile" element={<Profile />} />
+            <Route path="/settings" element={<Settings />} />
+            <Route path="/certificate" element={<Certificate />} />
+            <Route path="/chatbot" element={<Chatbot />} />
+            <Route path="/daily" element={<Navigate to="/chatbot" replace />} />
+            <Route path="/verify" element={<Verify />} />
+            <Route path="/knowledge" element={<Knowledge />} />
+            <Route path="/stats" element={<Navigate to="/knowledge" replace />} />
+            <Route path="/journal" element={<Navigate to="/knowledge" replace />} />
+            <Route path="/arcade" element={<Navigate to="/knowledge" replace />} />
+            <Route path="/map" element={<MissionMap />} />
+            <Route path="/exam" element={<Navigate to="/knowledge" replace />} />
+            <Route path="/achievements" element={<Navigate to="/knowledge" replace />} />
+            <Route path="/assessment" element={<Navigate to="/knowledge" replace />} />
+            <Route path="/leaderboard" element={<Navigate to="/knowledge" replace />} />
+            <Route path="/shop" element={<Navigate to="/knowledge" replace />} />
+            {/* legacy /room → redirect ไปที่ Knowledge เพื่อไม่ให้ลิงก์เก่าเสีย */}
+            <Route path="/room" element={<Navigate to="/knowledge" replace />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </Suspense>
+      )}
       <Toaster />
       <LevelUpModal />
       {/* แบนเนอร์เตือน: production แต่ยังรัน mock mode = ข้อมูลไม่ผูกบัญชี LINE (config ผิด) */}
