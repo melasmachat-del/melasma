@@ -12,6 +12,7 @@ import PageHeader from '../components/PageHeader';
 import CertNameDialog from '../components/CertNameDialog';
 import { SHOP_ITEMS } from '../lib/shopItems';
 import { useCertNameStore } from '../store/certNameStore';
+import { asset } from '../lib/asset';
 
 // ============================================================================
 //  Profile — โทนสุภาพ คุมโทนเดียว (slate/lavender) ไม่มีรุ้ง
@@ -50,6 +51,16 @@ export default function Profile() {
       <PageHeader title="โปรไฟล์" backTo="/" />
 
       <main className="max-w-md md:max-w-2xl mx-auto p-4 space-y-3">
+        <section className="relative min-h-44 overflow-hidden rounded-[28px] border border-white/80 bg-sky-100 shadow-clay">
+          <img src={asset('images/mascot/doctor-progress.png')} alt="คุณหมอให้กำลังใจกับความคืบหน้าการเรียนรู้" className="absolute inset-0 h-full w-full object-fill" loading="lazy" />
+          <div className="absolute inset-0 bg-gradient-to-r from-slate-950/55 via-slate-900/15 to-transparent" aria-hidden="true" />
+          <div className="relative z-10 flex min-h-44 max-w-[58%] flex-col justify-center p-4 text-white sm:p-5">
+            <span className="text-[10px] font-bold uppercase tracking-[.16em] text-sky-100">เส้นทางของคุณ</span>
+            <h2 className="mt-1 text-xl font-extrabold leading-tight">ก้าวต่อไปได้ทุกวัน</h2>
+            <p className="mt-1 text-xs leading-relaxed text-white/85">สะสมความรู้ให้ครบ แล้วรับเกียรติบัตรของคุณ</p>
+          </div>
+        </section>
+
         {/* === Hero card: solid white card, ไม่มี gradient รุ้ง === */}
         <motion.div
           initial={{ opacity: 0, y: 8 }}

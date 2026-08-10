@@ -3,19 +3,21 @@ import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { usePlayerStore } from '../store/playerStore';
 import AvatarFolder from '../components/AvatarFolder';
+import { asset } from '../lib/asset';
 
 function PDPAAccordion({ title, children }: { title: string; children: ReactNode }) {
   const [open, setOpen] = useState(false);
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-blue-100 overflow-hidden">
+    <div className="overflow-hidden rounded-[22px] border border-sky-100 bg-white shadow-clay-sm">
       <button
         type="button"
         onClick={() => setOpen(v => !v)}
-        className="w-full text-left p-3 flex items-center gap-2 active:bg-blue-50 transition-colors"
+        className="flex w-full items-center gap-3 p-4 text-left transition-colors hover:bg-sky-50/60 active:bg-sky-50"
       >
-        <span className="text-blue-500 text-sm transition-transform"
+        <span className="icon-tile-sm bg-sky-50 text-sky-700 transition-transform"
               style={{ transform: open ? 'rotate(90deg)' : 'rotate(0)' }}>▸</span>
-        <span className="font-semibold text-sm text-blue-800 flex-1">{title}</span>
+        <span className="flex-1 text-sm font-bold text-slate-800">{title}</span>
+        <span className="text-xs font-bold text-sky-500">{open ? 'ซ่อน' : 'อ่าน'}</span>
       </button>
       <AnimatePresence>
         {open && (
@@ -24,9 +26,9 @@ function PDPAAccordion({ title, children }: { title: string; children: ReactNode
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="overflow-hidden"
+            className="overflow-hidden border-t border-sky-100 bg-sky-50/35"
           >
-            <div className="px-4 pb-3 text-xs text-gray-600 leading-relaxed">{children}</div>
+            <div className="px-4 pb-4 pt-3 text-xs leading-relaxed text-slate-600">{children}</div>
           </motion.div>
         )}
       </AnimatePresence>
@@ -67,85 +69,126 @@ export default function Onboarding() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col max-w-md md:max-w-lg mx-auto relative bg-slate-50">
-      <div className="flex flex-col flex-1 p-6 pt-8">
-      {/* Progress Bar สีฟ้า */}
-      <div className="flex justify-center gap-2 mb-6">
-        {[0, 1, 2].map(i => (
-          <div
-            key={i}
-            className={`h-2 rounded-full transition-all duration-500 ${
-              i === step
-                ? 'w-12 bg-gradient-to-r from-blue-500 to-sky-400 shadow-md'
-                : i < step
-                ? 'w-6 bg-blue-300'
-                : 'w-6 bg-blue-100'
-            }`}
-          />
-        ))}
-      </div>
+    <div className="relative min-h-screen overflow-hidden bg-[#EEF6FF] pb-6">
+      <div className="pointer-events-none absolute -left-24 top-16 h-64 w-64 rounded-full bg-sky-200/35 blur-3xl" />
+      <div className="pointer-events-none absolute -right-24 bottom-12 h-72 w-72 rounded-full bg-emerald-200/30 blur-3xl" />
+
+      <main className="relative mx-auto flex min-h-[calc(100vh-80px)] w-full max-w-5xl flex-col px-4 py-5 sm:px-6 sm:py-7 lg:px-8">
+        <div className="mb-5 flex items-center gap-3 rounded-[24px] border border-white/90 bg-white/65 px-3 py-2.5 shadow-clay-sm backdrop-blur-xl sm:px-4">
+          <div className="icon-tile-sm bg-sky-100 text-sky-700">✦</div>
+          <div className="min-w-0 flex-1">
+            <p className="text-[10px] font-extrabold uppercase tracking-[0.16em] text-sky-600">เริ่มต้นใช้งาน Melasma</p>
+            <p className="mt-0.5 text-xs font-semibold text-slate-500">ขั้นตอน {step + 1} จาก 3</p>
+          </div>
+          <div className="flex w-28 gap-1.5 sm:w-40" aria-label={`ขั้นตอนที่ ${step + 1} จาก 3`}>
+            {[0, 1, 2].map(i => (
+              <div key={i} className={`h-2 flex-1 rounded-full transition-all duration-500 ${
+                i <= step ? 'bg-gradient-to-r from-sky-500 to-cyan-400 shadow-clay-blue' : 'bg-sky-100'
+              }`} />
+            ))}
+          </div>
+        </div>
 
       <AnimatePresence mode="wait">
         {step === 0 && (
           <motion.div key="0" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}
-            className="flex-1 flex flex-col items-center text-center justify-center">
+            className="grid flex-1 items-center gap-5 lg:grid-cols-[1.08fr_0.92fr]">
             <motion.div
-              animate={{ y: [0, -8, 0], rotate: [0, 5, -5, 0] }}
-              transition={{ repeat: Infinity, duration: 3, ease: 'easeInOut' }}
-              className="text-8xl mb-4 drop-shadow-lg"
+              initial={{ opacity: 0, scale: 0.98 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.05 }}
+              className="relative mx-auto w-full max-w-xl overflow-hidden rounded-[32px] border border-white/90 bg-gradient-to-br from-white via-sky-50 to-emerald-50 shadow-clay"
             >
-              🩺
+              <div className="absolute left-4 top-4 z-10 pill bg-white/85 text-sky-700 backdrop-blur">🩺 เรียนรู้เรื่องผิว</div>
+              <img src={asset('images/mascot/doctor-welcome.png')} alt="คุณหมอผู้หญิงผมสั้นแนะนำการเรียนรู้เรื่องฝ้า" className="block aspect-square w-full object-fill" />
+              <div className="absolute bottom-4 left-4 right-4 rounded-[20px] border border-white/80 bg-white/75 px-4 py-3 shadow-sm backdrop-blur-md">
+                <p className="text-xs font-extrabold text-slate-800">ค่อย ๆ รู้จักฝ้า แล้วดูแลผิวได้อย่างมั่นใจ</p>
+                <p className="mt-1 text-[11px] leading-relaxed text-slate-500">ข้อมูลเข้าใจง่าย อ้างอิงจากแหล่งความรู้ทางการแพทย์</p>
+              </div>
             </motion.div>
-            <h1 className="text-4xl font-display font-bold bg-gradient-to-r from-blue-700
-                           to-sky-500 bg-clip-text text-transparent mb-2
-                           leading-[1.4] pt-1 pb-2 overflow-visible">
-              Melasma WebLine
-            </h1>
-            <p className="text-slate-600 mb-1 font-medium">✨ ผู้ช่วยดูแลผิว และให้ความรู้เรื่องฝ้า</p>
-            
-            <div className="bg-blue-50 border border-blue-100 rounded-2xl p-4 mt-6 mx-2 shadow-sm w-full">
-              <p className="text-sm text-blue-900 leading-relaxed">
-                เรียนรู้สาเหตุ ปัจจัยกระตุ้น <br/>และวิธีการดูแลรักษา <b>ฝ้า (Melasma)</b><br/>
-                อย่างถูกวิธี อ้างอิงจากข้อมูลทางการแพทย์ 📘
+
+            <div className="card-hero w-full">
+              <span className="pill bg-sky-100 text-sky-700">ยินดีต้อนรับ</span>
+              <h1 className="mt-4 text-3xl font-extrabold leading-tight text-slate-900 sm:text-4xl">
+                เรียนรู้เรื่องฝ้า<br /><span className="text-sky-600">อย่างเข้าใจ</span>
+              </h1>
+              <p className="mt-3 text-sm leading-relaxed text-slate-600 sm:text-base">
+                ผู้ช่วยเรียนรู้เรื่อง Melasma ที่พาไปรู้จักสาเหตุ ปัจจัยกระตุ้น และวิธีดูแลผิวในชีวิตประจำวันอย่างเป็นขั้นตอน
               </p>
-              <p className="text-[11px] text-blue-600 font-semibold mt-3">
-                เพื่อผิวที่แข็งแรงและสุขภาพดี
-              </p>
+
+              <div className="mt-5 grid grid-cols-3 gap-2">
+                {[
+                  ['🔎', 'สังเกต', 'เข้าใจลักษณะ'],
+                  ['☀️', 'ป้องกัน', 'รู้ทันตัวกระตุ้น'],
+                  ['🛡️', 'ดูแล', 'เลือกวิธีที่เหมาะ'],
+                ].map(([icon, title, detail]) => (
+                  <div key={title} className="rounded-[18px] border border-sky-100 bg-white/80 p-2.5 text-center shadow-clay-sm">
+                    <div className="text-xl">{icon}</div>
+                    <p className="mt-1 text-[11px] font-extrabold text-slate-800">{title}</p>
+                    <p className="mt-0.5 text-[10px] leading-tight text-slate-500">{detail}</p>
+                  </div>
+                ))}
+              </div>
+
+              <button onClick={() => setStep(1)} className="btn-primary mt-5 w-full text-base">
+                เริ่มต้นใช้งาน <span className="ml-2">→</span>
+              </button>
+              <p className="mt-3 text-center text-[11px] text-slate-500">ใช้เวลาเริ่มต้นเพียงเล็กน้อย แล้วไปเรียนรู้กัน</p>
             </div>
-            <button onClick={() => setStep(1)} className="mt-8 w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-xl shadow-lg transition-colors text-base">
-              เริ่มต้นใช้งาน ✨
-            </button>
           </motion.div>
         )}
 
         {step === 1 && (
           <motion.div key="1" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}
-            className="flex-1 flex flex-col">
-            <h2 className="text-2xl font-display font-bold text-blue-800 mb-1">📝 ข้อมูลสำหรับสนทนา</h2>
-            <p className="text-sm text-slate-500 mb-5">ตั้งชื่อเล่นสำหรับแสดงในบทเรียนและความคืบหน้าของคุณ</p>
-
-            <label className="text-sm font-semibold text-slate-700">ชื่อของคุณ</label>
-            <input
-              value={nickname}
-              onChange={e => setNickname(e.target.value)}
-              maxLength={20}
-              placeholder="เช่น คุณบิวตี้, ผิวสวย"
-              className="w-full p-3 mt-1 mb-4 rounded-xl bg-white border border-blue-200 shadow-sm
-                         focus:border-blue-400 focus:ring-2 focus:ring-blue-100 outline-none transition-all"
-            />
-
-            <label className="text-sm font-semibold text-slate-700 mb-2 block">เลือกอวตารตัวแทนของคุณ</label>
-            <div className="mb-24">
-              <AvatarFolder preset={avatar} customId={customAvatarId} onPick={handlePickAvatar} />
+            className="mx-auto flex w-full max-w-4xl flex-1 flex-col">
+            <div className="mb-5 flex items-start gap-3 rounded-[26px] border border-white/90 bg-white/70 p-4 shadow-clay-sm backdrop-blur-xl sm:p-5">
+              <div className="icon-tile bg-sky-100 text-sky-700">📝</div>
+              <div>
+                <p className="text-[11px] font-extrabold uppercase tracking-[0.14em] text-sky-600">ตั้งค่าโปรไฟล์</p>
+                <h2 className="mt-1 text-2xl font-extrabold leading-tight text-slate-900">ข้อมูลสำหรับสนทนา</h2>
+                <p className="mt-1 text-sm leading-relaxed text-slate-500">ตั้งชื่อเล่นและเลือกตัวแทนของคุณสำหรับใช้ในบทเรียนและความคืบหน้า</p>
+              </div>
             </div>
 
-            <div className="sticky bottom-0 -mx-6 px-6 pt-3
-                            pb-[max(0.75rem,env(safe-area-inset-bottom))]
-                            mt-auto bg-gradient-to-t from-slate-50 via-slate-50/95 to-transparent
-                            backdrop-blur-sm">
-              <button onClick={() => setStep(2)} disabled={!nickname.trim()}
-                className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 text-white font-semibold py-3 rounded-xl shadow-md transition-colors">
-                ต่อไป →
+            <div className="grid gap-4 lg:grid-cols-[0.82fr_1.18fr]">
+              <section className="card-hero h-fit">
+                <div className="mb-4 flex items-center gap-2">
+                  <span className="icon-tile-sm bg-sky-50 text-sky-700">✎</span>
+                  <h3 className="text-sm font-extrabold text-slate-900">ชื่อที่ใช้แสดง</h3>
+                </div>
+                <label className="text-xs font-bold text-slate-700" htmlFor="nickname">ชื่อเล่นของคุณ</label>
+                <input
+                  id="nickname"
+                  value={nickname}
+                  onChange={e => setNickname(e.target.value)}
+                  maxLength={20}
+                  placeholder="เช่น คุณบิวตี้, ผิวสวย"
+                  className="mt-2 w-full rounded-[18px] border border-sky-100 bg-white px-4 py-3 text-sm text-slate-800 shadow-clay-pressed outline-none transition-all placeholder:text-slate-400 focus:border-sky-400 focus:ring-4 focus:ring-sky-100"
+                />
+                <div className="surface-soft mt-4 flex items-start gap-2 p-3">
+                  <span className="text-base">💡</span>
+                  <p className="text-[11px] leading-relaxed text-slate-600">ใช้ชื่อเล่นหรือชื่อสมมุติได้ ไม่จำเป็นต้องใช้ชื่อจริง</p>
+                </div>
+              </section>
+
+              <section className="card">
+                <div className="mb-4 flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-2">
+                    <span className="icon-tile-sm bg-emerald-50 text-emerald-700">◉</span>
+                    <div>
+                      <h3 className="text-sm font-extrabold text-slate-900">ตัวแทนของคุณ</h3>
+                      <p className="mt-0.5 text-[11px] text-slate-500">เลือกตัวละครที่อยากพาไปเรียนรู้ด้วยกัน</p>
+                    </div>
+                  </div>
+                  <span className="pill bg-emerald-50 text-emerald-700">ปรับเปลี่ยนได้</span>
+                </div>
+                <AvatarFolder preset={avatar} customId={customAvatarId} onPick={handlePickAvatar} />
+              </section>
+            </div>
+
+            <div className="mt-5 flex justify-end">
+              <button onClick={() => setStep(2)} disabled={!nickname.trim()} className="btn-primary w-full text-base sm:w-auto sm:min-w-52">
+                ต่อไป <span className="ml-2">→</span>
               </button>
             </div>
           </motion.div>
@@ -153,19 +196,26 @@ export default function Onboarding() {
 
         {step === 2 && (
           <motion.div key="2" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}
-            className="flex-1 flex flex-col">
-            <h2 className="text-xl font-display font-bold text-blue-800 mb-1">🛡️ นโยบายความเป็นส่วนตัว (PDPA)</h2>
-            <p className="text-xs text-slate-500 mb-3">กดที่แถบเพื่ออ่านรายละเอียดแต่ละหัวข้อ</p>
-
-            <div className="bg-blue-50 border border-blue-100 rounded-2xl p-4 mb-4 shadow-sm">
-              <p className="text-sm text-blue-900 leading-relaxed">
-                <b className="text-blue-700">🩺 เราให้ความสำคัญกับข้อมูลของคุณ</b><br/>
-                ระบบนี้จัดทำขึ้นเพื่อให้ความรู้เบื้องต้นเรื่อง <b>ฝ้า (Melasma)</b> 
-                ข้อมูลที่ให้ไม่ใช่การวินิจฉัยโรคแทนแพทย์ ระบบบันทึกข้อมูลโปรไฟล์และความคืบหน้าเท่าที่จำเป็นต่อการใช้งาน
-              </p>
+            className="mx-auto flex w-full max-w-3xl flex-1 flex-col">
+            <div className="card-hero mb-4 border border-white/90">
+              <div className="flex items-start gap-3">
+                <div className="icon-tile bg-emerald-100 text-emerald-700">🛡️</div>
+                <div>
+                  <p className="text-[11px] font-extrabold uppercase tracking-[0.14em] text-emerald-600">ขั้นตอนสุดท้าย</p>
+                  <h2 className="mt-1 text-2xl font-extrabold leading-tight text-slate-900">นโยบายความเป็นส่วนตัว</h2>
+                  <p className="mt-1 text-sm leading-relaxed text-slate-500">กดที่แถบเพื่ออ่านรายละเอียด ก่อนเริ่มใช้งาน Melasma</p>
+                </div>
+              </div>
+              <div className="surface-soft mt-4 flex items-start gap-3 p-3.5">
+                <span className="text-xl">🩺</span>
+                <p className="text-sm leading-relaxed text-slate-700">
+                  <b className="text-sky-700">เราให้ความสำคัญกับข้อมูลของคุณ</b><br/>
+                  ระบบนี้จัดทำขึ้นเพื่อให้ความรู้เบื้องต้นเรื่อง <b>ฝ้า (Melasma)</b> ไม่ใช่การวินิจฉัยโรคแทนแพทย์ และบันทึกข้อมูลเท่าที่จำเป็นต่อการใช้งาน
+                </p>
+              </div>
             </div>
 
-            <div className="space-y-2 mb-3">
+            <div className="mb-4 space-y-2.5">
               <PDPAAccordion title="🚫 ไม่เก็บข้อมูลส่วนตัวที่ระบุตัวตนได้">
                 <ul className="space-y-1 pl-1">
                   <li>• ไม่เก็บเบอร์โทรศัพท์ อีเมล หรือที่อยู่</li>
@@ -195,31 +245,26 @@ export default function Onboarding() {
               </PDPAAccordion>
             </div>
 
-            <label className="flex items-start gap-3 mb-24 cursor-pointer bg-white border border-slate-200 rounded-xl p-3 shadow-sm hover:border-blue-300 transition-colors">
+            <label className="flex cursor-pointer items-start gap-3 rounded-[22px] border border-sky-100 bg-white p-4 shadow-clay-sm transition hover:border-sky-300">
               <input type="checkbox" checked={consent} onChange={e => setConsent(e.target.checked)}
-                className="mt-1 w-5 h-5 accent-blue-600 rounded text-blue-600 focus:ring-blue-500" />
-              <span className="text-sm text-slate-700 font-medium leading-relaxed">
+                className="mt-1 h-5 w-5 rounded text-sky-600 accent-sky-600 focus:ring-sky-500" />
+              <span className="text-sm font-medium leading-relaxed text-slate-700">
                 ฉันเข้าใจและ <b>ยินยอม</b> ให้ประมวลผลข้อมูลตามที่ระบุ และรับทราบว่านี่ไม่ใช่บริการวินิจฉัยทางการแพทย์
               </span>
             </label>
 
-            <div className="sticky bottom-0 -mx-6 px-6 pt-3
-                            pb-[max(0.75rem,env(safe-area-inset-bottom))]
-                            mt-auto bg-gradient-to-t from-slate-50 via-slate-50/95 to-transparent
-                            backdrop-blur-sm">
-              <div className="flex gap-2">
-                <button onClick={() => setStep(1)} className="flex-1 bg-white border-2 border-slate-200 text-slate-600 font-semibold py-3 rounded-xl hover:bg-slate-50 transition-colors">
+            <div className="mt-5 flex gap-2 sm:justify-end">
+                <button onClick={() => setStep(1)} className="btn-outline flex-1 text-sm sm:flex-none sm:min-w-32">
                   ← กลับ
                 </button>
-                <button onClick={handleFinish} disabled={!consent} className="flex-1 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 text-white font-semibold py-3 rounded-xl shadow-md transition-colors">
-                  เข้าสู่ระบบ ✨
+                <button onClick={handleFinish} disabled={!consent} className="btn-primary flex-1 text-sm sm:flex-none sm:min-w-48">
+                  เข้าสู่ Melasma <span className="ml-2">→</span>
                 </button>
-              </div>
             </div>
           </motion.div>
         )}
       </AnimatePresence>
-      </div>
+      </main>
     </div>
   );
 }

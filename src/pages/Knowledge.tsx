@@ -1,7 +1,8 @@
 import { motion } from 'framer-motion';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
-import PageHeader from '../components/PageHeader';
+import BackButton from '../components/BackButton';
+import { asset } from '../lib/asset';
 
 interface Reference {
   label: string;
@@ -19,6 +20,33 @@ interface LearningSection {
   points: string[];
   references: Reference[];
 }
+
+const LEARNING_VIDEOS = [
+  {
+    id: 'aad-self-care',
+    videoId: 'xWKewpiwWso',
+    title: 'ดูแลฝ้าในชีวิตประจำวัน',
+    detail: '4 วิธีช่วยให้ฝ้าดูจางลง',
+    source: 'American Academy of Dermatology',
+    language: 'English',
+  },
+  {
+    id: 'mahidol-melasma',
+    videoId: 'zSP9n3IeIR0',
+    title: 'รู้ทันฝ้า ป้องกันก่อนสายเกินแก้',
+    detail: 'รู้จักสาเหตุ ป้องกัน และรักษาฝ้า',
+    source: 'พบหมอมหิดล',
+    language: 'ภาษาไทย',
+  },
+  {
+    id: 'suandok-melasma',
+    videoId: 'HUznaUT7qCc',
+    title: 'ฝ้า กระ รักษาอย่างไรให้หาย',
+    detail: 'คำแนะนำเรื่องการรักษาจากแพทย์ผิวหนัง',
+    source: 'Suandok Channel · มช.',
+    language: 'ภาษาไทย',
+  },
+] as const;
 
 const SECTIONS: LearningSection[] = [
   {
@@ -44,9 +72,9 @@ const SECTIONS: LearningSection[] = [
     number: '02',
     title: 'ประเภทของฝ้า',
     eyebrow: 'เม็ดสีอยู่ตื้นหรือลึกต่างกัน',
-    image: 'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&w=1200&q=82',
-    imageAlt: 'แพทย์กำลังอธิบายข้อมูลสุขภาพผิวแก่ผู้รับคำปรึกษา',
-    summary: 'ฝ้าแบ่งตามระดับที่พบเม็ดสีเป็นฝ้าตื้น ฝ้าลึก และฝ้าผสม การดูด้วยตาเพียงอย่างเดียวบอกชนิดได้ไม่แน่นอน ภาพเปรียบเทียบนี้ใช้เพื่อการเรียนรู้ ไม่ใช่การวินิจฉัยตนเอง',
+    image: asset('images/knowledge-types-hero-v2.png'),
+    imageAlt: 'ภาพจำลองลักษณะฝ้าผสมบนใบหน้าเพื่อการเรียนรู้',
+    summary: 'ฝ้าแบ่งตามระดับที่พบเม็ดสีเป็นฝ้าตื้น ฝ้าลึก และฝ้าผสม ภาพลักษณะบนใบหน้าอาจช่วยให้เข้าใจความแตกต่างเบื้องต้น แต่การดูด้วยตาเพียงอย่างเดียวบอกชนิดได้ไม่แน่นอน เพราะต้องพิจารณาร่วมกับการตรวจโดยแพทย์',
     points: [
       'ฝ้าตื้น (Epidermal): มักเป็นสีน้ำตาลเข้ม ขอบค่อนข้างชัด และโดยทั่วไปตอบสนองต่อการรักษาได้ดีกว่า',
       'ฝ้าลึก (Dermal): อาจเป็นสีน้ำตาลอ่อน น้ำตาลเทา หรือเทาอมฟ้า ขอบไม่ชัด และใช้เวลารักษานานกว่า',
@@ -54,6 +82,7 @@ const SECTIONS: LearningSection[] = [
     ],
     references: [
       { label: 'DermNet NZ: การแบ่งฝ้าตื้น ฝ้าลึก และฝ้าผสม', url: 'https://dermnetnz.org/topics/melasma' },
+      { label: 'DermNet NZ: Wood lamp ช่วยประเมินระดับเม็ดสี', url: 'https://dermnetnz.org/topics/wood-lamp-skin-examination' },
       { label: 'NCBI Bookshelf / StatPearls: Melasma', url: 'https://www.ncbi.nlm.nih.gov/books/NBK459271/' },
     ],
   },
@@ -98,9 +127,51 @@ const SECTIONS: LearningSection[] = [
 ];
 
 const TYPE_VISUALS = [
-  { label: 'ฝ้าตื้น', detail: 'น้ำตาล · ขอบชัดกว่า', gradient: 'from-amber-200 via-amber-300 to-amber-500' },
-  { label: 'ฝ้าลึก', detail: 'น้ำตาลเทา · ขอบฟุ้ง', gradient: 'from-stone-200 via-stone-400 to-slate-500' },
-  { label: 'ฝ้าผสม', detail: 'หลายเฉด · พบบ่อย', gradient: 'from-amber-300 via-stone-400 to-slate-500' },
+  {
+    label: 'ฝ้าตื้น (Epidermal)',
+    detail: 'เม็ดสีอยู่ในชั้นหนังกำพร้า',
+    image: asset('images/knowledge-type-epidermal-v3.png'),
+    imageAlt: 'ภาพจำลองฝ้าตื้น เป็นปื้นสีน้ำตาลเข้มขอบค่อนข้างชัดบนแก้มและหน้าผาก',
+    tone: { badge: 'bg-amber-100 text-amber-900', border: 'border-amber-200', title: 'text-amber-900' },
+    features: [
+      ['สีที่มักเห็น', 'น้ำตาลเข้ม'],
+      ['ขอบปื้น', 'ค่อนข้างชัด'],
+      ['Wood lamp', 'มักเห็นเด่นขึ้น'],
+      ['การตอบสนอง', 'มักดีกว่าแบบลึก'],
+    ],
+  },
+  {
+    label: 'ฝ้าลึก (Dermal)',
+    detail: 'เม็ดสีอยู่ลึกลงไปในชั้นหนังแท้',
+    image: asset('images/knowledge-type-dermal-v3.png'),
+    imageAlt: 'ภาพจำลองฝ้าลึก เป็นปื้นน้ำตาลเทาถึงเทาอมฟ้าขอบฟุ้งบนแก้ม',
+    tone: { badge: 'bg-slate-100 text-slate-800', border: 'border-slate-200', title: 'text-slate-800' },
+    features: [
+      ['สีที่มักเห็น', 'น้ำตาลเทา/เทาอมฟ้า'],
+      ['ขอบปื้น', 'ไม่ค่อยชัด ขอบฟุ้ง'],
+      ['Wood lamp', 'มักไม่เด่นขึ้น'],
+      ['การตอบสนอง', 'มักใช้เวลานานกว่า'],
+    ],
+  },
+  {
+    label: 'ฝ้าผสม (Mixed)',
+    detail: 'มีทั้งเม็ดสีตื้นและลึกในบริเวณเดียวกัน',
+    image: asset('images/knowledge-type-mixed-v3.png'),
+    imageAlt: 'ภาพจำลองฝ้าผสม มีทั้งปื้นน้ำตาลเข้มและปื้นน้ำตาลเทาหลายเฉดบนใบหน้า',
+    tone: { badge: 'bg-violet-100 text-violet-900', border: 'border-violet-200', title: 'text-violet-900' },
+    features: [
+      ['สีที่มักเห็น', 'หลายเฉดในใบหน้าเดียว'],
+      ['ขอบปื้น', 'มีทั้งชัดและฟุ้ง'],
+      ['Wood lamp', 'เห็นรูปแบบผสมกัน'],
+      ['การตอบสนอง', 'มักดีขึ้นได้บางส่วน'],
+    ],
+  },
+];
+
+const FACE_PATTERNS = [
+  { label: 'Centrofacial', thai: 'กึ่งกลางใบหน้า', detail: 'หน้าผาก แก้ม จมูก และเหนือริมฝีปาก เป็นรูปแบบที่พบบ่อย' },
+  { label: 'Malar', thai: 'บริเวณโหนกแก้ม', detail: 'เด่นบริเวณแก้มและสันจมูก โดยอาจไม่ครอบคลุมหน้าผาก' },
+  { label: 'Mandibular', thai: 'แนวกรามและคาง', detail: 'อยู่บริเวณแนวกรามหรือคาง พบได้น้อยกว่าสองรูปแบบแรก' },
 ];
 
 const TRIGGER_ICONS = [
@@ -111,6 +182,8 @@ const TRIGGER_ICONS = [
 
 export default function Knowledge() {
   const { hash } = useLocation();
+  const [activeVideoId, setActiveVideoId] = useState<string>(LEARNING_VIDEOS[0].id);
+  const activeVideo = LEARNING_VIDEOS.find(video => video.id === activeVideoId) ?? LEARNING_VIDEOS[0];
   useEffect(() => {
     if (!hash) return;
     const timer = window.setTimeout(() => document.getElementById(hash.slice(1))?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 120);
@@ -119,33 +192,82 @@ export default function Knowledge() {
 
   return (
     <div className="min-h-screen bg-[#EEF6FF] pb-12">
-      <PageHeader title="คลังความรู้เรื่องฝ้า" subtitle="เรียนรู้แบบเข้าใจง่าย อ้างอิงข้อมูลทางการแพทย์" backTo="/" />
-
       <main className="mx-auto max-w-5xl px-4 pt-6 sm:px-6 lg:px-8 lg:pt-8">
         <motion.section
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="card-hero overflow-hidden border border-white/80 !p-5 sm:!p-7"
+          className="relative overflow-hidden rounded-[30px] border border-white/80 bg-sky-100 shadow-clay"
         >
-          <div className="grid items-center gap-5 lg:grid-cols-[0.85fr_1.15fr]">
-            <div>
-              <p className="text-xs font-bold uppercase tracking-[0.2em] text-sky-600">เรียนรู้ก่อนเริ่มดูแลผิว</p>
-              <h1 className="mt-2 text-2xl font-extrabold leading-tight text-slate-900 sm:text-3xl">เข้าใจฝ้าอย่างถูกต้อง เพื่อเลือกการดูแลที่ปลอดภัย</h1>
-              <p className="mt-3 text-sm leading-relaxed text-slate-600">วิดีโอจาก American Academy of Dermatology สรุปวิธีลดปัจจัยกระตุ้นฝ้าและดูแลผิวในชีวิตประจำวัน</p>
-            </div>
-            <div className="aspect-video overflow-hidden rounded-[24px] border border-sky-100 bg-slate-900 shadow-clay-sm">
-              <iframe
-                className="h-full w-full"
-                src="https://www.youtube-nocookie.com/embed/xWKewpiwWso?rel=0"
-                title="คำแนะนำการดูแลฝ้าจาก American Academy of Dermatology"
-                allow="accelerometer; encrypted-media; gyroscope; picture-in-picture"
-                referrerPolicy="strict-origin-when-cross-origin"
-                loading="lazy"
-                allowFullScreen
-              />
+          <BackButton className="absolute left-4 top-4 z-20 sm:left-6 sm:top-6" />
+          <img src={asset('images/knowledge-hero-v2.png')} alt="คุณหมอแนะนำความรู้เรื่องฝ้า" className="h-72 w-full object-cover object-center sm:h-96" loading="lazy" />
+          <div className="absolute inset-0 bg-gradient-to-r from-white/45 via-white/12 to-transparent" aria-hidden="true" />
+          <div className="absolute inset-0 z-10 flex max-w-xl flex-col justify-end p-4 pb-5 text-white sm:p-8 sm:pb-8">
+            <div className="max-w-[94%] sm:max-w-xl">
+              <span className="font-display text-[10px] font-extrabold tracking-[0.14em] text-[#087EAF] drop-shadow-[0_1px_2px_rgba(255,255,255,0.9)] sm:text-sm sm:tracking-[0.16em]">เรียนรู้ก่อนเริ่มดูแลผิว</span>
+              <h1 className="mt-1.5 font-display text-[1.35rem] font-extrabold leading-[1.08] tracking-tight text-slate-950 drop-shadow-[0_1px_3px_rgba(255,255,255,0.9)] sm:mt-2 sm:text-3xl sm:leading-[1.12] lg:text-4xl">เข้าใจฝ้า ดูแลผิวให้ถูกทาง</h1>
+              <p className="mt-1.5 max-w-lg text-[10px] leading-4 text-slate-700 drop-shadow-[0_1px_2px_rgba(255,255,255,0.95)] sm:mt-3 sm:text-sm sm:leading-6 lg:text-base">เริ่มจากความรู้ที่เข้าใจง่าย แล้วค่อยเลือกวิธีดูแลผิวที่เหมาะกับคุณ</p>
             </div>
           </div>
         </motion.section>
+
+        <section className="mt-5 overflow-hidden rounded-[28px] border border-white/80 bg-white shadow-clay" aria-labelledby="knowledge-video-title">
+          <div className="flex flex-col gap-2 border-b border-sky-100 bg-gradient-to-r from-white to-sky-50 px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-[0.16em] text-sky-600">วิดีโอแนะนำ</p>
+              <h2 id="knowledge-video-title" className="mt-1 text-lg font-extrabold text-slate-900 sm:text-xl">เลือกหัวข้อที่อยากเรียนรู้</h2>
+              <p className="mt-1 text-xs leading-relaxed text-slate-500 sm:text-sm">เลือกดูวิดีโอสั้นเรื่องฝ้า แล้วค่อยอ่านบทเรียนด้านล่างต่อได้</p>
+            </div>
+            <span className="w-fit rounded-full bg-sky-100 px-3 py-1 text-xs font-bold text-sky-700">3 วิดีโอ</span>
+          </div>
+
+          <div className="grid gap-3 border-b border-sky-100 bg-sky-50/35 p-4 sm:grid-cols-3 sm:p-5">
+            {LEARNING_VIDEOS.map(video => {
+              const selected = video.id === activeVideo.id;
+              return (
+                <button
+                  key={video.id}
+                  type="button"
+                  aria-pressed={selected}
+                  onClick={() => setActiveVideoId(video.id)}
+                  className={`overflow-hidden rounded-[20px] border bg-white text-left shadow-clay-sm transition hover:-translate-y-0.5 hover:shadow-md ${selected ? 'border-sky-500 ring-2 ring-sky-200' : 'border-sky-100'}`}
+                >
+                  <div className="relative aspect-video overflow-hidden bg-sky-100">
+                    <img
+                      src={`https://i.ytimg.com/vi/${video.videoId}/hqdefault.jpg`}
+                      alt=""
+                      className="h-full w-full object-cover"
+                      loading="lazy"
+                    />
+                    <span className="absolute inset-0 flex items-center justify-center bg-slate-950/10">
+                      <span className="flex h-10 w-10 items-center justify-center rounded-full bg-white/95 text-lg text-sky-700 shadow-md">▶</span>
+                    </span>
+                  </div>
+                  <div className="p-3">
+                    <div className="flex items-start justify-between gap-2">
+                      <p className="text-sm font-extrabold leading-tight text-slate-900">{video.title}</p>
+                      <span className="flex-none rounded-full bg-sky-50 px-2 py-0.5 text-[10px] font-bold text-sky-700">{video.language}</span>
+                    </div>
+                    <p className="mt-1 text-xs leading-relaxed text-slate-500">{video.detail}</p>
+                    <p className="mt-2 text-[11px] font-semibold text-slate-400">{video.source}</p>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+
+          <div className="aspect-video overflow-hidden bg-slate-900">
+            <iframe
+              key={activeVideo.videoId}
+              className="h-full w-full"
+              src={`https://www.youtube-nocookie.com/embed/${activeVideo.videoId}?rel=0`}
+              title={activeVideo.title}
+              allow="accelerometer; encrypted-media; gyroscope; picture-in-picture"
+              referrerPolicy="strict-origin-when-cross-origin"
+              loading="lazy"
+              allowFullScreen
+            />
+          </div>
+        </section>
 
         <nav aria-label="หัวข้อความรู้" className="mt-5 grid grid-cols-2 gap-3 lg:grid-cols-4">
           {SECTIONS.map(section => (
@@ -167,35 +289,90 @@ export default function Knowledge() {
               transition={{ duration: 0.35 }}
               className="card scroll-mt-28 overflow-hidden border border-white/80 !p-0"
             >
-              <div className={`grid lg:grid-cols-2 ${index % 2 === 1 ? 'lg:[&>*:first-child]:order-2' : ''}`}>
-                <div className="relative min-h-56 overflow-hidden bg-gradient-to-br from-sky-100 to-slate-200 lg:min-h-full">
+              <div className={`grid ${section.id === 'melasma-types' ? 'lg:grid-cols-1' : 'lg:grid-cols-2'} ${index % 2 === 1 && section.id !== 'melasma-types' ? 'lg:[&>*:first-child]:order-2' : ''}`}>
+                <div className={`relative overflow-hidden bg-gradient-to-br from-sky-100 to-slate-200 ${section.id === 'melasma-types' ? 'aspect-[16/9]' : 'min-h-56 lg:min-h-full'}`}>
                   <img
                     src={section.image}
                     alt={section.imageAlt}
-                    className="absolute inset-0 h-full w-full object-cover"
+                    className="absolute inset-0 h-full w-full object-cover object-center"
                     loading="lazy"
                     onError={event => { event.currentTarget.style.display = 'none'; }}
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950/55 via-transparent to-transparent" />
-                  <div className="absolute bottom-4 left-4 right-4 text-white">
+                  <div className="absolute inset-0 bg-gradient-to-b from-sky-950/35 via-transparent to-transparent" />
+                  <div className="absolute left-4 right-4 top-4 text-white">
                     <span className="rounded-full bg-white/20 px-3 py-1 text-xs font-bold backdrop-blur-md">บทเรียน {section.number}</span>
                     <p className="mt-2 text-sm font-semibold drop-shadow">{section.eyebrow}</p>
                   </div>
                 </div>
 
-                <div className="p-5 sm:p-7">
+                <div className="p-4 sm:p-6 lg:p-8">
                   <h2 className="text-2xl font-extrabold text-slate-900">{section.title}</h2>
                   <p className="mt-3 text-sm leading-7 text-slate-600">{section.summary}</p>
 
                   {section.id === 'melasma-types' && (
-                    <div className="mt-5 grid grid-cols-3 gap-2" aria-label="ภาพจำลองสีของฝ้าแต่ละชนิด">
-                      {TYPE_VISUALS.map(type => (
-                        <div key={type.label} className="rounded-2xl border border-sky-100 bg-sky-50 p-2 text-center">
-                          <div className={`h-14 rounded-xl bg-gradient-to-br ${type.gradient}`} />
-                          <p className="mt-2 text-xs font-bold text-slate-800">{type.label}</p>
-                          <p className="mt-0.5 text-[10px] leading-tight text-slate-500">{type.detail}</p>
+                    <div className="mt-6 rounded-[24px] border border-sky-100 bg-sky-50/45 p-3 sm:p-4" aria-label="ภาพจำลองลักษณะฝ้าแต่ละชนิด">
+                      <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                        <div>
+                          <p className="text-sm font-extrabold text-slate-900">เห็นภาพความแตกต่าง</p>
+                          <p className="mt-1 text-xs leading-relaxed text-slate-500">ภาพจำลองเชิงคลินิกเพื่อการเรียนรู้ ไม่ใช่ภาพผู้ป่วยจริง</p>
                         </div>
-                      ))}
+                        <span className="pill w-fit flex-shrink-0 bg-white text-sky-700">3 แบบหลัก</span>
+                      </div>
+
+                      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                        {TYPE_VISUALS.map(type => (
+                          <article key={type.label} className={`overflow-hidden rounded-[18px] border bg-white shadow-clay-sm ${type.tone.border}`}>
+                            <div className="relative aspect-[4/3] overflow-hidden bg-sky-50">
+                              <img src={type.image} alt={type.imageAlt} className="h-full w-full object-cover object-center" loading="lazy" />
+                              <span className={`absolute bottom-1.5 left-1.5 rounded-full px-2 py-0.5 text-[9px] font-extrabold shadow-sm ${type.tone.badge}`}>ภาพจำลอง</span>
+                            </div>
+                            <div className="p-2 sm:p-3">
+                              <h3 className={`text-sm font-extrabold leading-tight ${type.tone.title}`}>{type.label}</h3>
+                              <p className="mt-1 text-xs leading-relaxed text-slate-500">{type.detail}</p>
+                              <dl className="mt-2 space-y-1.5 border-t border-slate-100 pt-2 sm:mt-3 sm:space-y-2 sm:pt-3">
+                                {type.features.map(([label, value]) => (
+                                  <div key={label} className="flex items-start justify-between gap-1 text-[9px] leading-tight sm:gap-2 sm:text-[11px]">
+                                    <dt className="text-slate-500">{label}</dt>
+                                    <dd className="text-right font-bold text-slate-700">{value}</dd>
+                                  </div>
+                                ))}
+                              </dl>
+                            </div>
+                          </article>
+                        ))}
+                      </div>
+
+                      <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                        <div className="rounded-[20px] border border-sky-100 bg-white p-4 shadow-clay-sm">
+                          <p className="text-xs font-extrabold text-sky-800">ทำไมดูจากภาพอย่างเดียวไม่ได้?</p>
+                          <p className="mt-1.5 text-xs leading-relaxed text-slate-600">สีของฝ้าเปลี่ยนตามแสง สีผิว และกล้องได้ แพทย์อาจใช้ Wood lamp หรือ dermatoscope ช่วยประเมินระดับเม็ดสีร่วมกับประวัติและการตรวจจริง</p>
+                        </div>
+                        <div className="rounded-[20px] border border-amber-100 bg-amber-50/80 p-4">
+                          <p className="text-xs font-extrabold text-amber-900">อย่าใช้ชนิดฝ้าเลือกยาเอง</p>
+                          <p className="mt-1.5 text-xs leading-relaxed text-amber-950/75">การตอบสนองต่อการรักษาแตกต่างกัน และรอยที่คล้ายฝ้าอาจเป็นภาวะอื่น หากไม่แน่ใจควรให้แพทย์ผิวหนังประเมิน</p>
+                        </div>
+                      </div>
+
+                      <div className="mt-4 rounded-[20px] border border-slate-200 bg-white p-4 shadow-clay-sm">
+                        <div className="flex items-center justify-between gap-3">
+                          <p className="text-xs font-extrabold text-slate-800">รูปแบบตามตำแหน่งที่พบบนใบหน้า</p>
+                          <span className="text-[10px] font-bold text-slate-400">Clinical pattern</span>
+                        </div>
+                        <div className="mt-3 grid gap-2 sm:grid-cols-3">
+                          {FACE_PATTERNS.map((pattern, patternIndex) => (
+                            <div key={pattern.label} className="rounded-[16px] bg-slate-50 p-3">
+                              <div className="flex items-center gap-2">
+                                <span className="flex h-7 w-7 items-center justify-center rounded-full bg-sky-100 text-[11px] font-extrabold text-sky-700">0{patternIndex + 1}</span>
+                                <div>
+                                  <p className="text-[11px] font-extrabold text-slate-800">{pattern.thai}</p>
+                                  <p className="text-[10px] font-semibold text-sky-600">{pattern.label}</p>
+                                </div>
+                              </div>
+                              <p className="mt-2 text-[10px] leading-relaxed text-slate-500">{pattern.detail}</p>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
                     </div>
                   )}
 

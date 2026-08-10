@@ -66,9 +66,7 @@ export default function AvatarFolder({ preset, customId, onPick }: Props) {
           type="button"
           onClick={() => fileRef.current?.click()}
           disabled={busy}
-          className="text-xs font-semibold bg-detective-600 hover:bg-detective-700
-                     text-white rounded-lg px-3 py-1.5 active:scale-95 shadow-sm
-                     disabled:opacity-60"
+          className="btn-outline !min-h-9 !rounded-full !px-3 !py-1.5 !text-xs !shadow-clay-sm"
         >
           {busy ? 'กำลังอัป...' : '＋ อัปโหลดรูป'}
         </button>
@@ -84,15 +82,15 @@ export default function AvatarFolder({ preset, customId, onPick }: Props) {
       />
 
       {error && (
-        <p className="text-xs text-danger-500 bg-danger-50 rounded-lg px-3 py-2">
+        <p className="rounded-[16px] border border-rose-100 bg-rose-50 px-3 py-2 text-xs text-rose-700">
           {error}
         </p>
       )}
 
       {/* แนะนำตัวละครที่เลือก — โทนเดียวกับตัวละคร */}
       {activeCharacter && (
-        <div className="bg-detective-50 border border-detective-200 rounded-xl p-2.5 text-center">
-          <p className="text-xs font-bold text-detective-700">
+        <div className="surface-soft border border-sky-100 p-3 text-center">
+          <p className="text-xs font-bold text-sky-700">
             ✨ {activeCharacter.label}
           </p>
           <p className="text-[11px] text-slate-600 mt-0.5">{activeCharacter.tagline}</p>
@@ -112,8 +110,8 @@ export default function AvatarFolder({ preset, customId, onPick }: Props) {
               className={`relative aspect-square rounded-2xl overflow-hidden
                           transition-all border-2 ${
                 active
-                  ? 'border-detective-500 shadow-md scale-105'
-                  : 'border-slate-200 active:scale-95 hover:border-detective-300'
+                  ? 'border-sky-500 shadow-clay-blue scale-105'
+                  : 'border-sky-100 bg-white shadow-clay-sm active:scale-95 hover:border-sky-300'
               }`}
             >
               <img
@@ -151,8 +149,8 @@ export default function AvatarFolder({ preset, customId, onPick }: Props) {
                   className={`relative w-full aspect-square rounded-2xl overflow-hidden
                               border-2 transition-all ${
                     active
-                      ? 'border-detective-500 shadow-md scale-105'
-                      : 'border-slate-200 active:scale-95'
+                      ? 'border-sky-500 shadow-clay-blue scale-105'
+                      : 'border-sky-100 bg-white shadow-clay-sm active:scale-95'
                   }`}
                 >
                   <img src={av.dataUrl} alt={av.name} className="w-full h-full object-cover" />
@@ -184,7 +182,8 @@ export default function AvatarFolder({ preset, customId, onPick }: Props) {
           onClick={() => fileRef.current?.click()}
           disabled={busy}
           className="aspect-square rounded-2xl border-2 border-dashed border-slate-300
-                     bg-slate-50 text-slate-500 flex flex-col items-center justify-center
+                     bg-sky-50/60 text-slate-500 flex flex-col items-center justify-center
+                     shadow-clay-sm
                      active:scale-95 disabled:opacity-50"
         >
           <span className="text-2xl leading-none">＋</span>

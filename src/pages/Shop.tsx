@@ -169,8 +169,8 @@ export default function Shop() {
   return (
     <div className="min-h-full pb-8 relative">
       <PageHeader
-        title="🧓 ร้านค้าของคุณลุง"
-        subtitle="เก็บเหรียญมาแลกของดีกับคุณลุง"
+        title="🧴 คลังรางวัล Skin Lab"
+        subtitle="สะสมเหรียญมาแลกไอเทมช่วยเรียนรู้เรื่องผิว"
         backTo="/"
         actions={
           <>
@@ -203,14 +203,14 @@ export default function Shop() {
             >
               <img
                 src={NPC_CHARACTERS.shopkeeper.src}
-                alt="คุณลุงเจ้าของร้าน"
+                alt="คุณหมอผู้หญิงผมสั้นดูแลคลังรางวัล"
                 className="w-full h-full object-cover"
                 loading="eager"
               />
             </motion.div>
             <div className="flex-1 min-w-0">
               <p className="text-xs font-bold text-warning-600 mb-0.5 flex items-center gap-1">
-                🧓 คุณลุงเจ้าของร้าน
+                🩺 คุณหมอประจำคลังรางวัล
               </p>
               <AnimatePresence mode="wait">
                 <motion.p

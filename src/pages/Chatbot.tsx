@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type ChangeEvent } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import PageHeader from '../components/PageHeader';
+import BackButton from '../components/BackButton';
+import { asset } from '../lib/asset';
 import { sfx } from '../lib/sound';
 import { CHAT_CLEAR_EVENT, clearChatSession } from '../lib/chatSession';
 import { getFaqAnswer } from '../lib/melasmaFaq';
@@ -625,22 +626,21 @@ export default function Chatbot() {
   return (
     <div className="min-h-screen bg-[#EEF6FF] pb-12">
       <canvas ref={analysisCanvasRef} className="hidden" aria-hidden="true" />
-      <PageHeader title="ผู้ช่วยเรียนรู้เรื่องฝ้า" subtitle="เลือกคำถามที่สงสัยและอ่านคำตอบพร้อมแหล่งอ้างอิง" backTo="/" />
-
       <main className="mx-auto max-w-5xl px-4 pt-6 sm:px-6 lg:px-8 lg:pt-8">
         <motion.section
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
-          className="card-hero mb-4 border border-sky-100"
+          className="relative mb-4 aspect-[16/9] overflow-hidden rounded-[28px] border border-white/80 bg-sky-100 shadow-clay"
         >
-          <div className="flex items-start gap-3">
-            <div className="icon-tile bg-sky-50 text-sky-700 text-2xl">🩺</div>
-            <div className="min-w-0 flex-1">
-              <h2 className="text-xl font-bold text-slate-900">ถามเรื่องฝ้าอย่างเป็นขั้นตอน</h2>
-              <p className="text-sm text-slate-600 leading-relaxed mt-1">
-                เลือกหัวข้อที่สงสัย แล้วระบบจะแสดงคำอธิบายจากคลังความรู้พร้อมแหล่งอ้างอิง
-              </p>
-            </div>
+          <BackButton className="absolute left-4 top-4 z-20 sm:left-6 sm:top-6" />
+          <img src={asset('images/chatbot-hero-v2.png')} alt="คุณหมอพร้อมตอบคำถามเรื่องฝ้า" className="absolute inset-0 h-full w-full object-cover object-center" loading="lazy" />
+          <div className="absolute inset-0 bg-gradient-to-r from-white/45 via-white/12 to-transparent" aria-hidden="true" />
+          <div className="relative z-10 flex h-full max-w-md flex-col justify-center p-5 text-slate-950 sm:p-7">
+            <span className="text-xs font-bold uppercase tracking-[.18em] text-[#087EAF]">ผู้ช่วยคุณหมอ</span>
+            <h2 className="mt-2 text-xl font-bold text-slate-950 sm:text-2xl">ถามเรื่องฝ้า รับคำตอบเข้าใจง่าย</h2>
+            <p className="mt-1 text-sm leading-relaxed text-slate-700">
+              เลือกหัวข้อที่สงสัย แล้วรับคำอธิบายพร้อมแหล่งอ้างอิงที่อ่านเข้าใจง่าย
+            </p>
           </div>
         </motion.section>
 

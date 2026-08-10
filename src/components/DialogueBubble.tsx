@@ -3,20 +3,20 @@ import type { SpeakerKey } from '../types';
 import { usePlayerStore } from '../store/playerStore';
 import { useSettingsStore } from '../store/settingsStore';
 import { speak, useTtsAvailable } from '../lib/tts';
-import Avatar from './Avatar';
 import { NPC_CHARACTERS } from '../lib/characters';
+import { asset } from '../lib/asset';
 
-// โทนสีบับเบิลของแต่ละ speaker — คุมโทน TMF: ฟ้า (player) / เขียว (หมอ) / เทา/ส้ม (NPC) / แดง (Vapor)
+// โทนสีบับเบิลของแต่ละ speaker — ใช้คาแรกเตอร์คุณหมอผมสั้นเป็นภาพหลักของแอป
 const SPEAKERS: Record<SpeakerKey, { name: string; emoji: string; align: 'left' | 'right'; bg: string }> = {
   narrator:      { name: 'เล่าเรื่อง',    emoji: '📖', align: 'left',  bg: 'bg-slate-100 text-slate-700 border border-slate-200' },
   player:        { name: 'คุณ',          emoji: '🧒', align: 'right', bg: 'bg-detective-600 text-white shadow-sm' },
-  doctor:        { name: 'หมอนุ่น',        emoji: '👩‍⚕️', align: 'left',  bg: 'bg-gradient-to-br from-white to-mint-50 text-slate-800 border border-mint-200' },
-  baitoey:       { name: 'น้องใบเตย',    emoji: '🌿', align: 'left',  bg: 'bg-warning-50 text-slate-800 border border-warning-200' },
-  vapor:         { name: 'Vapor (ตัวร้าย)', emoji: '👤', align: 'left',  bg: 'bg-danger-50 text-slate-800 border border-danger-200' },
+  doctor:        { name: 'คุณหมอประจำ Skin Lab', emoji: '👩‍⚕️', align: 'left', bg: 'bg-gradient-to-br from-white to-mint-50 text-slate-800 border border-mint-200' },
+  baitoey:       { name: 'ผู้ช่วยดูแลผิว', emoji: '🩺', align: 'left', bg: 'bg-warning-50 text-slate-800 border border-warning-200' },
+  vapor:         { name: 'ผู้ช่วยเตือนความเสี่ยง', emoji: '💡', align: 'left', bg: 'bg-danger-50 text-slate-800 border border-danger-200' },
   friend1:       { name: 'เพื่อน',       emoji: '🧑', align: 'left',  bg: 'bg-detective-50 text-slate-800 border border-detective-200' },
   friend2:       { name: 'เพื่อน',       emoji: '👦', align: 'left',  bg: 'bg-detective-50 text-slate-800 border border-detective-200' },
-  shopkeeper:    { name: 'เจ้าของร้าน',   emoji: '🧓', align: 'left',  bg: 'bg-warning-50 text-slate-800 border border-warning-200' },
-  'dm-stranger': { name: 'คนใน DM',     emoji: '💬', align: 'left',  bg: 'bg-danger-50 text-slate-800 border border-danger-200' },
+  shopkeeper:    { name: 'คุณหมอประจำคลังความรู้', emoji: '🧴', align: 'left', bg: 'bg-warning-50 text-slate-800 border border-warning-200' },
+  'dm-stranger': { name: 'ผู้ช่วยในแชต', emoji: '💬', align: 'left', bg: 'bg-danger-50 text-slate-800 border border-danger-200' },
   system:        { name: 'ระบบ',        emoji: '⚙️', align: 'left',  bg: 'bg-slate-200 text-slate-700' },
 };
 
@@ -29,12 +29,19 @@ export default function DialogueBubble({ speaker, text }: Props) {
   const s = SPEAKERS[speaker];
   const player = usePlayerStore();
   const isPlayer = speaker === 'player';
-  // ตัวละครหลักที่มีรูป PNG จริง (หมอ + Vapor)
+  const isDoctor = speaker === 'doctor';
+  // ตัวละครประกอบทั้งหมดใช้ภาพมาสคอตคุณหมอผมสั้นชุดเดียวกัน
   const npc = NPC_CHARACTERS[speaker];
   // ปุ่มอ่านออกเสียง — โผล่เฉพาะเมื่อเปิดในตั้งค่า + เครื่องมีเสียงไทย
   const ttsEnabled = useSettingsStore(st => st.ttsEnabled);
   const ttsAvailable = useTtsAvailable();
   const showTts = ttsEnabled && ttsAvailable && !!text;
+  const isCloudCharacter = isDoctor || isPlayer;
+  const bubbleStyle = isDoctor
+    ? 'border-2 border-mint-200 bg-gradient-to-br from-white via-mint-50/95 to-sky-50 text-slate-800 shadow-[0_10px_24px_-12px_rgba(43,202,171,0.6)]'
+    : isPlayer
+      ? 'border-2 border-sky-200 bg-gradient-to-br from-white via-sky-50/95 to-detective-50 text-slate-800 shadow-[0_10px_24px_-12px_rgba(0,143,255,0.5)]'
+      : `${s.bg} ${s.align === 'right' ? 'rounded-br-md' : 'rounded-bl-md'}`;
 
   return (
     <motion.div
@@ -43,11 +50,39 @@ export default function DialogueBubble({ speaker, text }: Props) {
       transition={{ type: 'spring', stiffness: 220, damping: 22 }}
       className={`group flex gap-3 mb-4 ${s.align === 'right' ? 'flex-row-reverse' : ''}`}
     >
-      <div className="flex-shrink-0">
-        {isPlayer ? (
-          <Avatar preset={player.avatar} customId={player.customAvatarId} size={36} />
+      <div className={isCloudCharacter ? 'flex flex-none items-end' : 'flex-shrink-0'}>
+        {isDoctor ? (
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ type: 'spring', stiffness: 220, damping: 22 }}
+            className="relative flex h-44 w-24 flex-none items-end justify-center sm:h-56 sm:w-32"
+          >
+            <motion.img
+              src={asset('images/doctor-dialogue-cutout-v4.png')}
+              alt="คุณหมอประจำ Skin Lab กำลังอธิบายเรื่องฝ้า"
+              className="h-full w-full object-contain object-bottom drop-shadow-[0_8px_8px_rgba(0,86,145,0.18)]"
+              animate={{ y: [0, -3, 0] }}
+              transition={{ duration: 3.2, repeat: Infinity, ease: 'easeInOut' }}
+            />
+          </motion.div>
+        ) : isPlayer ? (
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ type: 'spring', stiffness: 220, damping: 22 }}
+            className="relative flex h-36 w-24 flex-none items-end justify-center sm:h-48 sm:w-28"
+          >
+            <motion.img
+              src={asset('images/student-dialogue-cutout-v1.png')}
+              alt={player.nickname ? `ตัวละครของ ${player.nickname}` : 'ตัวละครนักเรียน'}
+              className="h-full w-full object-contain object-bottom drop-shadow-[0_8px_8px_rgba(0,86,145,0.18)]"
+              animate={{ y: [0, -3, 0] }}
+              transition={{ duration: 3.2, repeat: Infinity, ease: 'easeInOut' }}
+            />
+          </motion.div>
         ) : npc ? (
-          // ใช้รูป PNG จริงของหมอ/Vapor
+          // ใช้ภาพมาสคอตคุณหมอผมสั้น
           <div className="h-12 w-12 overflow-hidden rounded-2xl border-2 border-white bg-[#FFFCF7] shadow-md ring-1 ring-mint-100 transition-transform group-hover:-translate-y-0.5">
             <img src={npc.src} alt={npc.label} className="w-full h-full object-cover" loading="lazy" />
           </div>
@@ -58,12 +93,18 @@ export default function DialogueBubble({ speaker, text }: Props) {
           </div>
         )}
       </div>
-      <div className={`flex max-w-[82%] flex-col ${s.align === 'right' ? 'items-end' : 'items-start'}`}>
+      <div className={`flex flex-col ${isCloudCharacter ? 'min-w-0 flex-1' : 'max-w-[82%]'} ${s.align === 'right' ? 'items-end' : 'items-start'}`}>
         <span className="mb-1 px-1 text-xs font-bold text-slate-500">
           {isPlayer ? player.nickname || s.name : s.name}
         </span>
-        <div className={`relative rounded-[24px] px-5 py-4 shadow-md ring-1 ring-black/[0.02] ${s.bg} ${s.align === 'right' ? 'rounded-br-md' : 'rounded-bl-md'}`}>
-          <p className="whitespace-pre-line break-words text-[15px] leading-7">{text}</p>
+        <div className={`relative rounded-[34px] px-5 py-4 shadow-md ring-1 ring-black/[0.02] ${bubbleStyle}`}>
+          {isCloudCharacter && (
+            <span
+              className={`absolute ${isPlayer ? '-right-2 border-r-2 border-t-2 border-sky-200 bg-sky-50' : '-left-2 border-b-2 border-l-2 border-mint-200 bg-mint-50'} bottom-6 h-4 w-4 rotate-45`}
+              aria-hidden="true"
+            />
+          )}
+          <p className="relative z-10 whitespace-pre-line break-words text-[15px] leading-7">{text}</p>
         </div>
         {showTts && (
           <button

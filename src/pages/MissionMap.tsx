@@ -2,16 +2,16 @@ import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { usePlayerStore } from '../store/playerStore';
 import { SCENARIO_META, getStageDifficulty, isStageUnlocked, certificateStageProgress, CERT_STAGE_COUNT } from '../scenarios';
-import PageHeader from '../components/PageHeader';
+import BackButton from '../components/BackButton';
 import { asset } from '../lib/asset';
 import { sfx } from '../lib/sound';
 
 const STAGE_ART: Record<number, string> = {
-  1: 'images/stages/stage-01-melasma.png',
-  2: 'images/stages/stage-02-melanocyte.png',
-  3: 'images/stages/stage-03-triggers.png',
-  4: 'images/stages/stage-04-protection.png',
-  5: 'images/stages/stage-05-long-term-care.png',
+  1: 'images/mission-stage-1-v2.png',
+  2: 'images/mission-stage-2-v2.png',
+  3: 'images/mission-stage-3-v2.png',
+  4: 'images/mission-stage-4-v2.png',
+  5: 'images/mission-stage-5-v2.png',
 };
 
 const DIFFICULTY = {
@@ -29,15 +29,18 @@ export default function MissionMap() {
 
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_top_right,rgba(52,211,153,.12),transparent_30%),#EEF6FF] pb-12">
-      <PageHeader title="เลือกด่านที่อยากเล่น" subtitle="เห็นครบทั้ง 5 ด่าน · เรียนจบแล้วกลับมาทบทวนได้เสมอ" backTo="/" />
       <main className="mx-auto max-w-5xl px-4 pt-5 sm:px-6">
-        <section className="relative mb-6 overflow-hidden rounded-[30px] bg-slate-900 shadow-xl">
-          <img src={asset('images/skin-detective-stage-hero.png')} alt="นักสืบสุขภาพผิว" className="h-52 w-full object-cover object-center opacity-80 sm:h-64" />
-          <div className="absolute inset-0 bg-gradient-to-r from-slate-950/85 via-slate-900/45 to-transparent" />
-          <div className="absolute inset-0 flex max-w-lg flex-col justify-center p-6 text-white sm:p-8">
-            <span className="text-xs font-bold uppercase tracking-[.18em] text-sky-200">ภารกิจนักสืบผิวหนัง</span>
-            <h1 className="mt-2 font-display text-2xl font-extrabold leading-tight sm:text-3xl">เลือกคดี แล้วออกตามหาความจริงเรื่องฝ้า</h1>
-            <p className="mt-2 text-sm leading-relaxed text-white/80">แต่ละด่านใช้เวลาเพียง 5–7 นาที มีภาพ เรื่องราว คำถาม และบทสรุปพร้อมแหล่งอ้างอิง</p>
+        <section className="relative mb-6 aspect-[16/9] overflow-hidden rounded-[30px] border border-white/80 bg-sky-100 shadow-xl">
+          <BackButton className="absolute left-4 top-4 z-20 sm:left-6 sm:top-6" />
+          <img src={asset('images/mission-map-hero-v2.png')} alt="คุณหมอชี้เส้นทางภารกิจการเรียนรู้" className="absolute inset-0 h-full w-full object-cover object-center" loading="lazy" />
+          <div className="absolute inset-0 bg-gradient-to-l from-white/40 via-white/12 to-transparent" aria-hidden="true" />
+          <div className="absolute inset-0 z-10 flex items-center justify-end p-5 text-right text-slate-950 sm:p-8">
+            <div className="max-w-[94%] sm:max-w-lg">
+              <span className="font-display text-[10px] font-extrabold tracking-[0.14em] text-[#087EAF] drop-shadow-[0_1px_2px_rgba(255,255,255,0.9)] sm:text-sm sm:tracking-[0.16em]">ภารกิจนักสืบผิวหนัง</span>
+              <h1 className="mt-1.5 font-display text-[1.35rem] font-extrabold leading-[1.08] tracking-tight text-slate-950 drop-shadow-[0_1px_3px_rgba(255,255,255,0.9)] sm:mt-2 sm:text-3xl sm:leading-[1.12] lg:text-4xl">เลือกภารกิจ เรียนรู้เรื่องฝ้า</h1>
+              <p className="mt-1.5 text-[10px] leading-4 text-slate-700 drop-shadow-[0_1px_2px_rgba(255,255,255,0.95)] sm:mt-3 sm:text-sm sm:leading-6 lg:text-base">แต่ละด่านใช้เวลาเพียง 5–7 นาที มีภาพ เรื่องราว คำถาม และบทสรุปพร้อมแหล่งอ้างอิง</p>
+              <span className="mt-3 inline-flex rounded-full bg-white/80 px-3 py-1.5 text-sm font-bold text-sky-800 shadow-sm backdrop-blur-md">ด่านการเรียนรู้ 5 ภารกิจ</span>
+            </div>
           </div>
         </section>
 
@@ -53,12 +56,11 @@ export default function MissionMap() {
             const difficulty = DIFFICULTY[getStageDifficulty(stage.id)];
             return (
               <motion.article key={stage.id} initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * .06 }} className={`overflow-hidden rounded-[28px] border bg-white shadow-lg ${finished ? 'border-emerald-200' : unlocked ? 'border-sky-100' : 'border-slate-200'}`}>
-                <div className="relative h-44 overflow-hidden">
-                  <img src={asset(STAGE_ART[stage.id])} alt={`ภาพประกอบด่าน ${stage.id} ${stage.title}`} className={`h-full w-full object-cover transition duration-500 hover:scale-105 ${unlocked ? '' : 'grayscale-[35%] opacity-70'}`} loading="lazy" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-transparent to-transparent" />
+                <div className="relative aspect-video overflow-hidden">
+                  <img src={asset(STAGE_ART[stage.id])} alt={`ภาพประกอบด่าน ${stage.id} ${stage.title}`} className={`h-full w-full object-cover object-center transition duration-500 ${unlocked ? '' : 'grayscale-[35%] opacity-70'}`} loading="lazy" />
                   <span className="absolute left-3 top-3 rounded-full bg-white/90 px-3 py-1 text-xs font-extrabold text-slate-800 shadow backdrop-blur">ด่าน {stage.id}</span>
                   <span className={`absolute right-3 top-3 rounded-full px-3 py-1 text-xs font-bold shadow ${difficulty[1]}`}>{difficulty[0]}</span>
-                  <p className="absolute bottom-3 left-4 text-xs font-bold text-white">⏱ ประมาณ {stage.estMinutes} นาที</p>
+                  <p className="absolute bottom-3 left-4 rounded-full bg-white/90 px-2.5 py-1 text-xs font-bold text-slate-700 shadow-sm">⏱ ประมาณ {stage.estMinutes} นาที</p>
                 </div>
                 <div className="p-5">
                   <div className="flex items-start justify-between gap-3">

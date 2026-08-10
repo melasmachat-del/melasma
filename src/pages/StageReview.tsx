@@ -5,9 +5,9 @@ import PageHeader from '../components/PageHeader';
 import { asset } from '../lib/asset';
 
 const STAGE_ART: Record<number, string> = {
-  1: 'images/stages/stage-01-melasma.png', 2: 'images/stages/stage-02-melanocyte.png',
-  3: 'images/stages/stage-03-triggers.png', 4: 'images/stages/stage-04-protection.png',
-  5: 'images/stages/stage-05-long-term-care.png',
+  1: 'images/mission-stage-1-v2.png', 2: 'images/mission-stage-2-v2.png',
+  3: 'images/mission-stage-3-v2.png', 4: 'images/mission-stage-4-v2.png',
+  5: 'images/mission-stage-5-v2.png',
 };
 
 const SOURCES = [
@@ -48,8 +48,8 @@ export default function StageReview() {
     <div className="min-h-screen bg-[#EEF6FF] pb-12">
       <PageHeader title={`สมุดคดีด่าน ${stageId}`} subtitle="บทเรียน เฉลย และแหล่งข้อมูลสำหรับกลับมาทบทวน" backTo="/map" />
       <main className="mx-auto max-w-3xl px-4 pt-5">
-        <section className="relative mb-5 h-56 overflow-hidden rounded-[30px] shadow-xl">
-          <img src={asset(STAGE_ART[stageId])} alt={`ภาพบทเรียน ${scenario.title}`} className="h-full w-full object-cover" />
+        <section className="relative mb-5 aspect-video overflow-hidden rounded-[30px] shadow-xl">
+          <img src={asset(STAGE_ART[stageId])} alt={`ภาพบทเรียน ${scenario.title}`} className="h-full w-full object-cover object-center" />
           <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-900/10 to-transparent" />
           <div className="absolute inset-x-0 bottom-0 p-5 text-white"><span className="text-xs font-bold text-sky-200">ทบทวนด่าน {stageId}</span><h1 className="mt-1 font-display text-2xl font-extrabold">{scenario.title}</h1><p className="mt-1 text-sm text-white/80">{scenario.subtitle}</p></div>
         </section>

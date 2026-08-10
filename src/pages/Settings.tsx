@@ -6,7 +6,8 @@ import { usePlayerStore } from '../store/playerStore';
 import { useProgressStore } from '../store/progressStore';
 import { type FontSize, useSettingsStore } from '../store/settingsStore';
 import { CERT_STAGE_COUNT, certificateStageProgress } from '../scenarios';
-import PageHeader from '../components/PageHeader';
+import BackButton from '../components/BackButton';
+import { asset } from '../lib/asset';
 
 interface SwitchRowProps {
   icon: string;
@@ -67,8 +68,27 @@ export default function Settings() {
 
   return (
     <div className="min-h-screen bg-[#EEF6FF] pb-12">
-      <PageHeader title="ตั้งค่าระบบ" subtitle="การเข้าถึง ข้อมูลการเรียนรู้ และความเป็นส่วนตัว" backTo="/" />
       <main className="mx-auto max-w-5xl px-4 pt-6 sm:px-6 sm:pt-8 lg:px-8">
+        <motion.section
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="relative mb-5 aspect-[16/9] overflow-hidden rounded-[30px] border border-white/80 bg-sky-100 shadow-clay"
+        >
+          <img
+            src={asset('images/settings-hero-v2.png')}
+            alt="คุณหมอแนะนำการตั้งค่าระบบการเรียนรู้"
+            className="absolute inset-0 h-full w-full object-cover object-center"
+            loading="lazy"
+          />
+          <div className="absolute inset-0 bg-gradient-to-r from-white/95 via-white/72 to-white/10" aria-hidden="true" />
+          <BackButton className="absolute left-4 top-4 z-20 sm:left-6 sm:top-6" />
+          <div className="relative z-10 flex h-full max-w-md flex-col justify-end p-5 pb-6 sm:p-7 sm:pb-8">
+            <span className="text-xs font-bold uppercase tracking-[.18em] text-[#087EAF]">จัดประสบการณ์การเรียนรู้ให้เหมาะกับคุณ</span>
+            <h1 className="mt-2 font-display text-2xl font-extrabold leading-tight text-slate-950 sm:text-3xl">ตั้งค่าระบบ</h1>
+            <p className="mt-1 text-sm leading-relaxed text-slate-700">การเข้าถึง ข้อมูลการเรียนรู้ และความเป็นส่วนตัว</p>
+          </div>
+        </motion.section>
+
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}

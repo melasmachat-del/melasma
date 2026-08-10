@@ -89,11 +89,11 @@ const GAME_REVIEW_LABEL: Record<string, string> = {
 };
 
 const STAGE_SCENE: Record<number, { image: string; eyebrow: string; accent: string }> = {
-  1: { image: 'images/stages/stage-01-melasma.png', eyebrow: 'ส่องรอยบนผิวให้ชัด', accent: 'from-amber-400 to-orange-500' },
-  2: { image: 'images/stages/stage-02-melanocyte.png', eyebrow: 'ซูมเข้าไปดูโลกของเซลล์', accent: 'from-mint-400 to-emerald-500' },
-  3: { image: 'images/stages/stage-03-triggers.png', eyebrow: 'ตามหาตัวกระตุ้นที่ซ่อนอยู่', accent: 'from-orange-400 to-rose-500' },
-  4: { image: 'images/stages/stage-04-protection.png', eyebrow: 'สร้างเกราะป้องกันให้ผิว', accent: 'from-sky-400 to-blue-600' },
-  5: { image: 'images/stages/stage-05-long-term-care.png', eyebrow: 'วางแผนดูแลผิวระยะยาว', accent: 'from-violet-400 to-indigo-600' },
+  1: { image: 'images/mission-stage-1-v2.png', eyebrow: 'ส่องรอยบนผิวให้ชัด', accent: 'from-amber-400 to-orange-500' },
+  2: { image: 'images/mission-stage-2-v2.png', eyebrow: 'ซูมเข้าไปดูโลกของเซลล์', accent: 'from-mint-400 to-emerald-500' },
+  3: { image: 'images/mission-stage-3-v2.png', eyebrow: 'ตามหาตัวกระตุ้นที่ซ่อนอยู่', accent: 'from-orange-400 to-rose-500' },
+  4: { image: 'images/mission-stage-4-v2.png', eyebrow: 'สร้างเกราะป้องกันให้ผิว', accent: 'from-sky-400 to-blue-600' },
+  5: { image: 'images/mission-stage-5-v2.png', eyebrow: 'วางแผนดูแลผิวระยะยาว', accent: 'from-violet-400 to-indigo-600' },
 };
 
 /** เกมอาร์เคดในด่าน — เล่นจนถึง goalScore แล้วผ่าน (เลี่ยงให้สั้น ไม่ล้า) */
@@ -468,6 +468,12 @@ export default function ScenarioPage() {
     nav('/');
   };
 
+  const goReview = () => {
+    claimEndRewards();
+    sfx.click();
+    nav(`/scenario/${scenario.id}/review`);
+  };
+
   // แชร์คำท้าไปยังเพื่อนผ่าน LINE (หรือ fallback)
   const handleShareChallenge = async (finalScore: number) => {
     const text = `🔍 ฉันทำได้ ${finalScore} แต้ม ในด่าน ${scenario.id}: ${scenario.title} — มาลองเอาชนะฉันสิ!`;
@@ -489,23 +495,21 @@ export default function ScenarioPage() {
     node.type === 'dialogue' ? (
       <DialogueBubble key={node.id} speaker={node.speaker} text={node.text} />
     ) : node.type === 'feedback' ? (
-      <motion.div key={node.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-        className="card bg-warning-50 border-l-4 border-warning-500 mb-3">
-        <p className="font-semibold text-warning-600 mb-1">{node.title}</p>
-        <p className="text-sm text-gray-700 leading-relaxed">{node.body}</p>
-        {node.source && (
-          <p className="text-[11px] text-gray-500 mt-1.5 leading-snug">
-            📚 อ้างอิง: {node.source}
-          </p>
-        )}
-      </motion.div>
+      <DialogueBubble
+        key={node.id}
+        speaker="doctor"
+        text={[node.title, node.body, node.source ? `📚 อ้างอิง: ${node.source}` : '']
+          .filter(Boolean)
+          .join('\n\n')}
+      />
     ) : node.type === 'educationalPopup' ? (
-      <motion.div key={node.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-        className="card bg-success-50 border-l-4 border-success-500 mb-3">
-        <p className="font-semibold text-success-600 mb-1">💡 รู้หรือไม่?</p>
-        <p className="text-sm text-gray-700 leading-relaxed">{node.fact}</p>
-        <p className="text-[11px] text-gray-500 mt-1.5 leading-snug">📚 อ้างอิง: {node.source}</p>
-      </motion.div>
+      <DialogueBubble
+        key={node.id}
+        speaker="doctor"
+        text={['💡 รู้หรือไม่?', node.fact, `📚 อ้างอิง: ${node.source}`]
+          .filter(Boolean)
+          .join('\n\n')}
+      />
     ) : null;
 
   // ความคืบหน้าในด่าน — นับ node หลัก (ไม่นับ feedback/__pick_) ที่ผ่านแบบไม่ซ้ำ ÷ ทั้งหมด
@@ -573,10 +577,10 @@ export default function ScenarioPage() {
             className="relative mb-4 overflow-hidden rounded-[30px] border border-white/80 bg-white shadow-clay"
             aria-labelledby="stage-title"
           >
-            <div className="relative h-44 overflow-hidden sm:h-56">
+            <div className="relative aspect-video overflow-hidden">
               <img
-                src={asset('images/skin-detective-stage-hero.png')}
-                alt="นักสืบสุขภาพผิวกำลังตรวจสอบเบาะแสด้วยแว่นขยาย"
+                src={asset(stageScene.image)}
+                alt={`ภาพประกอบคุณหมอในด่าน ${scenario.id} ${scenario.title}`}
                 className="h-full w-full object-cover object-center"
                 fetchPriority="high"
               />
@@ -820,7 +824,7 @@ export default function ScenarioPage() {
           className="relative mb-5 overflow-hidden rounded-[28px] border border-white/80 bg-white shadow-lg"
           aria-label={`ภาพประกอบด่าน ${scenario.id}`}
         >
-          <div className="relative h-32 sm:h-40">
+          <div className="relative aspect-video">
             <img
               src={asset(stageScene.image)}
               alt={`ภาพประกอบ ${scenario.title}`}
@@ -984,15 +988,12 @@ export default function ScenarioPage() {
 
               {currentNode.type === 'feedback' && (
                 <>
-                  <div className="card bg-warning-50 border-l-4 border-warning-500 mb-3">
-                    <p className="font-semibold text-warning-600 mb-1">{currentNode.title}</p>
-                    <p className="text-sm text-gray-700 leading-relaxed">{currentNode.body}</p>
-                    {currentNode.source && (
-                      <p className="text-[11px] text-gray-500 mt-1.5 leading-snug">
-                        📚 อ้างอิง: {currentNode.source}
-                      </p>
-                    )}
-                  </div>
+                  <DialogueBubble
+                    speaker="doctor"
+                    text={[currentNode.title, currentNode.body, currentNode.source ? `📚 อ้างอิง: ${currentNode.source}` : '']
+                      .filter(Boolean)
+                      .join('\n\n')}
+                  />
                   <button onClick={() => goToNext(currentNode.next)} className="btn-primary w-full">
                     ต่อไป →
                   </button>
@@ -1001,13 +1002,12 @@ export default function ScenarioPage() {
 
               {currentNode.type === 'educationalPopup' && (
                 <>
-                  <div className="card bg-success-50 border-l-4 border-success-500 mb-3">
-                    <p className="font-semibold text-success-600 mb-1">💡 รู้หรือไม่?</p>
-                    <p className="text-sm text-gray-700 leading-relaxed">{currentNode.fact}</p>
-                    <p className="text-[11px] text-gray-500 mt-1.5 leading-snug">
-                      📚 อ้างอิง: {currentNode.source}
-                    </p>
-                  </div>
+                  <DialogueBubble
+                    speaker="doctor"
+                    text={[`💡 รู้หรือไม่?`, currentNode.fact, `📚 อ้างอิง: ${currentNode.source}`]
+                      .filter(Boolean)
+                      .join('\n\n')}
+                  />
                   <button onClick={() => goToNext(currentNode.next)} className="btn-primary w-full">
                     ต่อไป →
                   </button>
@@ -1015,34 +1015,31 @@ export default function ScenarioPage() {
               )}
 
               {currentNode.type === 'end' && (
-                <div className="relative card-hero text-center py-10 overflow-hidden">
-                  <div className="absolute -top-10 -left-10 w-40 h-40 bg-warning-500/20 rounded-full blur-2xl" />
-                  <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-detective-300/30 rounded-full blur-2xl" />
+                <div className="relative card-hero overflow-hidden p-3 sm:p-4">
+                  <div className="absolute -top-10 -left-10 w-40 h-40 bg-sky-300/25 rounded-full blur-2xl" />
+                  <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-blue-300/25 rounded-full blur-2xl" />
                   <motion.div
-                    initial={{ scale: 0, rotate: -180 }}
-                    animate={{ scale: 1, rotate: 0 }}
-                    transition={{ type: 'spring', stiffness: 200, delay: 0.1 }}
-                    className="mb-3 relative inline-block"
+                    initial={{ opacity: 0, y: 18 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ type: 'spring', stiffness: 180, delay: 0.1 }}
+                    className="relative min-h-[300px] overflow-hidden rounded-[1.5rem] border border-white/70 shadow-inner sm:min-h-[360px]"
                   >
                     <img
-                      src={asset('characters/party-popper.png')}
-                      alt="เยี่ยมมาก!"
-                      className="w-40 h-40 md:w-48 md:h-48 object-contain drop-shadow-xl"
+                      src={asset(stageScene.image)}
+                      alt="คุณหมอมาสคอตแนะนำความคืบหน้าการเรียนรู้เรื่องฝ้า"
+                      className="absolute inset-0 h-full w-full object-cover object-center"
                     />
+                    <div className="absolute inset-0 bg-gradient-to-r from-white/95 via-white/78 to-white/10" />
+                    <div className="relative flex min-h-[300px] w-full max-w-none flex-col justify-center rounded-[24px] border border-white/90 bg-white/88 p-4 text-left shadow-[0_14px_30px_-18px_rgba(0,86,145,0.55)] backdrop-blur-sm sm:min-h-[360px] sm:max-w-none sm:p-6">
+                      <span className="mb-3 inline-flex w-fit items-center gap-2 rounded-full border border-sky-200 bg-sky-50 px-3 py-1 text-xs font-bold text-sky-700 shadow-sm">
+                        ✓ เรียนรู้พื้นฐานฝ้าแล้ว
+                      </span>
+                      <h2 className="font-display text-2xl font-bold leading-tight text-detective-800 sm:text-3xl">
+                        {currentNode.title}
+                      </h2>
+                      <p className="mt-3 whitespace-pre-line text-sm leading-relaxed text-slate-800 sm:text-base">{currentNode.message}</p>
+                    </div>
                   </motion.div>
-                  <h2 className="font-display text-2xl font-bold text-detective-700 mb-2 relative">
-                    {currentNode.title}
-                  </h2>
-                  <p className="text-gray-600 mb-6 leading-relaxed relative">{currentNode.message}</p>
-                  <motion.p
-                    initial={{ scale: 0.7, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    transition={{ delay: 0.4, type: 'spring' }}
-                    className="inline-block bg-gradient-to-r from-warning-400 to-warning-500
-                               text-white font-bold text-xl px-6 py-2 rounded-full shadow-glow mb-6 relative"
-                  >
-                    +{currentNode.xp} แต้ม
-                  </motion.p>
 
                   {/* ผลคำท้า — เทียบแต้มรวมของด่านนี้กับเป้าของผู้ท้า */}
                   {challenge && (() => {
@@ -1188,7 +1185,7 @@ export default function ScenarioPage() {
                       </button>
                     )}
                     <button
-                      onClick={() => { sfx.click(); nav(`/scenario/${scenario.id}/review`); }}
+                      onClick={goReview}
                       className="btn-outline w-full"
                     >
                       📖 เปิดสมุดบทเรียนและเฉลย
