@@ -29,6 +29,14 @@
     background: rgba(255, 184, 92, 0.11);
     mix-blend-mode: multiply;
   }
+  html.reduce-motion *,
+  html.reduce-motion *::before,
+  html.reduce-motion *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
   /* เมื่อสวม theme — body bg มี tint สีเด่นของ theme ลายอ่อนๆ (base soft blue) */
   html.has-theme body {
     background:

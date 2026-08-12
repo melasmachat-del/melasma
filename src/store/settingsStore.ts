@@ -23,18 +23,23 @@ interface SettingsState {
   setFontSize: (size: FontSize) => void;
   toggleReducedMotion: () => void;
   toggleEyeComfort: () => void;
+  resetSettings: () => void;
 }
+
+const DEFAULT_SETTINGS = {
+  soundEnabled: true,
+  musicEnabled: false,
+  vibrationEnabled: true,
+  ttsEnabled: true,
+  fontSize: 'md' as FontSize,
+  reducedMotion: false,
+  eyeComfortEnabled: false,
+};
 
 export const useSettingsStore = create<SettingsState>()(
   persist(
     (set) => ({
-      soundEnabled: true,
-      musicEnabled: false,         // ปิดเริ่มต้น (ไม่ทุกคนชอบ BGM)
-      vibrationEnabled: true,
-      ttsEnabled: true,            // เปิดเริ่มต้น (ถ้าเครื่องมีเสียงไทย ปุ่มจะโผล่)
-      fontSize: 'md',
-      reducedMotion: false,
-      eyeComfortEnabled: false,
+      ...DEFAULT_SETTINGS,
 
       toggleSound:        () => set(s => ({ soundEnabled: !s.soundEnabled })),
       toggleMusic:        () => set(s => ({ musicEnabled: !s.musicEnabled })),
@@ -43,6 +48,7 @@ export const useSettingsStore = create<SettingsState>()(
       setFontSize:        (fontSize) => set({ fontSize }),
       toggleReducedMotion:() => set(s => ({ reducedMotion: !s.reducedMotion })),
       toggleEyeComfort:    () => set(s => ({ eyeComfortEnabled: !s.eyeComfortEnabled })),
+      resetSettings:       () => set(DEFAULT_SETTINGS),
     }),
     {
       name: 'hd_settings',

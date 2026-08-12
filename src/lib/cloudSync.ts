@@ -202,6 +202,11 @@ function clearQueue() {
   try { localStorage.removeItem(QUEUE_KEY); } catch { /* */ }
 }
 
+/** ล้างรายการซิงก์ค้างในเครื่อง — ใช้ตอนผู้ใช้เลือกล้างข้อมูลทั้งหมด */
+export function clearPendingSyncQueue(): void {
+  clearQueue();
+}
+
 export async function flushQueue(): Promise<void> {
   const queue = getQueue();
   if (queue.length === 0) return;
@@ -245,6 +250,20 @@ export async function issueCertificate(userIdHash: string): Promise<CertResponse
   }
 }
 
+/**
+ * Apps Script web apps can redirect a POST and turn it into a GET in browsers.
+ * Keep a minimal text-only fallback for the chat endpoint; never send images
+ * or the long knowledge context in a URL.
+ */
+async function askAiViaGet(question: string): Promise<AiAnswerResponse> {
+  const url = new URL(SYNC_URL);
+  url.searchParams.set('action', 'ask_ai');
+  url.searchParams.set('question', question.trim().slice(0, 1_000));
+  const res = await fetch(url.toString(), { method: 'GET' });
+  const data = await res.json() as AiAnswerResponse;
+  return res.ok ? data : { ok: false, error: 'network_error' };
+}
+
 /** Ask the Apps Script backend to generate a grounded Melasma explanation. */
 export async function askAi(question: string, context = ''): Promise<AiAnswerResponse> {
   if (!SYNC_URL) return { ok: false, error: 'no_sync_url' };
@@ -260,11 +279,18 @@ export async function askAi(question: string, context = ''): Promise<AiAnswerRes
       }),
     });
     const data = await res.json() as AiAnswerResponse;
+    if (data.error === 'unknown_action' || res.status === 404) {
+      return await askAiViaGet(question);
+    }
     if (!res.ok) return { ok: false, error: 'network_error' };
     return data;
   } catch (err) {
     console.warn('[cloudSync] AI request failed:', err);
-    return { ok: false, error: 'network_error', message: String(err) };
+    try {
+      return await askAiViaGet(question);
+    } catch (fallbackError) {
+      return { ok: false, error: 'network_error', message: String(fallbackError) };
+    }
   }
 }
 

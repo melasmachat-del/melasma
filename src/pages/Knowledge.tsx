@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import BackButton from '../components/BackButton';
 import { asset } from '../lib/asset';
+import { apaReference, apaReferenceByUrl } from '../lib/references';
 
 interface Reference {
   label: string;
@@ -16,6 +17,7 @@ interface LearningSection {
   eyebrow: string;
   image: string;
   imageAlt: string;
+  takeaway: string;
   summary: string;
   points: string[];
   references: Reference[];
@@ -27,7 +29,7 @@ const LEARNING_VIDEOS = [
     videoId: 'xWKewpiwWso',
     title: 'ดูแลฝ้าในชีวิตประจำวัน',
     detail: '4 วิธีช่วยให้ฝ้าดูจางลง',
-    source: 'American Academy of Dermatology',
+    source: 'American Academy of Dermatology Association. (n.d.). ดูแลฝ้าในชีวิตประจำวัน [วิดีโอ]. YouTube. https://www.youtube.com/watch?v=xWKewpiwWso',
     language: 'English',
   },
   {
@@ -35,7 +37,7 @@ const LEARNING_VIDEOS = [
     videoId: 'zSP9n3IeIR0',
     title: 'รู้ทันฝ้า ป้องกันก่อนสายเกินแก้',
     detail: 'รู้จักสาเหตุ ป้องกัน และรักษาฝ้า',
-    source: 'พบหมอมหิดล',
+    source: 'พบหมอมหิดล. (n.d.). รู้ทันฝ้า ป้องกันก่อนสายเกินแก้ [วิดีโอ]. YouTube. https://www.youtube.com/watch?v=zSP9n3IeIR0',
     language: 'ภาษาไทย',
   },
   {
@@ -43,7 +45,7 @@ const LEARNING_VIDEOS = [
     videoId: 'HUznaUT7qCc',
     title: 'ฝ้า กระ รักษาอย่างไรให้หาย',
     detail: 'คำแนะนำเรื่องการรักษาจากแพทย์ผิวหนัง',
-    source: 'Suandok Channel · มช.',
+    source: 'Suandok Channel. (n.d.). ฝ้า กระ รักษาอย่างไรให้หาย [วิดีโอ]. YouTube. https://www.youtube.com/watch?v=HUznaUT7qCc',
     language: 'ภาษาไทย',
   },
 ] as const;
@@ -56,13 +58,14 @@ const SECTIONS: LearningSection[] = [
     eyebrow: 'ทำความเข้าใจผิวและเม็ดสี',
     image: asset('images/knowledge-hero-v2.png'),
     imageAlt: 'ภาพประกอบทางการแพทย์สำหรับการเรียนรู้เรื่องผิวและเม็ดสี',
+    takeaway: 'ฝ้าเป็นปื้นสีเข้มที่มักเกิดสองข้างบนใบหน้า ไม่ใช่ความสกปรกและไม่ใช่โรคติดต่อ',
     summary: 'ฝ้าเป็นภาวะเม็ดสีผิวที่ทำให้เกิดปื้นสีน้ำตาลถึงน้ำตาลเทา มักขึ้นแบบสมมาตรบริเวณแก้ม หน้าผาก จมูก เหนือริมฝีปาก หรือคาง ไม่ใช่โรคติดต่อและไม่ได้เกิดจากการทำความสะอาดผิวไม่เพียงพอ',
     points: [
-      'เกิดจากเซลล์เมลาโนไซต์สร้างเมลานินมากกว่าปกติ และมีปัจจัยหลายอย่างกระตุ้นร่วมกัน',
-      'สีและความชัดของฝ้าอาจเปลี่ยนตามแสงแดด ฮอร์โมน ความร้อน และการระคายเคือง',
-      'แพทย์ผิวหนังมักวินิจฉัยจากลักษณะผิว และอาจใช้โคมไฟวูดหรือกล้องตรวจผิวช่วยประเมินความลึก',
-      'ฝ้าไม่ใช่โรคติดต่อ ไม่ได้เกิดจากความสกปรก และโดยตัวมันเองไม่ใช่สัญญาณเริ่มต้นของมะเร็งผิวหนัง',
-      'แม้พบในผู้หญิงวัยเจริญพันธุ์บ่อยกว่า ผู้ชายก็เป็นฝ้าได้จากพันธุกรรมและการรับแสงแดดเช่นกัน',
+      'สาเหตุหลัก: เซลล์เมลาโนไซต์สร้างเมลานินมากกว่าปกติ และมีปัจจัยหลายอย่างกระตุ้นร่วมกัน',
+      'สิ่งที่ทำให้เปลี่ยน: สีและความชัดของฝ้าอาจเปลี่ยนตามแสงแดด ฮอร์โมน ความร้อน และการระคายเคือง',
+      'การวินิจฉัย: แพทย์ผิวหนังมักประเมินจากลักษณะผิว และอาจใช้โคมไฟวูดหรือกล้องตรวจผิวช่วยดูความลึก',
+      'ข้อเท็จจริง: ฝ้าไม่ใช่โรคติดต่อ ไม่ได้เกิดจากความสกปรก และโดยตัวมันเองไม่ใช่สัญญาณเริ่มต้นของมะเร็งผิวหนัง',
+      'ใครก็เป็นได้: แม้พบในผู้หญิงวัยเจริญพันธุ์บ่อยกว่า ผู้ชายก็เป็นฝ้าได้จากพันธุกรรมและการรับแสงแดดเช่นกัน',
     ],
     references: [
       { label: 'American Academy of Dermatology (AAD): อาการและลักษณะของฝ้า', url: 'https://www.aad.org/public/diseases/a-z/melasma-symptoms' },
@@ -76,12 +79,13 @@ const SECTIONS: LearningSection[] = [
     eyebrow: 'เม็ดสีอยู่ตื้นหรือลึกต่างกัน',
     image: asset('images/knowledge-types-hero-v2.png'),
     imageAlt: 'ภาพจำลองลักษณะฝ้าผสมบนใบหน้าเพื่อการเรียนรู้',
+    takeaway: 'สีและขอบของปื้นช่วยให้เข้าใจเบื้องต้น แต่ดูจากภาพอย่างเดียวไม่สามารถยืนยันชนิดของฝ้าได้',
     summary: 'ฝ้าแบ่งตามระดับที่พบเม็ดสีเป็นฝ้าตื้น ฝ้าลึก และฝ้าผสม ภาพลักษณะบนใบหน้าอาจช่วยให้เข้าใจความแตกต่างเบื้องต้น แต่การดูด้วยตาเพียงอย่างเดียวบอกชนิดได้ไม่แน่นอน เพราะต้องพิจารณาร่วมกับการตรวจโดยแพทย์',
     points: [
       'ฝ้าตื้น (Epidermal): มักเป็นสีน้ำตาลเข้ม ขอบค่อนข้างชัด และโดยทั่วไปตอบสนองต่อการรักษาได้ดีกว่า',
       'ฝ้าลึก (Dermal): อาจเป็นสีน้ำตาลอ่อน น้ำตาลเทา หรือเทาอมฟ้า ขอบไม่ชัด และใช้เวลารักษานานกว่า',
       'ฝ้าผสม (Mixed): พบได้บ่อย มีทั้งเม็ดสีชั้นตื้นและชั้นลึก จึงเห็นหลายเฉดสีในบริเวณเดียวกัน',
-      'สีและขอบปื้นช่วยให้เข้าใจภาพรวมเท่านั้น การดูด้วยตาอย่างเดียวไม่สามารถยืนยันชนิดหรือทำนายผลรักษาได้',
+      'ข้อจำกัด: สีและขอบปื้นช่วยให้เข้าใจภาพรวมเท่านั้น การดูด้วยตาอย่างเดียวไม่สามารถยืนยันชนิดหรือทำนายผลรักษาได้',
     ],
     references: [
       { label: 'DermNet NZ: การแบ่งฝ้าตื้น ฝ้าลึก และฝ้าผสม', url: 'https://dermnetnz.org/topics/melasma' },
@@ -96,14 +100,15 @@ const SECTIONS: LearningSection[] = [
     eyebrow: 'รู้ทันสิ่งที่ทำให้ฝ้าเข้มขึ้น',
     image: asset('images/home-topic-triggers-v2.png'),
     imageAlt: 'แสงแดดและท้องฟ้า ใช้ประกอบความรู้เรื่องรังสียูวีและฝ้า',
+    takeaway: 'แสงแดดเป็นตัวกระตุ้นหลักของฝ้า ส่วนฮอร์โมน ความร้อน และการระคายเคืองอาจเสริมให้ฝ้าเข้มขึ้น',
     summary: 'ฝ้าไม่ได้มีสาเหตุเดียว แสงอัลตราไวโอเลต แสงที่มองเห็นได้ ฮอร์โมน ความร้อน พันธุกรรม และการระคายเคืองสามารถกระตุ้นให้เมลาโนไซต์สร้างเม็ดสีเพิ่มขึ้น',
     points: [
-      'รังสี UVA และ UVB กระตุ้นการสร้างเม็ดสี แม้ในวันที่มีเมฆหรืออยู่ใกล้หน้าต่าง',
-      'แสงที่มองเห็นได้ รวมถึงแสงพลังงานสูงในช่วงสีน้ำเงิน อาจทำให้รอยเข้มขึ้น โดยเฉพาะในผิวสีปานกลางถึงเข้ม',
-      'การตั้งครรภ์ ยาคุมกำเนิด หรือการรักษาด้วยฮอร์โมนอาจสัมพันธ์กับฝ้าในบางคน',
-      'เครื่องสำอางที่แสบ ผิวอักเสบ การขัดแรง และความร้อนสะสมอาจทำให้รอยสีเข้มกว่าเดิม',
-      'ไอร้อนจากการทำอาหารหรือการอยู่ใกล้แหล่งความร้อนอาจกระตุ้นฝ้าในบางคน แต่หลักฐานเรื่องแสงแดดยังชัดเจนกว่า',
-      'แม้อยู่ในบ้าน ควรใส่ใจกับแสงที่ส่องผ่านหน้าต่างและการรับแดดทางอ้อม โดยไม่จำเป็นต้องกังวลกับแสงหน้าจอมากกว่าแสงแดด',
+      'รังสี UV: UVA และ UVB กระตุ้นการสร้างเม็ดสี แม้ในวันที่มีเมฆหรืออยู่ใกล้หน้าต่าง',
+      'แสงที่มองเห็นได้: รวมถึงแสงพลังงานสูงในช่วงสีน้ำเงิน อาจทำให้รอยเข้มขึ้น โดยเฉพาะในผิวสีปานกลางถึงเข้ม',
+      'ฮอร์โมน: การตั้งครรภ์ ยาคุมกำเนิด หรือการรักษาด้วยฮอร์โมนอาจสัมพันธ์กับฝ้าในบางคน',
+      'การระคายเคือง: เครื่องสำอางที่แสบ ผิวอักเสบ และการขัดแรงอาจทำให้รอยสีเข้มกว่าเดิม',
+      'ความร้อน: ไอร้อนจากการทำอาหารหรือการอยู่ใกล้แหล่งความร้อนอาจกระตุ้นฝ้าในบางคน แต่หลักฐานเรื่องแสงแดดยังชัดเจนกว่า',
+      'ในบ้าน: ใส่ใจกับแสงที่ส่องผ่านหน้าต่างและการรับแดดทางอ้อม โดยไม่จำเป็นต้องกังวลกับแสงหน้าจอมากกว่าแสงแดด',
     ],
     references: [
       { label: 'AAD: การดูแลตนเองและการป้องกันแสงที่มองเห็นได้', url: 'https://www.aad.org/public/diseases/a-z/melasma-self-care' },
@@ -117,12 +122,13 @@ const SECTIONS: LearningSection[] = [
     eyebrow: 'กันแดดให้พอ เสริมอุปกรณ์ และดูแลผิวอย่างอ่อนโยน',
     image: asset('images/home-topic-protection-v2.png'),
     imageAlt: 'คุณหมอแนะนำการป้องกันแสงแดดและการดูแลผิว',
+    takeaway: 'ป้องกันฝ้าให้ครบ 3 ทาง: กันแดด ใช้อุปกรณ์บังแดด และลดการระคายเคืองผิว',
     summary: 'การป้องกันแสงคือหัวใจของการดูแลฝ้า ควรทำทุกวันทั้งตอนออกกลางแจ้ง อยู่ใกล้หน้าต่าง หรือขับรถ โดยใช้กันแดดร่วมกับหมวก ร่ม และร่มเงา',
     points: [
-      'เลือกกันแดดชนิดครอบคลุม UVA/UVB ค่า SPF 30 ขึ้นไป และทาซ้ำเมื่ออยู่กลางแจ้ง เหงื่อออก หรือว่ายน้ำ',
-      'กันแดดแบบมีสีที่มี iron oxides ช่วยเพิ่มการป้องกันแสงที่มองเห็นได้ ควบคู่กับหมวกปีกกว้างและร่มเงา',
-      'ทาให้ทั่วใบหน้าและลำคอในปริมาณตามฉลาก โดยใช้หลักสองข้อนิ้วหรือประมาณ 1/4 ช้อนชาเป็นตัวช่วยกะปริมาณ ไม่ใช่ทาเฉพาะจุดที่เป็นฝ้า',
-      'หากอยู่กลางแจ้งต่อเนื่อง ให้ทาซ้ำประมาณทุก 2 ชั่วโมง หรือเร็วขึ้นหลังเหงื่อออกมาก ล้างหน้า เช็ดหน้า หรือโดนน้ำ',
+      'เลือกกันแดด: ใช้ชนิดครอบคลุม UVA/UVB ค่า SPF 30 ขึ้นไป และทาซ้ำเมื่ออยู่กลางแจ้ง เหงื่อออก หรือว่ายน้ำ',
+      'เสริมการป้องกัน: กันแดดแบบมีสีที่มี iron oxides ช่วยเพิ่มการป้องกันแสงที่มองเห็นได้ ควบคู่กับหมวกปีกกว้างและร่มเงา',
+      'ปริมาณที่ทา: ทาให้ทั่วใบหน้าและลำคอตามฉลาก ใช้หลักสองข้อนิ้วหรือประมาณ 1/4 ช้อนชาเป็นตัวช่วยกะปริมาณ ไม่ใช่ทาเฉพาะจุดที่เป็นฝ้า',
+      'ทาซ้ำ: หากอยู่กลางแจ้งต่อเนื่อง ให้ทาซ้ำประมาณทุก 2 ชั่วโมง หรือเร็วขึ้นหลังเหงื่อออกมาก ล้างหน้า เช็ดหน้า หรือโดนน้ำ',
     ],
     references: [
       { label: 'AAD: วิธีเลือกและใช้ครีมกันแดด', url: 'https://www.aad.org/public/everyday-care/sun-protection/shade-clothing-sunscreen/choosing-right-sunscreen' },
@@ -136,13 +142,14 @@ const SECTIONS: LearningSection[] = [
     eyebrow: 'ตั้งเป้าควบคุมระยะยาวและเลือกการรักษาอย่างปลอดภัย',
     image: asset('images/home-topic-treatment-v2.png'),
     imageAlt: 'คุณหมอแนะนำแนวทางรักษาฝ้าและการดูแลระยะยาว',
+    takeaway: 'เป้าหมายของการรักษาคือทำให้ฝ้าจางลงและควบคุมไม่ให้กลับเข้มขึ้น โดยควรเลือกวิธีร่วมกับแพทย์',
     summary: 'ฝ้ามักไม่หายขาดถาวรและสามารถกลับมาเข้มขึ้นได้เมื่อเจอตัวกระตุ้น เป้าหมายจึงเป็นการควบคุมให้จางลงและดูแลผิวต่อเนื่องร่วมกับแพทย์ผิวหนัง',
     points: [
-      'สารอย่าง azelaic acid, hydroquinone, tretinoin หรือยาสูตรผสมควรเลือกตามคำแนะนำของแพทย์ โดยเฉพาะระหว่างตั้งครรภ์หรือให้นมบุตร',
-      'เลเซอร์ ยารับประทาน และ tranexamic acid มีข้อบ่งชี้และความเสี่ยงเฉพาะ ไม่ควรซื้อหรือทำหัตถการเอง',
-      'เมื่อฝ้าจางลงแล้วก็ยังต้องป้องกันแสงต่อเนื่อง เพราะเป้าหมายคือควบคุมระยะยาว ไม่ใช่หายขาดถาวร',
-      'หากกำลังตั้งครรภ์หรือให้นมบุตร ควรปรึกษาแพทย์ก่อนใช้ยาลดเม็ดสีทุกชนิด',
-      'ถ้ารอยโตเร็ว เปลี่ยนสีหรือรูปร่าง ขอบไม่สม่ำเสมอ คัน เจ็บ นูน มีแผล หรือเลือดออก ควรพบแพทย์เพื่อตรวจแยกโรคผิวหนังอื่น',
+      'ยาทา: azelaic acid, hydroquinone, tretinoin หรือยาสูตรผสมควรเลือกตามคำแนะนำของแพทย์ โดยเฉพาะระหว่างตั้งครรภ์หรือให้นมบุตร',
+      'หัตถการและยารับประทาน: เลเซอร์ ยารับประทาน และ tranexamic acid มีข้อบ่งชี้และความเสี่ยงเฉพาะ ไม่ควรซื้อหรือทำหัตถการเอง',
+      'ดูแลต่อเนื่อง: เมื่อฝ้าจางลงแล้วก็ยังต้องป้องกันแสงต่อเนื่อง เพราะเป้าหมายคือควบคุมระยะยาว ไม่ใช่หายขาดถาวร',
+      'ตั้งครรภ์หรือให้นมบุตร: ควรปรึกษาแพทย์ก่อนใช้ยาลดเม็ดสีทุกชนิด',
+      'ควรพบแพทย์เมื่อ: รอยโตเร็ว เปลี่ยนสีหรือรูปร่าง ขอบไม่สม่ำเสมอ คัน เจ็บ นูน มีแผล หรือเลือดออก เพื่อแยกโรคผิวหนังอื่น',
     ],
     references: [
       { label: 'AAD: การวินิจฉัยและแนวทางรักษาฝ้า', url: 'https://www.aad.org/public/diseases/a-z/melasma-treatment' },
@@ -150,6 +157,9 @@ const SECTIONS: LearningSection[] = [
     ],
   },
 ];
+
+const VIDEO_TOPIC = { id: 'learning-videos', number: '06', title: 'วิดีโอแนะนำ' } as const;
+const KNOWLEDGE_TOPICS = [...SECTIONS, VIDEO_TOPIC];
 
 const TYPE_VISUALS = [
   {
@@ -227,15 +237,29 @@ const MELASMA_MECHANISM = [
 const SECTION_ALIASES: Record<string, string> = { 'safe-care': 'melasma-protection' };
 const resolveSectionId = (id: string) => SECTION_ALIASES[id] ?? id;
 
+function renderReadablePoint(point: string) {
+  const separator = point.indexOf(':');
+  if (separator === -1) return point;
+
+  return (
+    <>
+      <strong className="font-extrabold text-slate-800">{point.slice(0, separator)}:</strong>
+      {point.slice(separator + 1)}
+    </>
+  );
+}
+
 export default function Knowledge() {
   const { hash } = useLocation();
   const [activeVideoId, setActiveVideoId] = useState<string>(LEARNING_VIDEOS[0].id);
-  const [activeSectionId, setActiveSectionId] = useState(() => SECTIONS.find(section => section.id === resolveSectionId(hash.slice(1)))?.id ?? SECTIONS[0].id);
+  const [activeSectionId, setActiveSectionId] = useState(() => KNOWLEDGE_TOPICS.find(section => section.id === resolveSectionId(hash.slice(1)))?.id ?? SECTIONS[0].id);
   const activeVideo = LEARNING_VIDEOS.find(video => video.id === activeVideoId) ?? LEARNING_VIDEOS[0];
   const activeSection = SECTIONS.find(section => section.id === activeSectionId) ?? SECTIONS[0];
+  const activeTopic = KNOWLEDGE_TOPICS.find(section => section.id === activeSectionId) ?? SECTIONS[0];
+  const isVideoTopic = activeSectionId === VIDEO_TOPIC.id;
   useEffect(() => {
     if (!hash) return;
-    const nextSection = SECTIONS.find(section => section.id === resolveSectionId(hash.slice(1)));
+    const nextSection = KNOWLEDGE_TOPICS.find(section => section.id === resolveSectionId(hash.slice(1)));
     if (nextSection) setActiveSectionId(nextSection.id);
     const timer = window.setTimeout(() => document.getElementById(resolveSectionId(hash.slice(1)))?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 120);
     return () => window.clearTimeout(timer);
@@ -267,77 +291,18 @@ export default function Knowledge() {
           </div>
         </motion.section>
 
-        <section className="mt-5 overflow-hidden rounded-[28px] border border-white/80 bg-white shadow-clay" aria-labelledby="knowledge-video-title">
-          <div className="flex flex-col gap-2 border-b border-sky-100 bg-gradient-to-r from-white to-sky-50 px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
-            <div>
-              <p className="text-xs font-bold uppercase tracking-[0.16em] text-sky-600">วิดีโอแนะนำ</p>
-              <h2 id="knowledge-video-title" className="mt-1 text-lg font-extrabold text-slate-900 sm:text-xl">เลือกหัวข้อที่อยากเรียนรู้</h2>
-              <p className="mt-1 text-xs leading-relaxed text-slate-500 sm:text-sm">เลือกดูวิดีโอสั้นเรื่องฝ้า แล้วค่อยอ่านบทเรียนด้านล่างต่อได้</p>
-            </div>
-            <span className="w-fit rounded-full bg-sky-100 px-3 py-1 text-xs font-bold text-sky-700">3 วิดีโอ</span>
-          </div>
-
-          <div className="grid gap-3 border-b border-sky-100 bg-sky-50/35 p-4 sm:grid-cols-3 sm:p-5">
-            {LEARNING_VIDEOS.map(video => {
-              const selected = video.id === activeVideo.id;
-              return (
-                <button
-                  key={video.id}
-                  type="button"
-                  aria-pressed={selected}
-                  onClick={() => setActiveVideoId(video.id)}
-                  className={`overflow-hidden rounded-[20px] border bg-white text-left shadow-clay-sm transition hover:-translate-y-0.5 hover:shadow-md ${selected ? 'border-sky-500 ring-2 ring-sky-200' : 'border-sky-100'}`}
-                >
-                  <div className="relative aspect-video overflow-hidden bg-sky-100">
-                    <img
-                      src={`https://i.ytimg.com/vi/${video.videoId}/hqdefault.jpg`}
-                      alt=""
-                      className="h-full w-full object-cover"
-                      loading="lazy"
-                    />
-                    <span className="absolute inset-0 flex items-center justify-center bg-slate-950/10">
-                      <span className="flex h-10 w-10 items-center justify-center rounded-full bg-white/95 text-lg text-sky-700 shadow-md">▶</span>
-                    </span>
-                  </div>
-                  <div className="p-3">
-                    <div className="flex items-start justify-between gap-2">
-                      <p className="text-sm font-extrabold leading-tight text-slate-900">{video.title}</p>
-                      <span className="flex-none rounded-full bg-sky-50 px-2 py-0.5 text-[10px] font-bold text-sky-700">{video.language}</span>
-                    </div>
-                    <p className="mt-1 text-xs leading-relaxed text-slate-500">{video.detail}</p>
-                    <p className="mt-2 text-[11px] font-semibold text-slate-400">{video.source}</p>
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-
-          <div className="aspect-video overflow-hidden bg-slate-900">
-            <iframe
-              key={activeVideo.videoId}
-              className="h-full w-full"
-              src={`https://www.youtube-nocookie.com/embed/${activeVideo.videoId}?rel=0`}
-              title={activeVideo.title}
-              allow="accelerometer; encrypted-media; gyroscope; picture-in-picture"
-              referrerPolicy="strict-origin-when-cross-origin"
-              loading="lazy"
-              allowFullScreen
-            />
-          </div>
-        </section>
-
         <section id="knowledge-sections" className="mt-5 scroll-mt-24" aria-labelledby="knowledge-sections-title">
           <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
             <div>
               <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-sky-600">เรียนรู้ทีละหมวด</p>
               <h2 id="knowledge-sections-title" className="mt-1 text-xl font-extrabold text-slate-900 sm:text-2xl">เลือกหัวข้อที่อยากรู้ก่อนได้เลย</h2>
             </div>
-            <p className="text-xs font-semibold text-slate-500">หมวด {activeSection.number} จาก {SECTIONS.length}</p>
+            <p className="text-xs font-semibold text-slate-500">หมวด {activeTopic.number} จาก {KNOWLEDGE_TOPICS.length}</p>
           </div>
 
-          <nav aria-label="หัวข้อความรู้" className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
-            {SECTIONS.map(section => {
-              const selected = section.id === activeSection.id;
+          <nav aria-label="หัวข้อความรู้" className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
+            {KNOWLEDGE_TOPICS.map(section => {
+              const selected = section.id === activeSectionId;
               return (
                 <button
                   key={section.id}
@@ -356,13 +321,16 @@ export default function Knowledge() {
 
           <div className="mt-5">
             <motion.article
-              key={activeSection.id}
-              id={activeSection.id}
+              key={activeTopic.id}
+              id={activeTopic.id}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.35 }}
               className="card scroll-mt-28 overflow-hidden border border-white/80 !p-0"
             >
+              {isVideoTopic ? (
+                <VideoTopicContent activeVideo={activeVideo} onSelect={setActiveVideoId} />
+              ) : (
               <div className="grid">
                 <div className="relative aspect-[16/9] overflow-hidden bg-gradient-to-br from-sky-100 to-slate-200">
                   <img
@@ -381,7 +349,11 @@ export default function Knowledge() {
 
                 <div className="p-4 sm:p-6 lg:p-8">
                   <h2 className="text-2xl font-extrabold text-slate-900">{activeSection.title}</h2>
-                  <p className="mt-3 text-sm leading-7 text-slate-600">{activeSection.summary}</p>
+                  <div className="mt-4 rounded-[20px] border border-sky-100 bg-sky-50/80 p-3.5 sm:p-4">
+                    <p className="text-xs font-extrabold uppercase tracking-[0.12em] text-sky-700">สรุปสำคัญ</p>
+                    <p className="mt-1.5 text-[15px] font-semibold leading-7 text-sky-950">{activeSection.takeaway}</p>
+                  </div>
+                  <p className="mt-4 text-[15px] leading-7 text-slate-600"><span className="font-bold text-slate-800">ทำความเข้าใจ:</span> {activeSection.summary}</p>
 
                   {activeSection.id === 'what-is-melasma' && (
                     <>
@@ -400,7 +372,7 @@ export default function Knowledge() {
                                 <span className="flex h-7 w-7 items-center justify-center rounded-full bg-sky-600 text-xs font-extrabold text-white">{location.number}</span>
                                 <p className="text-xs font-extrabold text-slate-800">ฝ้าบริเวณ{location.title}</p>
                               </div>
-                              <p className="mt-2 text-[11px] leading-relaxed text-slate-500">{location.detail}</p>
+                               <p className="mt-2 text-xs leading-relaxed text-slate-500">{location.detail}</p>
                             </div>
                           ))}
                         </div>
@@ -418,7 +390,7 @@ export default function Knowledge() {
                           {MELASMA_MYTHS.map(myth => (
                             <div key={myth.number} className="rounded-[18px] border border-white bg-white p-3 shadow-clay-sm">
                               <p className="text-xs font-extrabold text-slate-800">{myth.number}. {myth.title}</p>
-                              <p className="mt-1.5 text-[11px] leading-relaxed text-slate-500">{myth.detail}</p>
+                               <p className="mt-1.5 text-xs leading-relaxed text-slate-500">{myth.detail}</p>
                             </div>
                           ))}
                         </div>
@@ -427,20 +399,20 @@ export default function Knowledge() {
                   )}
 
                   {activeSection.id === 'melasma-types' && (
-                    <div className="mt-6 grid gap-3 overflow-hidden rounded-[24px] border border-sky-100 bg-sky-50/55 p-3 sm:grid-cols-[minmax(0,0.9fr)_minmax(0,1.4fr)] sm:p-4" aria-label="กลไกการเกิดฝ้า">
-                      <div className="relative aspect-[16/9] min-h-44 overflow-hidden rounded-[20px] bg-sky-100">
-                        <img src={asset('images/stages/stage-02-melanocyte.png')} alt="ภาพจำลองเซลล์เมลาโนไซต์สร้างเม็ดสี" className="absolute inset-0 h-full w-full object-contain" loading="lazy" />
+                    <div className="mt-6 grid min-w-0 grid-cols-1 items-start gap-4 overflow-hidden rounded-[24px] border border-sky-100 bg-sky-50/55 p-3 md:grid-cols-[minmax(0,0.9fr)_minmax(0,1.4fr)] md:p-4" aria-label="กลไกการเกิดฝ้า">
+                      <div className="relative mx-auto aspect-[4/3] min-h-52 w-full max-w-sm overflow-hidden rounded-[20px] bg-sky-100 md:aspect-[16/9] md:min-h-0 md:max-w-none">
+                        <img src={asset('images/stages/stage-02-melanocyte.png')} alt="ภาพจำลองเซลล์เมลาโนไซต์สร้างเม็ดสี" className="absolute inset-0 h-full w-full object-cover" loading="lazy" />
                         <span className="absolute bottom-2 left-2 rounded-full bg-white/90 px-2.5 py-1 text-[10px] font-extrabold text-sky-800 shadow-sm">ภาพจำลองการเรียนรู้</span>
                       </div>
-                      <div className="p-1 sm:p-2">
+                      <div className="min-w-0 p-1 md:p-2">
                         <p className="text-sm font-extrabold text-slate-900">กลไกการเกิดฝ้าแบบเข้าใจง่าย</p>
                         <div className="mt-3 space-y-2">
                           {MELASMA_MECHANISM.map(item => (
-                            <div key={item.step} className="flex gap-3 rounded-[16px] border border-white bg-white p-3 shadow-clay-sm">
+                            <div key={item.step} className="flex min-w-0 gap-3 rounded-[16px] border border-white bg-white p-3 shadow-clay-sm">
                               <span className="flex h-7 w-7 flex-none items-center justify-center rounded-full bg-sky-600 text-[10px] font-extrabold text-white">{item.step}</span>
-                              <div>
+                              <div className="min-w-0">
                                 <p className="text-xs font-extrabold text-slate-800">{item.title}</p>
-                                <p className="mt-1 text-[11px] leading-relaxed text-slate-500">{item.detail}</p>
+                                <p className="mt-1 text-xs leading-relaxed text-slate-500">{item.detail}</p>
                               </div>
                             </div>
                           ))}
@@ -468,12 +440,12 @@ export default function Knowledge() {
                             </div>
                             <div className="p-2 sm:p-3">
                               <h3 className={`text-sm font-extrabold leading-tight ${type.tone.title}`}>{type.label}</h3>
-                              <p className="mt-1 text-xs leading-relaxed text-slate-500">{type.detail}</p>
-                              <dl className="mt-2 space-y-1.5 border-t border-slate-100 pt-2 sm:mt-3 sm:space-y-2 sm:pt-3">
-                                {type.features.map(([label, value]) => (
-                                  <div key={label} className="flex items-start justify-between gap-1 text-[9px] leading-tight sm:gap-2 sm:text-[11px]">
-                                    <dt className="text-slate-500">{label}</dt>
-                                    <dd className="text-right font-bold text-slate-700">{value}</dd>
+                               <p className="mt-1 text-sm leading-relaxed text-slate-500">{type.detail}</p>
+                               <dl className="mt-2 space-y-1.5 border-t border-slate-100 pt-2 sm:mt-3 sm:space-y-2 sm:pt-3">
+                                 {type.features.map(([label, value]) => (
+                                   <div key={label} className="flex items-start justify-between gap-2 text-[11px] leading-relaxed sm:text-xs">
+                                     <dt className="text-slate-500">{label}</dt>
+                                     <dd className="text-right font-bold text-slate-700">{value}</dd>
                                   </div>
                                 ))}
                               </dl>
@@ -508,7 +480,7 @@ export default function Knowledge() {
                                   <p className="text-[10px] font-semibold text-sky-600">{pattern.label}</p>
                                 </div>
                               </div>
-                              <p className="mt-2 text-[10px] leading-relaxed text-slate-500">{pattern.detail}</p>
+                               <p className="mt-2 text-[11px] leading-relaxed text-slate-500">{pattern.detail}</p>
                             </div>
                           ))}
                         </div>
@@ -527,27 +499,28 @@ export default function Knowledge() {
                     </div>
                   )}
 
-                  <ul className="mt-5 space-y-3">
-                    {activeSection.points.map(point => (
-                      <li key={point} className="flex gap-3 text-sm leading-relaxed text-slate-700">
-                        <span className="mt-1 flex h-5 w-5 flex-none items-center justify-center rounded-full bg-sky-100 text-[11px] font-bold text-sky-700">✓</span>
-                        <span>{point}</span>
-                      </li>
-                    ))}
-                  </ul>
+                   <ul className="mt-5 space-y-3.5">
+                     {activeSection.points.map(point => (
+                       <li key={point} className="flex gap-3 text-[15px] leading-[1.8] text-slate-700">
+                         <span className="mt-1.5 flex h-6 w-6 flex-none items-center justify-center rounded-full bg-sky-100 text-xs font-bold text-sky-700">✓</span>
+                         <span>{renderReadablePoint(point)}</span>
+                       </li>
+                     ))}
+                   </ul>
 
-                  <div className="mt-6 rounded-[20px] border border-sky-100 bg-sky-50/80 p-4">
-                    <p className="text-xs font-bold text-sky-800">แหล่งอ้างอิงทางการแพทย์</p>
-                    <ul className="mt-2 space-y-1.5">
-                      {activeSection.references.map(reference => (
-                        <li key={reference.url}>
-                          <a href={reference.url} target="_blank" rel="noreferrer" className="text-xs leading-relaxed text-sky-700 underline decoration-sky-200 underline-offset-2 hover:text-sky-900">{reference.label}</a>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
+                   <details className="mt-6 rounded-[20px] border border-sky-100 bg-sky-50/80 p-4">
+                     <summary className="cursor-pointer text-sm font-bold text-sky-800">ดูแหล่งอ้างอิงทางการแพทย์</summary>
+                     <ul className="mt-3 space-y-2">
+                       {activeSection.references.map(reference => (
+                         <li key={reference.url}>
+                           <a href={reference.url} target="_blank" rel="noreferrer" className="text-xs leading-relaxed text-sky-700 underline decoration-sky-200 underline-offset-2 hover:text-sky-900">{apaReferenceByUrl(reference.url, reference.label).citation}</a>
+                         </li>
+                       ))}
+                     </ul>
+                   </details>
                 </div>
               </div>
+              )}
             </motion.article>
           </div>
         </section>
@@ -556,6 +529,89 @@ export default function Knowledge() {
           <strong>ข้อควรรู้:</strong> เนื้อหานี้ใช้เพื่อการศึกษา ไม่สามารถแทนการตรวจโดยแพทย์ได้ หากรอยเปลี่ยนเร็ว ขอบผิดปกติ คัน เจ็บ มีแผล หรือมีเลือดออก ควรพบแพทย์ผิวหนังเพื่อวินิจฉัยโดยตรง
         </aside>
       </main>
+    </div>
+  );
+}
+
+function VideoTopicContent({
+  activeVideo,
+  onSelect,
+}: {
+  activeVideo: typeof LEARNING_VIDEOS[number];
+  onSelect: (videoId: string) => void;
+}) {
+  return (
+    <div className="overflow-hidden">
+      <div className="flex flex-col gap-2 border-b border-sky-100 bg-gradient-to-r from-white to-sky-50 px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+        <div>
+          <p className="text-xs font-bold uppercase tracking-[0.16em] text-sky-600">วิดีโอแนะนำ</p>
+          <h2 className="mt-1 text-lg font-extrabold text-slate-900 sm:text-xl">ดูวิดีโอเรื่องฝ้า</h2>
+          <p className="mt-1 text-xs leading-relaxed text-slate-500 sm:text-sm">เลือกวิดีโอที่สนใจ แล้วกดปุ่ม ▶ ตรงกลางวิดีโอเพื่อเริ่มดู</p>
+        </div>
+        <span className="w-fit rounded-full bg-sky-100 px-3 py-1 text-xs font-bold text-sky-700">เลือกได้ 3 วิดีโอ</span>
+      </div>
+
+      <div className="grid gap-3 border-b border-sky-100 bg-sky-50/35 p-4 sm:grid-cols-3 sm:p-5">
+        {LEARNING_VIDEOS.map(video => {
+          const selected = video.id === activeVideo.id;
+          return (
+            <button
+              key={video.id}
+              type="button"
+              aria-pressed={selected}
+              aria-label={`${selected ? 'เลือกแล้ว' : 'เลือก'}วิดีโอ: ${video.title}`}
+              onClick={() => onSelect(video.id)}
+              className={`group overflow-hidden rounded-[20px] border bg-white text-left shadow-clay-sm transition hover:-translate-y-0.5 hover:shadow-md ${selected ? 'border-sky-500 ring-2 ring-sky-200' : 'border-sky-100'}`}
+            >
+              <div className="relative aspect-video overflow-hidden bg-sky-100">
+                <img
+                  src={`https://i.ytimg.com/vi/${video.videoId}/hqdefault.jpg`}
+                  alt=""
+                  className="h-full w-full object-cover"
+                  loading="lazy"
+                />
+                <span className="absolute inset-0 flex items-center justify-center bg-slate-950/10 transition group-hover:bg-slate-950/20">
+                  <span className="flex h-11 w-11 items-center justify-center rounded-full bg-white text-lg text-sky-700 shadow-lg ring-4 ring-white/40">▶</span>
+                </span>
+              </div>
+              <div className="p-3">
+                <div className="flex items-start justify-between gap-2">
+                  <p className="text-sm font-extrabold leading-tight text-slate-900">{video.title}</p>
+                  <span className="flex-none rounded-full bg-sky-50 px-2 py-0.5 text-[10px] font-bold text-sky-700">{video.language}</span>
+                </div>
+                <p className="mt-1 text-xs leading-relaxed text-slate-500">{video.detail}</p>
+                <p className="mt-2 line-clamp-2 text-[11px] font-semibold leading-relaxed text-slate-400">{apaReference(video.source)}</p>
+                <span className={`mt-3 flex items-center justify-center rounded-full px-3 py-2 text-xs font-extrabold transition ${selected ? 'bg-sky-600 text-white' : 'bg-sky-50 text-sky-700 group-hover:bg-sky-100'}`}>
+                  {selected ? '✓ วิดีโอนี้กำลังแสดงด้านล่าง' : '▶ เลือกวิดีโอนี้'}
+                </span>
+              </div>
+            </button>
+          );
+        })}
+      </div>
+
+      <div className="border-t border-sky-100 bg-white px-4 py-3 sm:px-5">
+        <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="text-[10px] font-extrabold uppercase tracking-[0.14em] text-sky-600">วิดีโอที่เลือก</p>
+            <p className="mt-0.5 text-sm font-extrabold text-slate-900">{activeVideo.title}</p>
+          </div>
+          <span className="w-fit rounded-full bg-amber-50 px-3 py-1 text-xs font-bold text-amber-800">กด ▶ ตรงกลางเพื่อเริ่มดู</span>
+        </div>
+      </div>
+
+      <div className="relative aspect-video overflow-hidden bg-slate-900">
+        <iframe
+          key={activeVideo.videoId}
+          className="h-full w-full"
+          src={`https://www.youtube-nocookie.com/embed/${activeVideo.videoId}?rel=0`}
+          title={activeVideo.title}
+          allow="accelerometer; encrypted-media; gyroscope; picture-in-picture"
+          referrerPolicy="strict-origin-when-cross-origin"
+          loading="lazy"
+          allowFullScreen
+        />
+      </div>
     </div>
   );
 }

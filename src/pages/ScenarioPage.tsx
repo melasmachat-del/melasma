@@ -33,6 +33,7 @@ import { speak, stopSpeaking, ttsSupported } from '../lib/tts';
 import { useSettingsStore } from '../store/settingsStore';
 import { useProgressStore } from '../store/progressStore';
 import { shareChallenge } from '../lib/liff';
+import { apaReference } from '../lib/references';
 import {
   getPendingChallenge, clearPendingChallenge, buildChallengeUrl,
   type PendingChallenge,
@@ -498,7 +499,7 @@ export default function ScenarioPage() {
       <DialogueBubble
         key={node.id}
         speaker="doctor"
-        text={[node.title, node.body, node.source ? `📚 อ้างอิง: ${node.source}` : '']
+        text={[node.title, node.body, node.source ? `📚 อ้างอิง: ${apaReference(node.source)}` : '']
           .filter(Boolean)
           .join('\n\n')}
       />
@@ -506,7 +507,7 @@ export default function ScenarioPage() {
       <DialogueBubble
         key={node.id}
         speaker="doctor"
-        text={['💡 รู้หรือไม่?', node.fact, `📚 อ้างอิง: ${node.source}`]
+        text={['💡 รู้หรือไม่?', node.fact, `📚 อ้างอิง: ${apaReference(node.source)}`]
           .filter(Boolean)
           .join('\n\n')}
       />
@@ -734,7 +735,7 @@ export default function ScenarioPage() {
                 ))}
               </ul>
               {scenario.preLesson.source && (
-                <p className="text-[10px] text-slate-500 mt-2 leading-snug">📚 อ้างอิง: {scenario.preLesson.source}</p>
+                <p className="text-[10px] text-slate-500 mt-2 leading-snug">📚 อ้างอิง: {apaReference(scenario.preLesson.source)}</p>
               )}
               <p className="text-[11px] text-warning-600 font-semibold mt-2">💡 จำไว้แล้วจะตอบมินิเกมได้ถูก!</p>
             </motion.div>
@@ -990,7 +991,7 @@ export default function ScenarioPage() {
                 <>
                   <DialogueBubble
                     speaker="doctor"
-                    text={[currentNode.title, currentNode.body, currentNode.source ? `📚 อ้างอิง: ${currentNode.source}` : '']
+                    text={[currentNode.title, currentNode.body, currentNode.source ? `📚 อ้างอิง: ${apaReference(currentNode.source)}` : '']
                       .filter(Boolean)
                       .join('\n\n')}
                   />
@@ -1004,7 +1005,7 @@ export default function ScenarioPage() {
                 <>
                   <DialogueBubble
                     speaker="doctor"
-                    text={[`💡 รู้หรือไม่?`, currentNode.fact, `📚 อ้างอิง: ${currentNode.source}`]
+                    text={[`💡 รู้หรือไม่?`, currentNode.fact, `📚 อ้างอิง: ${apaReference(currentNode.source)}`]
                       .filter(Boolean)
                       .join('\n\n')}
                   />
@@ -1100,7 +1101,7 @@ export default function ScenarioPage() {
                               )}
                               {(r.bestSource || r.source) && (
                                 <p className="text-[10px] text-slate-500 italic leading-snug mt-1">
-                                  📚 อ้างอิง: {r.bestSource || r.source}
+                                  📚 อ้างอิง: {apaReference(r.bestSource || r.source || '')}
                                 </p>
                               )}
                             </div>
@@ -1125,7 +1126,7 @@ export default function ScenarioPage() {
                                   )}
                                   {row.source && (
                                     <p className="text-[10px] text-slate-500 italic leading-snug mt-1">
-                                      📚 อ้างอิง: {row.source}
+                                      📚 อ้างอิง: {apaReference(row.source)}
                                     </p>
                                   )}
                                 </div>
@@ -1147,7 +1148,7 @@ export default function ScenarioPage() {
                         {scenario.references.map((ref, i) => (
                           <li key={i} className="text-[11px] text-gray-600 leading-relaxed flex gap-1.5">
                             <span className="text-detective-400 flex-shrink-0">•</span>
-                            <span>{ref}</span>
+                            <span>{apaReference(ref)}</span>
                           </li>
                         ))}
                       </ul>

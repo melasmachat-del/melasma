@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { usePlayerStore } from '../store/playerStore';
+import { apaReference } from '../lib/references';
 import { JOURNAL_ENTRIES, type JournalEntry } from '../lib/journalEntries';
 import { SCENARIO_META, isStageUnlocked } from '../scenarios';
 import { SHOP_ITEMS } from '../lib/shopItems';
@@ -353,7 +354,7 @@ function CaseModal({
                   {c.references.map((ref, i) => (
                     <li key={i} className="text-[11px] text-slate-600 leading-relaxed flex gap-1.5">
                       <span className="text-slate-400 flex-shrink-0">•</span>
-                      <span>{ref}</span>
+                      <span>{apaReference(ref)}</span>
                     </li>
                   ))}
                 </ul>

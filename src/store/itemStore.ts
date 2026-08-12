@@ -19,6 +19,7 @@ interface ItemState {
   addItem: (name: string, dataUrl: string, category?: CustomItem['category']) => CustomItem;
   removeItem: (id: string) => void;
   renameItem: (id: string, name: string) => void;
+  clearAll: () => void;
 }
 
 const genId = () => `it_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
@@ -49,6 +50,7 @@ export const useItemStore = create<ItemState>()(
           ),
         });
       },
+      clearAll: () => set({ items: [] }),
     }),
     {
       name: 'hd_items',

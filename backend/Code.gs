@@ -5,7 +5,7 @@
  *  Project    : Melasma learning game for skin health
  *  Account    : melasmachat@gmail.com
  *  Frontend   : https://melasmachat-del.github.io/melasma/
- *  Version    : 1.3.0  (เพิ่ม funRating — ดาวประเมินความพึงพอใจ/ความสนุกหลังจบด่าน)
+ *  Version    : 1.7.1  (รองรับการ fallback เมื่อ Apps Script redirect POST เป็น GET)
  *
  *  Endpoints  :
  *    POST  body {action:'sync', ...}        บันทึก/อัปเดต progress (รับ field ครบ)
@@ -38,7 +38,7 @@ const CONFIG = {
   CERT_PREFIX: 'MEL',
   CERT_YEAR: new Date().getFullYear(),
   STAGES_REQUIRED: 5,
-  BACKEND_VERSION: '1.6.0',
+  BACKEND_VERSION: '1.7.1',
   SHEET_NAMES: {
     PLAYERS: 'Players',
     EVENTS: 'Events',
@@ -131,6 +131,15 @@ function jsonResponse_(obj) {
 
 function nowIso_() { return new Date().toISOString(); }
 
+/** Read AI configuration without ever returning the secret key to clients. */
+function getGeminiConfig_() {
+  const properties = PropertiesService.getScriptProperties();
+  return {
+    apiKey: String(properties.getProperty('GEMINI_API_KEY') || '').trim(),
+    model: String(properties.getProperty('GEMINI_MODEL') || GEMINI_DEFAULT_MODEL).trim() || GEMINI_DEFAULT_MODEL,
+  };
+}
+
 // ---------- Gemini AI assistant ----------
 // The API key must stay in Apps Script > Project Settings > Script Properties.
 // Never put GEMINI_API_KEY in the frontend or commit it to the repository.
@@ -174,8 +183,8 @@ function handleAskAi_(payload) {
     return jsonResponse_({ ok: false, error: 'invalid_question' });
   }
 
-  const properties = PropertiesService.getScriptProperties();
-  const apiKey = String(properties.getProperty('GEMINI_API_KEY') || '').trim();
+  const gemini = getGeminiConfig_();
+  const apiKey = gemini.apiKey;
   if (!apiKey) {
     return jsonResponse_({
       ok: false,
@@ -184,7 +193,7 @@ function handleAskAi_(payload) {
     });
   }
 
-  const model = String(properties.getProperty('GEMINI_MODEL') || GEMINI_DEFAULT_MODEL).trim();
+  const model = gemini.model;
   const context = clampText_(payload && payload.context, GEMINI_MAX_CONTEXT_CHARS);
   const systemInstruction = [
     'คุณเป็นผู้ช่วยให้ความรู้เรื่องฝ้า (melasma) สำหรับเว็บไซต์การเรียนรู้สุขภาพผิว',
@@ -227,17 +236,17 @@ function handleAskAi_(payload) {
 
     if (status < 200 || status >= 300) {
       console.error('Gemini request failed with status ' + status);
-      return jsonResponse_({ ok: false, error: 'gemini_request_failed' });
+      return jsonResponse_({ ok: false, error: 'gemini_request_failed', status: status, model: model });
     }
 
     const answer = extractGeminiText_(data);
     if (!answer) {
-      return jsonResponse_({ ok: false, error: 'gemini_empty_response' });
+      return jsonResponse_({ ok: false, error: 'gemini_empty_response', model: model });
     }
     return jsonResponse_({ ok: true, answer: answer, model: model, source: 'gemini' });
   } catch (error) {
     console.error('Gemini request exception: ' + String(error));
-    return jsonResponse_({ ok: false, error: 'gemini_request_failed' });
+    return jsonResponse_({ ok: false, error: 'gemini_request_failed', model: model });
   }
 }
 
@@ -253,8 +262,8 @@ function handleAskAiImage_(payload) {
     return jsonResponse_({ ok: false, error: 'image_too_large' });
   }
 
-  const properties = PropertiesService.getScriptProperties();
-  const apiKey = String(properties.getProperty('GEMINI_API_KEY') || '').trim();
+  const gemini = getGeminiConfig_();
+  const apiKey = gemini.apiKey;
   if (!apiKey) {
     return jsonResponse_({
       ok: false,
@@ -263,7 +272,7 @@ function handleAskAiImage_(payload) {
     });
   }
 
-  const model = String(properties.getProperty('GEMINI_MODEL') || GEMINI_DEFAULT_MODEL).trim();
+  const model = gemini.model;
   const systemInstruction = [
     'คุณเป็นผู้ช่วย AI สำหรับการเรียนรู้เรื่องฝ้าและการดูแลผิว',
     'ภาพนี้เป็นข้อมูลส่วนบุคคล ให้ใช้เพื่อการตอบครั้งนี้เท่านั้นและอย่าขอข้อมูลระบุตัวตนเพิ่มเติม',
@@ -303,14 +312,14 @@ function handleAskAiImage_(payload) {
 
     if (status < 200 || status >= 300) {
       console.error('Gemini image request failed with status ' + status);
-      return jsonResponse_({ ok: false, error: 'gemini_request_failed' });
+      return jsonResponse_({ ok: false, error: 'gemini_request_failed', status: status, model: model });
     }
     const answer = extractGeminiText_(data);
-    if (!answer) return jsonResponse_({ ok: false, error: 'gemini_empty_response' });
+    if (!answer) return jsonResponse_({ ok: false, error: 'gemini_empty_response', model: model });
     return jsonResponse_({ ok: true, answer: answer, model: model, source: 'gemini-image' });
   } catch (error) {
     console.error('Gemini image request exception: ' + String(error));
-    return jsonResponse_({ ok: false, error: 'gemini_request_failed' });
+    return jsonResponse_({ ok: false, error: 'gemini_request_failed', model: model });
   }
 }
 
@@ -656,16 +665,28 @@ function handleLeaderboard_(params) {
 }
 
 // ---------- Routers ----------
-function doPost(e) {
+function parsePostPayload_(e) {
+  if (!e || !e.postData || !e.postData.contents) return null;
   try {
     const payload = JSON.parse(e.postData.contents);
-    if (payload.action === 'sync')      return handleSync_(payload);
-    if (payload.action === 'issueCert') return handleIssueCert_(payload);
-    if (payload.action === 'ask_ai')    return handleAskAi_(payload);
-    if (payload.action === 'ask_ai_image') return handleAskAiImage_(payload);
-    return jsonResponse_({ok:false, error:'unknown_action'});
+    return payload && typeof payload === 'object' ? payload : null;
   } catch (err) {
-    return jsonResponse_({ok:false, error:'server_error', message:String(err)});
+    return null;
+  }
+}
+
+function doPost(e) {
+  try {
+    const payload = parsePostPayload_(e);
+    if (!payload) return jsonResponse_({ ok: false, error: 'invalid_json' });
+    if (payload.action === 'sync')          return handleSync_(payload);
+    if (payload.action === 'issueCert')    return handleIssueCert_(payload);
+    if (payload.action === 'ask_ai')       return handleAskAi_(payload);
+    if (payload.action === 'ask_ai_image') return handleAskAiImage_(payload);
+    return jsonResponse_({ ok: false, error: 'unknown_action' });
+  } catch (err) {
+    console.error('POST router failed: ' + String(err));
+    return jsonResponse_({ ok: false, error: 'server_error' });
   }
 }
 
@@ -675,7 +696,24 @@ function doGet(e) {
     if (action === 'verify')      return handleVerify_(e.parameter);
     if (action === 'restore')     return handleRestore_(e.parameter);
     if (action === 'leaderboard') return handleLeaderboard_(e.parameter);
-    if (action === 'ping')        return jsonResponse_({ok:true, time:nowIso_(), version:CONFIG.BACKEND_VERSION});
+    // Apps Script may redirect a browser POST to a GET request. Keep a small
+    // text-only fallback for the chat endpoint so the question is not lost.
+    if (action === 'ask_ai') {
+      return handleAskAi_({
+        question: e.parameter.question || '',
+        context: '',
+      });
+    }
+    if (action === 'ping') {
+      const gemini = getGeminiConfig_();
+      return jsonResponse_({
+        ok: true,
+        time: nowIso_(),
+        version: CONFIG.BACKEND_VERSION,
+        features: { askAi: true, askAiImage: true },
+        gemini: { configured: !!gemini.apiKey, model: gemini.model },
+      });
+    }
     return jsonResponse_({ok:false, error:'unknown_action'});
   } catch (err) {
     return jsonResponse_({ok:false, error:'server_error', message:String(err)});

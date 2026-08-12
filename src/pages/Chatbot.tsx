@@ -7,6 +7,7 @@ import { CHAT_CLEAR_EVENT, clearChatSession } from '../lib/chatSession';
 import { getFaqAnswer } from '../lib/melasmaFaq';
 import { assessPhotoQuality } from '../lib/photoQuality';
 import { askAi, askAiImage, type AiImageInput } from '../lib/cloudSync';
+import { apaReferenceByUrl } from '../lib/references';
 import {
   assessObservedAppearance,
   type ObservedArea,
@@ -51,6 +52,18 @@ interface MedicalReference {
   url: string;
 }
 
+interface AiChatMessage {
+  id: string;
+  role: 'user' | 'assistant';
+  text: string;
+}
+
+const AI_SUGGESTED_QUESTIONS = [
+  'ฝ้าคืออะไร และเกิดขึ้นได้อย่างไร?',
+  'ควรเลือกครีมกันแดดแบบไหนถ้ามีฝ้า?',
+  'ฝ้ารักษาให้จางลงได้อย่างไรบ้าง?',
+];
+
 const MEDICAL_REFERENCES: MedicalReference[] = [
   { title: 'American Academy of Dermatology — Melasma: diagnosis and treatment', url: 'https://www.aad.org/public/diseases/a-z/melasma-treatment' },
   { title: 'DermNet NZ — Melasma', url: 'https://dermnetnz.org/topics/melasma' },
@@ -66,7 +79,7 @@ const FAQ_GROUPS = [
   { id: 'triggers', icon: '☀️', title: 'ทำไมฝ้าถึงเข้มขึ้น?', detail: 'แดด ฮอร์โมน ความร้อน และการระคายเคือง', questions: ['ฝ้าเข้มขึ้นเพราะอะไร?', 'แสงผ่านหน้าต่างหรือแสงหน้าจอทำให้ฝ้าเข้มไหม?', 'การตั้งครรภ์หรือยาคุมเกี่ยวข้องกับฝ้าไหม?', 'การขัดหน้าและสกินแคร์ที่แสบทำให้ฝ้าแย่ลงไหม?', 'ความร้อนและการทำอาหารทำให้ฝ้ากำเริบไหม?'] },
   { id: 'protect', icon: '🛡️', title: 'ป้องกันอย่างไร?', detail: 'เลือกและใช้กันแดดให้เหมาะกับฝ้า', questions: ['คนเป็นฝ้าควรเลือกกันแดดแบบไหน?', 'ต้องทากันแดดเท่าไรและทาซ้ำเมื่อไร?', 'กันแดดแบบมีสีและ iron oxide ช่วยอย่างไร?', 'อยู่ในบ้านต้องทากันแดดไหม?', 'แต่งหน้าแล้วจะทากันแดดซ้ำอย่างไร?'] },
   { id: 'treat', icon: '🧴', title: 'รักษาและดูแลอย่างไร?', detail: 'ยา สกินแคร์ หัตถการ และการดูแลระยะยาว', questions: ['การรักษาแบบไหนปลอดภัยบ้าง?', 'ฝ้าหายขาดได้ไหมและใช้เวลานานแค่ไหน?', 'ไฮโดรควิโนนและกรดวิตามินเอใช้เองได้ไหม?', 'เลเซอร์หรือ tranexamic acid เหมาะกับทุกคนไหม?', 'ระหว่างรักษาฝ้าควรใช้สกินแคร์ประจำวันอย่างไร?'] },
-  { id: 'ai', icon: '🩺', title: 'ถามคุณหมอ AI', detail: 'พิมพ์คำถามเรื่องฝ้า แล้วรับคำอธิบายจากคลังความรู้', questions: [] },
+  { id: 'ai', icon: '🩺', title: 'ถามคุณหมอ AI', detail: 'คุยกับอาจารย์ 3D แล้วรับคำอธิบายจากคลังความรู้', questions: AI_SUGGESTED_QUESTIONS },
   { id: 'photo', icon: '📷', title: 'อยากตรวจคุณภาพภาพ', detail: 'เช็กแสงและความคมชัดเบื้องต้น ไม่ใช่การวินิจฉัย', questions: [] },
 ] as const;
 
@@ -76,6 +89,23 @@ const MAX_IMAGE_DIMENSION = 12_000;
 const IMAGE_LOAD_TIMEOUT_MS = 10_000;
 
 const hasAny = (text: string, patterns: RegExp[]) => patterns.some(pattern => pattern.test(text));
+
+function describeAiError(error?: string) {
+  switch (error) {
+    case 'unknown_action':
+      return 'เซิร์ฟเวอร์ยังเป็นเวอร์ชันเก่า จึงยังไม่รองรับผู้ช่วย AI กรุณา deploy backend เวอร์ชันล่าสุดก่อน';
+    case 'gemini_not_configured':
+      return 'เซิร์ฟเวอร์ยังไม่ได้ตั้งค่า GEMINI_API_KEY ใน Google Apps Script จึงยังเรียกผู้ช่วย AI ไม่ได้';
+    case 'gemini_request_failed':
+      return 'เซิร์ฟเวอร์เชื่อมต่อ Gemini ไม่สำเร็จ กรุณาตรวจสอบ API key และชื่อโมเดลใน Script Properties';
+    case 'gemini_empty_response':
+      return 'Gemini ไม่ได้ส่งคำตอบกลับมา จึงแสดงคำตอบจากคลังความรู้ให้แทน';
+    case 'network_error':
+      return 'ติดต่อเซิร์ฟเวอร์ผู้ช่วย AI ไม่ได้ กรุณาตรวจสอบการเชื่อมต่อหรือ URL backend';
+    default:
+      return 'ผู้ช่วย AI ยังตอบไม่ได้ในขณะนี้ จึงแสดงคำตอบจากคลังความรู้ให้แทน';
+  }
+}
 
 function buildGuidanceSections(): GuidanceSection[] {
   return [
@@ -466,7 +496,7 @@ function buildAiContext(answer: AnswerBlock): string {
     'ข้อควรระวัง:',
     ...answer.caution.map(item => `- ${item}`),
     'แหล่งอ้างอิง:',
-    ...answer.references.map(reference => `${reference.title}: ${reference.url}`),
+    ...answer.references.map(reference => `${apaReferenceByUrl(reference.url, reference.title).citation} ${reference.url}`),
   ].join('\n').slice(0, 12_000);
 }
 
@@ -519,6 +549,7 @@ export default function Chatbot() {
   const [answer, setAnswer] = useState<AnswerBlock | null>(null);
   const [customQuestion, setCustomQuestion] = useState('');
   const [aiAnswer, setAiAnswer] = useState<string | null>(null);
+  const [aiMessages, setAiMessages] = useState<AiChatMessage[]>([]);
   const [isAiWorking, setIsAiWorking] = useState(false);
   const [aiError, setAiError] = useState<string | null>(null);
   const [aiImageConsent, setAiImageConsent] = useState(false);
@@ -551,6 +582,7 @@ export default function Chatbot() {
       setAnswer(null);
       setCustomQuestion('');
       setAiAnswer(null);
+      setAiMessages([]);
       setIsAiWorking(false);
       setAiError(null);
       setAiImageConsent(false);
@@ -648,7 +680,50 @@ export default function Chatbot() {
     }
   };
 
+  const submitAiQuestion = async (value: string) => {
+    const trimmed = value.trim().slice(0, 1_000);
+    if (!trimmed || isAiWorking) return;
+    sfx.click();
+    const staticAnswer = buildAnswer(trimmed, imageAnalysis);
+    setQuestion(trimmed);
+    setAnswer(staticAnswer);
+    setCustomQuestion('');
+    setAiAnswer(null);
+    setAiError(null);
+    setIsAiWorking(true);
+    setAiMessages(previous => [
+      ...previous,
+      { id: `user-${Date.now()}`, role: 'user', text: trimmed },
+    ]);
+
+    const response = await askAi(trimmed, buildAiContext(staticAnswer));
+    if (response.ok && response.answer) {
+      setAiAnswer(response.answer);
+      setAiMessages(previous => [
+        ...previous,
+        { id: `assistant-${Date.now()}`, role: 'assistant', text: response.answer! },
+      ]);
+    } else {
+      setAiMessages(previous => [
+        ...previous,
+        {
+          id: `assistant-fallback-${Date.now()}`,
+          role: 'assistant',
+          text: `${staticAnswer.summary}\n\nคำตอบนี้เป็นข้อมูลเบื้องต้นจากคลังความรู้ของแอป หากต้องการคำแนะนำเฉพาะบุคคลหรือมีอาการผิดปกติ ควรปรึกษาแพทย์ผิวหนังนะคะ`,
+        },
+      ]);
+      if (response.error && response.error !== 'no_sync_url') {
+        setAiError(describeAiError(response.error));
+      }
+    }
+    setIsAiWorking(false);
+  };
+
   const chooseQuestion = (value: string) => {
+    if (selectedTopic === 'ai') {
+      void submitAiQuestion(value);
+      return;
+    }
     sfx.click();
     setQuestion(value);
     setAnswer(buildAnswer(value, imageAnalysis));
@@ -660,6 +735,10 @@ export default function Chatbot() {
     event.preventDefault();
     const value = customQuestion.trim().slice(0, 1_000);
     if (!value) return;
+    if (selectedTopic === 'ai') {
+      await submitAiQuestion(value);
+      return;
+    }
     sfx.click();
     const staticAnswer = buildAnswer(value, imageAnalysis);
     setQuestion(value);
@@ -671,7 +750,7 @@ export default function Chatbot() {
     if (response.ok && response.answer) {
       setAiAnswer(response.answer);
     } else if (response.error && response.error !== 'no_sync_url') {
-      setAiError('ยังเชื่อมผู้ช่วย AI ไม่สำเร็จ จึงแสดงคำตอบจากคลังความรู้แทน');
+      setAiError(describeAiError(response.error));
     }
     setIsAiWorking(false);
   };
@@ -743,7 +822,7 @@ export default function Chatbot() {
           </div>
         </motion.section>
 
-        <div className="grid grid-cols-1 lg:grid-cols-[1.1fr_0.9fr] gap-4">
+        <div className={`grid grid-cols-1 gap-4 ${selectedTopic === 'ai' ? 'lg:grid-cols-[0.78fr_1.22fr]' : 'lg:grid-cols-[1.1fr_0.9fr]'}`}>
           <section className="card border border-sky-100">
             <div className="space-y-4">
               <div>
@@ -760,9 +839,31 @@ export default function Chatbot() {
                     {FAQ_GROUPS.find(group => group.id === selectedTopic)?.questions.map((item, index) => <button key={item} type="button" onClick={() => chooseQuestion(item)} className={`flex w-full items-center gap-3 rounded-[20px] border p-3 text-left text-sm font-semibold transition ${question === item ? 'border-sky-400 bg-sky-100 text-sky-900 shadow-sm' : 'border-sky-100 bg-white text-slate-700 hover:border-sky-300'}`}><span className="flex h-7 w-7 flex-none items-center justify-center rounded-full bg-sky-600 text-xs font-bold text-white">{index + 1}</span><span className="flex-1">{item}</span><span className="text-sky-400">→</span></button>)}
                   </div>
                 ) : selectedTopic === 'ai' ? (
-                  <div className="rounded-[22px] border border-violet-100 bg-violet-50/70 p-4 text-sm leading-relaxed text-violet-950">
-                    <b>คุณหมอ AI พร้อมตอบคำถามแล้ว</b>
-                    <p className="mt-1 text-xs text-violet-800">พิมพ์คำถามในช่องด้านล่างได้เลย ระบบจะใช้คลังความรู้เรื่องฝ้าเป็นหลักและไม่วินิจฉัยโรคแทนแพทย์</p>
+                  <div className="overflow-hidden rounded-[24px] border border-sky-100 bg-white shadow-clay-sm">
+                    <div className="flex min-h-[185px] items-stretch overflow-hidden bg-gradient-to-br from-[#E9F7FF] via-white to-[#EAFBF5]">
+                      <div className="flex min-w-0 flex-1 flex-col justify-center p-4 sm:p-5">
+                        <span className="text-[10px] font-extrabold uppercase tracking-[.16em] text-sky-600">Skin Lab · AI Mentor</span>
+                        <h3 className="mt-1 text-lg font-extrabold leading-tight text-slate-900 sm:text-xl">คุยกับอาจารย์หมอได้เลย</h3>
+                        <p className="mt-2 max-w-[23rem] text-xs leading-relaxed text-slate-600 sm:text-sm">ถามเรื่องฝ้าได้เหมือนคุยกับผู้ช่วยส่วนตัว อาจารย์จะอธิบายเป็นขั้นตอนและอ้างอิงจากคลังความรู้ของแอป</p>
+                        <span className="mt-3 inline-flex w-fit items-center gap-1.5 rounded-full border border-emerald-200 bg-white/90 px-2.5 py-1 text-[11px] font-bold text-emerald-700 shadow-sm"><span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />พร้อมตอบคำถาม</span>
+                      </div>
+                      <div className="relative hidden w-[42%] flex-none sm:block">
+                        <img src={asset('images/mascot/doctor-chat.png')} alt="อาจารย์หมอ 3D ผู้ช่วยตอบคำถามเรื่องฝ้า" className="absolute inset-0 h-full w-full object-cover object-right" loading="eager" />
+                        <div className="absolute inset-y-0 left-0 w-1/2 bg-gradient-to-r from-[#E9F7FF] to-transparent" aria-hidden="true" />
+                      </div>
+                    </div>
+                    <div className="border-t border-sky-100 bg-white p-4 sm:p-5">
+                      <p className="text-xs font-extrabold text-slate-800">ลองเลือกคำถามแนะนำ หรือพิมพ์คำถามของคุณในหน้าต่างแชต</p>
+                      <div className="mt-3 space-y-2">
+                        {(FAQ_GROUPS.find(group => group.id === 'ai')?.questions ?? AI_SUGGESTED_QUESTIONS).map((item, index) => (
+                          <button key={item} type="button" onClick={() => chooseQuestion(item)} disabled={isAiWorking} className="flex w-full items-center gap-2.5 rounded-2xl border border-sky-100 bg-sky-50/60 px-3 py-2.5 text-left text-xs font-semibold leading-relaxed text-sky-900 transition hover:border-sky-300 hover:bg-sky-50 disabled:cursor-not-allowed disabled:opacity-50">
+                            <span className="flex h-6 w-6 flex-none items-center justify-center rounded-full bg-white text-[10px] font-extrabold text-sky-700 shadow-sm">{index + 1}</span>
+                            <span className="min-w-0 flex-1">{item}</span>
+                            <span className="text-sky-500">→</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
                   </div>
                 ) : (
                   <div className="space-y-3">
@@ -782,7 +883,7 @@ export default function Chatbot() {
                 )}
               </div>
 
-                {selectedTopic !== 'photo' && (
+                {selectedTopic !== 'photo' && selectedTopic !== 'ai' && (
                   <form onSubmit={submitCustomQuestion} className="mt-3 rounded-[22px] border border-violet-100 bg-violet-50/60 p-3">
                     <label htmlFor="custom-melasma-question" className="text-xs font-bold text-violet-900">อยากถามคุณหมอเพิ่มไหม?</label>
                     <div className="mt-2 flex gap-2">
@@ -953,6 +1054,89 @@ export default function Chatbot() {
           </section>
 
           <section className="card border border-sky-100">
+            {selectedTopic === 'ai' ? (
+              <motion.div
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="flex min-h-[620px] flex-col"
+              >
+                <div className="flex items-center gap-3 border-b border-sky-100 pb-4">
+                  <div className="relative h-12 w-12 flex-none overflow-hidden rounded-2xl border-2 border-white bg-sky-100 shadow-clay-sm ring-1 ring-sky-100">
+                    <img src={asset('images/mascot/doctor-chat.png')} alt="อาจารย์หมอ AI" className="h-full w-full object-cover object-right" />
+                    <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-white bg-emerald-500" aria-label="ออนไลน์" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-extrabold text-slate-900">อาจารย์หมอ AI</p>
+                    <p className="mt-0.5 text-xs text-slate-500">ผู้ช่วยสอนเรื่องฝ้า · อธิบายจากคลังความรู้</p>
+                  </div>
+                  <span className="hidden rounded-full bg-emerald-50 px-2.5 py-1 text-[10px] font-extrabold text-emerald-700 sm:inline-flex">พร้อมตอบ</span>
+                </div>
+
+                <div className="mt-4 flex-1 space-y-4 overflow-y-auto rounded-[22px] border border-slate-100 bg-[#F7FBFF] p-3 sm:p-4">
+                  {aiMessages.length === 0 && (
+                    <div className="flex items-start gap-2.5">
+                      <div className="hidden h-9 w-9 flex-none overflow-hidden rounded-xl border border-sky-100 bg-white shadow-sm sm:block">
+                        <img src={asset('images/mascot/doctor-chat.png')} alt="อาจารย์หมอ" className="h-full w-full object-cover object-right" />
+                      </div>
+                      <div className="max-w-[88%] rounded-[20px] rounded-tl-md border border-mint-100 bg-white px-3.5 py-3 text-sm leading-relaxed text-slate-700 shadow-sm">
+                        <p className="font-extrabold text-slate-900">สวัสดีค่ะ ฉันคืออาจารย์หมอประจำ Skin Lab 👋</p>
+                        <p className="mt-1.5">ถามเรื่องฝ้า การป้องกัน หรือการดูแลผิวได้เลยนะคะ ฉันจะช่วยอธิบายให้เข้าใจง่ายเป็นขั้นตอน</p>
+                      </div>
+                    </div>
+                  )}
+
+                  {aiMessages.map(message => (
+                    <div key={message.id} className={`flex gap-2.5 ${message.role === 'user' ? 'justify-end' : 'items-start'}`}>
+                      {message.role === 'assistant' && (
+                        <div className="hidden h-9 w-9 flex-none overflow-hidden rounded-xl border border-sky-100 bg-white shadow-sm sm:block">
+                          <img src={asset('images/mascot/doctor-chat.png')} alt="อาจารย์หมอ" className="h-full w-full object-cover object-right" />
+                        </div>
+                      )}
+                      <div className={`max-w-[88%] rounded-[20px] px-3.5 py-3 text-sm leading-relaxed shadow-sm ${message.role === 'user' ? 'rounded-tr-md bg-sky-600 text-white' : 'rounded-tl-md border border-mint-100 bg-white text-slate-700'}`}>
+                        {message.role === 'assistant' && <p className="mb-1 text-[10px] font-extrabold text-mint-700">อาจารย์หมอ AI</p>}
+                        <p className="whitespace-pre-line break-words">{message.text}</p>
+                      </div>
+                    </div>
+                  ))}
+
+                  {isAiWorking && (
+                    <div className="flex items-start gap-2.5">
+                      <div className="hidden h-9 w-9 flex-none overflow-hidden rounded-xl border border-sky-100 bg-white shadow-sm sm:block">
+                        <img src={asset('images/mascot/doctor-chat.png')} alt="อาจารย์หมอกำลังตอบ" className="h-full w-full object-cover object-right" />
+                      </div>
+                      <div className="rounded-[20px] rounded-tl-md border border-mint-100 bg-white px-4 py-3 shadow-sm">
+                        <div className="flex items-center gap-1.5" aria-label="อาจารย์หมอกำลังพิมพ์">
+                          <span className="h-2 w-2 animate-bounce rounded-full bg-mint-400 [animation-delay:-.3s]" />
+                          <span className="h-2 w-2 animate-bounce rounded-full bg-mint-400 [animation-delay:-.15s]" />
+                          <span className="h-2 w-2 animate-bounce rounded-full bg-mint-400" />
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {aiError && <p className="mt-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs leading-relaxed text-amber-800">{aiError}</p>}
+
+                <form onSubmit={submitCustomQuestion} className="mt-4 rounded-[22px] border border-sky-100 bg-white p-2 shadow-clay-sm">
+                  <div className="flex items-end gap-2">
+                    <label htmlFor="custom-melasma-question" className="sr-only">พิมพ์คำถามถึงอาจารย์หมอ</label>
+                    <textarea
+                      id="custom-melasma-question"
+                      value={customQuestion}
+                      onChange={event => setCustomQuestion(event.target.value)}
+                      placeholder="พิมพ์คำถามเรื่องฝ้า..."
+                      maxLength={1000}
+                      rows={1}
+                      className="max-h-28 min-h-10 min-w-0 flex-1 resize-y rounded-2xl border-0 bg-sky-50/70 px-3 py-2.5 text-sm leading-relaxed text-slate-800 outline-none placeholder:text-slate-400 focus:ring-2 focus:ring-sky-200"
+                    />
+                    <button type="submit" disabled={!customQuestion.trim() || isAiWorking} className="flex h-10 flex-none items-center gap-1.5 rounded-2xl bg-sky-600 px-3.5 text-xs font-extrabold text-white shadow-sm transition hover:bg-sky-700 disabled:cursor-not-allowed disabled:opacity-45">
+                      ส่ง <span aria-hidden="true">➤</span>
+                    </button>
+                  </div>
+                  <p className="px-2 pt-1.5 text-[10px] leading-relaxed text-slate-400">คำตอบใช้เพื่อการเรียนรู้ ไม่แทนการวินิจฉัยหรือการรักษาโดยแพทย์</p>
+                </form>
+              </motion.div>
+            ) : (
             <AnimatePresence mode="wait">
               {!answer ? (
                 <motion.div
@@ -1058,7 +1242,7 @@ export default function Chatbot() {
                       {answer.references.map(ref => (
                         <li key={ref.url}>
                           <a href={ref.url} target="_blank" rel="noreferrer" className="text-sky-700 underline decoration-sky-200 underline-offset-2 hover:text-sky-900">
-                            {ref.title}
+                            {apaReferenceByUrl(ref.url, ref.title).citation}
                           </a>
                         </li>
                       ))}
@@ -1067,6 +1251,7 @@ export default function Chatbot() {
                 </motion.div>
               )}
             </AnimatePresence>
+            )}
           </section>
         </div>
       </main>

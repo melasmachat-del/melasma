@@ -12,6 +12,7 @@ interface AvatarState {
   removeAvatar: (id: string) => void;
   renameAvatar: (id: string, name: string) => void;
   getById: (id: string) => CustomAvatar | undefined;
+  clearAll: () => void;
 }
 
 const genId = () => `av_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
@@ -45,6 +46,7 @@ export const useAvatarStore = create<AvatarState>()(
       },
 
       getById: (id) => get().avatars.find(a => a.id === id),
+      clearAll: () => set({ avatars: [] }),
     }),
     {
       name: 'hd_avatars',

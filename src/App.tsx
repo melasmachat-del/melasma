@@ -3,7 +3,7 @@ import { Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-
 import { initLiff, getUserIdHash, isMockMode } from './lib/liff';
 import { flushQueue, restoreProgress } from './lib/cloudSync';
 import { parseChallengeFromSearch, setPendingChallenge } from './lib/challenge';
-import { startBgm } from './lib/bgm';
+import { startBgm, stopBgm } from './lib/bgm';
 import { usePlayerStore } from './store/playerStore';
 import { useSettingsStore } from './store/settingsStore';
 import { SHOP_ITEMS } from './lib/shopItems';
@@ -19,6 +19,7 @@ import TopNavigation from './components/TopNavigation';
 const ScenarioPage = lazy(() => import('./pages/ScenarioPage.tsx'));
 const MissionMap   = lazy(() => import('./pages/MissionMap.tsx'));
 const StageReview  = lazy(() => import('./pages/StageReview.tsx'));
+const AllStagesReview = lazy(() => import('./pages/AllStagesReview.tsx'));
 const Profile      = lazy(() => import('./pages/Profile.tsx'));
 const Certificate  = lazy(() => import('./pages/Certificate.tsx'));
 const Verify       = lazy(() => import('./pages/Verify.tsx'));
@@ -50,6 +51,7 @@ export default function App() {
   const fontSize = useSettingsStore(s => s.fontSize);
   const musicEnabled = useSettingsStore(s => s.musicEnabled);
   const eyeComfortEnabled = useSettingsStore(s => s.eyeComfortEnabled);
+  const reducedMotion = useSettingsStore(s => s.reducedMotion);
   const equippedTheme = usePlayerStore(s => s.equippedTheme);
 
   useEffect(() => {
@@ -63,6 +65,11 @@ export default function App() {
     document.documentElement.classList.toggle('eye-comfort', eyeComfortEnabled);
     return () => document.documentElement.classList.remove('eye-comfort');
   }, [eyeComfortEnabled]);
+
+  useEffect(() => {
+    document.documentElement.classList.toggle('reduce-motion', reducedMotion);
+    return () => document.documentElement.classList.remove('reduce-motion');
+  }, [reducedMotion]);
 
   // === Apply equipped theme CSS variables on <html> ===
   // ส่งผลกับ: body bg, .rainbow-header, .btn-primary
@@ -90,7 +97,10 @@ export default function App() {
   }, [equippedTheme]);
 
   useEffect(() => {
-    if (!musicEnabled) return;
+    if (!musicEnabled) {
+      stopBgm();
+      return;
+    }
     const onGesture = () => {
       startBgm();
       window.removeEventListener('pointerdown', onGesture);
@@ -225,6 +235,7 @@ export default function App() {
             <Route path="/onboarding" element={<Onboarding />} />
             <Route path="/scenario/:id" element={<ScenarioPage />} />
             <Route path="/scenario/:id/review" element={<StageReview />} />
+            <Route path="/map/summary" element={<AllStagesReview />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/settings" element={<Settings />} />
             <Route path="/certificate" element={<Certificate />} />

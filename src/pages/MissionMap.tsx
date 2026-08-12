@@ -49,38 +49,62 @@ export default function MissionMap() {
           <div className="h-2.5 overflow-hidden rounded-full bg-sky-100"><motion.div initial={{ width: 0 }} animate={{ width: `${done / CERT_STAGE_COUNT * 100}%` }} className="h-full rounded-full bg-gradient-to-r from-sky-400 to-sky-600" /></div>
         </div>
 
-        <section className="grid gap-5 md:grid-cols-2" aria-label="ด่านการเรียนรู้ทั้งหมด">
+        <section className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4" aria-label="ด่านการเรียนรู้ทั้งหมด">
           {SCENARIO_META.map((stage, index) => {
             const finished = completed.includes(stage.id);
             const unlocked = isStageUnlocked(stage.id, completed);
             const difficulty = DIFFICULTY[getStageDifficulty(stage.id)];
             return (
-              <motion.article key={stage.id} initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * .06 }} className={`overflow-hidden rounded-[28px] border bg-white shadow-lg ${finished ? 'border-emerald-200' : unlocked ? 'border-sky-100' : 'border-slate-200'}`}>
+              <motion.article key={stage.id} initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * .06 }} className={`overflow-hidden rounded-[22px] border bg-white shadow-lg sm:rounded-[28px] ${finished ? 'border-emerald-200' : unlocked ? 'border-sky-100' : 'border-slate-200'}`}>
                 <div className="relative aspect-video overflow-hidden">
                   <img src={asset(STAGE_ART[stage.id])} alt={`ภาพประกอบด่าน ${stage.id} ${stage.title}`} className={`h-full w-full object-cover object-center transition duration-500 ${unlocked ? '' : 'grayscale-[35%] opacity-70'}`} loading="lazy" />
-                  <span className="absolute left-3 top-3 rounded-full bg-white/90 px-3 py-1 text-xs font-extrabold text-slate-800 shadow backdrop-blur">ด่าน {stage.id}</span>
-                  <span className={`absolute right-3 top-3 rounded-full px-3 py-1 text-xs font-bold shadow ${difficulty[1]}`}>{difficulty[0]}</span>
-                  <p className="absolute bottom-3 left-4 rounded-full bg-white/90 px-2.5 py-1 text-xs font-bold text-slate-700 shadow-sm">⏱ ประมาณ {stage.estMinutes} นาที</p>
+                  <span className="absolute left-2 top-2 rounded-full bg-white/90 px-2 py-1 text-[10px] font-extrabold text-slate-800 shadow backdrop-blur sm:left-3 sm:top-3 sm:px-3 sm:text-xs">ด่าน {stage.id}</span>
+                  <span className={`absolute right-2 top-2 rounded-full px-2 py-1 text-[10px] font-bold shadow sm:right-3 sm:top-3 sm:px-3 sm:text-xs ${difficulty[1]}`}>{difficulty[0]}</span>
+                  <p className="absolute bottom-2 left-2 rounded-full bg-white/90 px-2 py-1 text-[10px] font-bold text-slate-700 shadow-sm sm:bottom-3 sm:left-4 sm:px-2.5 sm:text-xs">⏱ {stage.estMinutes} นาที</p>
                 </div>
-                <div className="p-5">
+                <div className="p-3 sm:p-5">
                   <div className="flex items-start justify-between gap-3">
-                    <div><h2 className="font-display text-xl font-extrabold text-slate-900">{stage.title}</h2><p className="mt-1 text-sm leading-relaxed text-slate-500">{stage.subtitle}</p></div>
-                    <span className={`flex h-9 w-9 flex-none items-center justify-center rounded-2xl text-lg ${finished ? 'bg-emerald-100 text-emerald-700' : unlocked ? 'bg-sky-100 text-sky-700' : 'bg-slate-100 text-slate-400'}`}>{finished ? '✓' : unlocked ? '▶' : '🔒'}</span>
+                    <div className="min-w-0"><h2 className="font-display text-sm font-extrabold leading-tight text-slate-900 sm:text-xl">{stage.title}</h2><p className="mt-1 text-[11px] leading-relaxed text-slate-500 sm:text-sm">{stage.subtitle}</p></div>
+                    <span className={`flex h-8 w-8 flex-none items-center justify-center rounded-xl text-sm sm:h-9 sm:w-9 sm:rounded-2xl sm:text-lg ${finished ? 'bg-emerald-100 text-emerald-700' : unlocked ? 'bg-sky-100 text-sky-700' : 'bg-slate-100 text-slate-400'}`}>{finished ? '✓' : unlocked ? '▶' : '🔒'}</span>
                   </div>
                   {finished ? (
-                    <div className="mt-4 grid grid-cols-2 gap-2">
-                      <button onClick={() => go(`/scenario/${stage.id}`)} className="btn-primary !min-h-11 !px-3 text-sm">↻ เล่นอีกครั้ง</button>
-                      <button onClick={() => go(`/scenario/${stage.id}/review`)} className="btn-outline !min-h-11 !px-3 text-sm">📖 บทเรียนและเฉลย</button>
+                    <div className="mt-3 grid gap-2 sm:mt-4 sm:grid-cols-2">
+                      <button onClick={() => go(`/scenario/${stage.id}`)} className="btn-primary !min-h-10 !px-2 text-xs sm:!min-h-11 sm:!px-3 sm:text-sm">↻ เล่นอีกครั้ง</button>
+                      <button onClick={() => go(`/scenario/${stage.id}/review`)} className="btn-outline !min-h-10 !px-2 text-xs sm:!min-h-11 sm:!px-3 sm:text-sm">📖 บทเรียนและเฉลย</button>
                     </div>
                   ) : unlocked ? (
-                    <button onClick={() => go(`/scenario/${stage.id}`)} className="btn-primary mt-4 w-full text-sm">เริ่มไขคดี <span className="ml-2">→</span></button>
+                    <button onClick={() => go(`/scenario/${stage.id}`)} className="btn-primary mt-3 w-full !px-2 text-xs sm:mt-4 sm:text-sm">เริ่มไขคดี <span className="ml-1 sm:ml-2">→</span></button>
                   ) : (
-                    <div className="mt-4 rounded-2xl bg-slate-50 px-4 py-3 text-center text-xs font-semibold text-slate-500">จบด่าน {stage.unlockAfter} เพื่อปลดล็อก · แต่คุณยังเห็นเส้นทางทั้งหมดได้</div>
+                    <div className="mt-3 rounded-2xl bg-slate-50 px-2 py-2.5 text-center text-[10px] font-semibold leading-relaxed text-slate-500 sm:mt-4 sm:px-4 sm:py-3 sm:text-xs">จบด่าน {stage.unlockAfter} เพื่อปลดล็อก</div>
                   )}
                 </div>
               </motion.article>
             );
           })}
+
+          <motion.article
+            initial={{ opacity: 0, y: 14 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: SCENARIO_META.length * .06 }}
+            className="overflow-hidden rounded-[22px] border border-violet-200 bg-white shadow-lg sm:rounded-[28px]"
+          >
+            <div className="relative aspect-video overflow-hidden bg-violet-100">
+              <img src={asset('images/knowledge-hero-v2.png')} alt="ภาพประกอบสรุปความรู้เรื่องฝ้าทั้งหมด" className="h-full w-full object-cover object-center" loading="lazy" />
+              <div className="absolute inset-0 bg-gradient-to-t from-violet-950/70 via-violet-900/10 to-transparent" />
+              <span className="absolute left-2 top-2 rounded-full bg-white/90 px-2 py-1 text-[10px] font-extrabold text-violet-800 shadow sm:left-3 sm:top-3 sm:px-3 sm:text-xs">รวมทุกด่าน</span>
+              <span className="absolute bottom-2 left-2 rounded-full bg-white/90 px-2 py-1 text-[10px] font-bold text-violet-800 shadow-sm sm:bottom-3 sm:left-4 sm:px-2.5 sm:text-xs">📚 อ่านทบทวนได้ตลอด</span>
+            </div>
+            <div className="p-3 sm:p-5">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <h2 className="font-display text-sm font-extrabold leading-tight text-slate-900 sm:text-xl">สรุปบทเรียนทั้งหมด</h2>
+                  <p className="mt-1 text-[11px] leading-relaxed text-slate-500 sm:text-sm">รวมคำถาม คำตอบ และเกล็ดความรู้จากทั้ง 5 ด่านไว้ในที่เดียว</p>
+                </div>
+                <span className="flex h-8 w-8 flex-none items-center justify-center rounded-xl bg-violet-100 text-base text-violet-700 sm:h-9 sm:w-9 sm:rounded-2xl sm:text-lg">📖</span>
+              </div>
+              <button onClick={() => go('/map/summary')} className="btn-primary mt-3 w-full !bg-violet-600 !px-2 text-xs hover:!bg-violet-700 sm:mt-4 sm:text-sm">เปิดสรุปความรู้ <span className="ml-1 sm:ml-2">→</span></button>
+            </div>
+          </motion.article>
         </section>
       </main>
     </div>

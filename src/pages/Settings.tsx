@@ -1,13 +1,19 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import { clearChatSession } from '../lib/chatSession';
 import { sfx } from '../lib/sound';
+import { startBgm, stopBgm } from '../lib/bgm';
+import { clearPendingSyncQueue, pingBackend } from '../lib/cloudSync';
 import { usePlayerStore } from '../store/playerStore';
 import { useProgressStore } from '../store/progressStore';
 import { type FontSize, useSettingsStore } from '../store/settingsStore';
+import { useAvatarStore } from '../store/avatarStore';
+import { useItemStore } from '../store/itemStore';
+import { useCertNameStore } from '../store/certNameStore';
 import { CERT_STAGE_COUNT, certificateStageProgress } from '../scenarios';
 import BackButton from '../components/BackButton';
 import { asset } from '../lib/asset';
+import { APP_VERSION, CHANGELOG } from '../lib/changelog';
 
 interface SwitchRowProps {
   icon: string;
@@ -44,13 +50,32 @@ const FONT_OPTIONS: Array<{ value: FontSize; label: string; sample: string; deta
   { value: 'lg', label: 'ใหญ่', sample: 'ก', detail: 'อ่านง่าย' },
 ];
 
+const BACKUP_KEYS = [
+  'hd_player',
+  'hd_progress',
+  'hd_settings',
+  'hd_cert_name_v1',
+  'hd_avatars',
+  'hd_items',
+  'hd_mock_user_id',
+] as const;
+
+type SyncStatus = 'idle' | 'checking' | 'online' | 'offline';
+
 export default function Settings() {
   const settings = useSettingsStore();
   const completedCount = usePlayerStore(state => certificateStageProgress(state.stagesCompleted));
   const resetLearningProgress = usePlayerStore(state => state.resetLearningProgress);
+  const resetProfile = usePlayerStore(state => state.reset);
   const clearAllProgress = useProgressStore(state => state.clearAllProgress);
+  const clearAvatars = useAvatarStore(state => state.clearAll);
+  const clearItems = useItemStore(state => state.clearAll);
+  const clearRealName = useCertNameStore(state => state.clearRealName);
   const [confirmReset, setConfirmReset] = useState(false);
+  const [confirmResetAll, setConfirmResetAll] = useState(false);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
+  const [syncStatus, setSyncStatus] = useState<SyncStatus>('idle');
+  const importInputRef = useRef<HTMLInputElement>(null);
 
   const handleResetLearning = () => {
     sfx.click();
@@ -64,6 +89,87 @@ export default function Settings() {
     sfx.click();
     clearChatSession();
     setStatusMessage('ล้างข้อความ รูปภาพ และผลวิเคราะห์ในเซสชันแชตแล้ว');
+  };
+
+  const handleMusicToggle = () => {
+    if (settings.musicEnabled) {
+      settings.toggleMusic();
+      stopBgm();
+    } else {
+      settings.toggleMusic();
+      startBgm();
+    }
+  };
+
+  const handleExport = () => {
+    sfx.click();
+    const storage: Record<string, string> = {};
+    BACKUP_KEYS.forEach(key => {
+      const value = localStorage.getItem(key);
+      if (value !== null) storage[key] = value;
+    });
+    const backup = {
+      format: 'health-detective-local-backup',
+      version: 1,
+      exportedAt: new Date().toISOString(),
+      storage,
+    };
+    const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `health-detective-backup-${new Date().toISOString().slice(0, 10)}.json`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+    setStatusMessage('ส่งออกข้อมูลการเรียนรู้เรียบร้อยแล้ว');
+  };
+
+  const handleImport = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (!file) return;
+
+    try {
+      const backup = JSON.parse(await file.text()) as { format?: string; storage?: Record<string, unknown> };
+      if (backup.format !== 'health-detective-local-backup' || !backup.storage || typeof backup.storage !== 'object') {
+        throw new Error('รูปแบบไฟล์ไม่ถูกต้อง');
+      }
+      BACKUP_KEYS.forEach(key => {
+        const value = backup.storage?.[key];
+        if (typeof value === 'string') localStorage.setItem(key, value);
+      });
+      setStatusMessage('นำเข้าข้อมูลสำเร็จ กำลังโหลดข้อมูลใหม่...');
+      window.setTimeout(() => window.location.reload(), 650);
+    } catch {
+      setStatusMessage('นำเข้าข้อมูลไม่สำเร็จ กรุณาเลือกไฟล์สำรองของแอปนี้');
+    }
+  };
+
+  const handleResetAll = () => {
+    sfx.click();
+    resetProfile();
+    clearAllProgress();
+    clearAvatars();
+    clearItems();
+    clearRealName();
+    settings.resetSettings();
+    stopBgm();
+    clearChatSession();
+    clearPendingSyncQueue();
+    try {
+      localStorage.removeItem('hd_mock_user_id');
+      localStorage.removeItem('hd_changelog_seen_version');
+    } catch { /* storage may be unavailable */ }
+    setConfirmResetAll(false);
+    setStatusMessage('ล้างข้อมูลทั้งหมดในอุปกรณ์แล้ว กำลังเริ่มต้นแอปใหม่');
+  };
+
+  const checkSync = async () => {
+    sfx.click();
+    setSyncStatus('checking');
+    setSyncStatus(await pingBackend() ? 'online' : 'offline');
   };
 
   return (
@@ -154,6 +260,56 @@ export default function Settings() {
 
             <div className="h-px bg-gradient-to-r from-transparent via-sky-100 to-transparent" />
 
+            <section aria-labelledby="interaction-heading">
+              <div className="mb-4 flex items-start gap-3">
+                <span className="flex h-10 w-10 flex-none items-center justify-center rounded-2xl bg-violet-100 text-lg text-violet-800" aria-hidden="true">🎛️</span>
+                <div>
+                  <h2 id="interaction-heading" className="text-base font-extrabold text-slate-900">เสียงและการช่วยการเข้าถึง</h2>
+                  <p className="mt-0.5 text-xs leading-relaxed text-slate-500">ปรับการตอบสนองของเกมให้เหมาะกับอุปกรณ์และความสบายของคุณ</p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
+                <SwitchRow
+                  icon="🔊"
+                  title="เสียงเอฟเฟกต์"
+                  description="เสียงคลิก ตอบถูก ตอบผิด และเสียงตอนผ่านด่าน"
+                  checked={settings.soundEnabled}
+                  onChange={settings.toggleSound}
+                />
+                <SwitchRow
+                  icon="🎵"
+                  title="เพลงพื้นหลัง"
+                  description="เปิดเพลงประกอบเบา ๆ ระหว่างเล่นด่าน ระบบจะเริ่มหลังแตะหน้าจอ"
+                  checked={settings.musicEnabled}
+                  onChange={handleMusicToggle}
+                />
+                <SwitchRow
+                  icon="📳"
+                  title="การสั่นมือถือ"
+                  description="สั่นเบา ๆ เมื่อมีเหตุการณ์สำคัญบนอุปกรณ์ที่รองรับ"
+                  checked={settings.vibrationEnabled}
+                  onChange={settings.toggleVibration}
+                />
+                <SwitchRow
+                  icon="🗣️"
+                  title="อ่านบทสนทนาออกเสียง"
+                  description="แสดงปุ่มอ่านออกเสียงภาษาไทยในบทสนทนาที่รองรับ"
+                  checked={settings.ttsEnabled}
+                  onChange={settings.toggleTts}
+                />
+                <SwitchRow
+                  icon="✨"
+                  title="ลดการเคลื่อนไหว"
+                  description="ลดแอนิเมชันและเอฟเฟกต์ที่อาจทำให้เวียนหัว"
+                  checked={settings.reducedMotion}
+                  onChange={settings.toggleReducedMotion}
+                />
+              </div>
+            </section>
+
+            <div className="h-px bg-gradient-to-r from-transparent via-sky-100 to-transparent" />
+
             <section aria-labelledby="data-heading">
               <div className="mb-4 flex items-start gap-3">
                 <span className="flex h-10 w-10 flex-none items-center justify-center rounded-2xl bg-slate-100 text-lg" aria-hidden="true">🗂️</span>
@@ -197,6 +353,61 @@ export default function Settings() {
                   <button type="button" onClick={handleClearChat} className="btn-outline mt-5 w-full text-sm font-bold">ล้างประวัติแชตปัจจุบัน</button>
                 </div>
               </div>
+
+              <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-2">
+                <div className="rounded-[24px] border border-violet-100 bg-violet-50/50 p-5 shadow-clay-sm">
+                  <div className="flex items-start gap-3">
+                    <span className="flex h-10 w-10 flex-none items-center justify-center rounded-2xl bg-white text-lg shadow-clay-sm" aria-hidden="true">💾</span>
+                    <div>
+                      <h3 className="text-sm font-bold text-slate-900">สำรองข้อมูลการเรียนรู้</h3>
+                      <p className="mt-1 text-xs leading-relaxed text-slate-500">ส่งออกหรือนำเข้าความคืบหน้า โปรไฟล์ การตั้งค่า และของตกแต่งในเครื่องนี้</p>
+                    </div>
+                  </div>
+                  <div className="mt-4 grid grid-cols-2 gap-2">
+                    <button type="button" onClick={handleExport} className="btn-secondary !min-h-10 !px-3 !py-2 text-xs font-bold">ส่งออกข้อมูล</button>
+                    <button type="button" onClick={() => { sfx.click(); importInputRef.current?.click(); }} className="btn-outline !min-h-10 !px-3 !py-2 text-xs font-bold">นำเข้าข้อมูล</button>
+                  </div>
+                  <input ref={importInputRef} type="file" accept="application/json,.json" onChange={handleImport} className="hidden" aria-label="เลือกไฟล์สำรองข้อมูล" />
+                  <p className="mt-3 text-[10px] leading-relaxed text-violet-800/70">ไฟล์สำรองอาจมีรูปอวตารและชื่อบนเกียรติบัตร ควรเก็บไว้ในที่ปลอดภัย</p>
+                </div>
+
+                <div className="rounded-[24px] border border-sky-100 bg-sky-50/50 p-5 shadow-clay-sm">
+                  <div className="flex items-start gap-3">
+                    <span className="flex h-10 w-10 flex-none items-center justify-center rounded-2xl bg-white text-lg shadow-clay-sm" aria-hidden="true">☁️</span>
+                    <div>
+                      <h3 className="text-sm font-bold text-slate-900">สถานะการซิงก์ข้อมูล</h3>
+                      <p className="mt-1 text-xs leading-relaxed text-slate-500">ความคืบหน้าจะเก็บในเครื่อง และพยายามส่งไปยังระบบเมื่อเชื่อมต่อได้</p>
+                    </div>
+                  </div>
+                  <div className="mt-4 flex items-center justify-between gap-3 rounded-2xl bg-white px-3 py-2.5 text-xs">
+                    <span className={`font-bold ${syncStatus === 'online' ? 'text-emerald-700' : syncStatus === 'offline' ? 'text-amber-700' : 'text-slate-500'}`}>
+                      {syncStatus === 'checking' ? 'กำลังตรวจสอบ...' : syncStatus === 'online' ? '● เชื่อมต่อได้' : syncStatus === 'offline' ? '● ออฟไลน์หรือยังไม่ได้ตั้งค่าระบบ' : 'ยังไม่ได้ตรวจสอบ'}
+                    </span>
+                    <button type="button" onClick={checkSync} disabled={syncStatus === 'checking'} className="font-bold text-sky-700 disabled:opacity-50">ตรวจสอบ</button>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-6 rounded-[24px] border border-rose-200 bg-rose-50/50 p-5 shadow-clay-sm">
+                <div className="flex items-start gap-3">
+                  <span className="flex h-10 w-10 flex-none items-center justify-center rounded-2xl bg-white text-lg shadow-clay-sm" aria-hidden="true">⚠️</span>
+                  <div className="min-w-0">
+                    <h3 className="text-sm font-bold text-rose-900">ล้างข้อมูลทั้งหมดในอุปกรณ์</h3>
+                    <p className="mt-1 text-xs leading-relaxed text-rose-950/70">ลบโปรไฟล์ ความคืบหน้า การตั้งค่า รูปอวตาร ของตกแต่ง ชื่อบนเกียรติบัตร และบริบทแชตออกจากเครื่องนี้</p>
+                  </div>
+                </div>
+                {!confirmResetAll ? (
+                  <button type="button" onClick={() => { sfx.click(); setConfirmResetAll(true); }} className="btn-outline mt-4 w-full !border-rose-200 !text-rose-700 text-sm font-bold hover:!bg-rose-100">ล้างข้อมูลทั้งหมด</button>
+                ) : (
+                  <div className="mt-4 rounded-[18px] border border-rose-200 bg-white p-3">
+                    <p className="text-xs font-bold leading-relaxed text-rose-800">การกระทำนี้ย้อนกลับไม่ได้ หากต้องการเก็บข้อมูลให้กด “ส่งออกข้อมูล” ก่อน</p>
+                    <div className="mt-3 grid grid-cols-2 gap-2">
+                      <button type="button" onClick={() => setConfirmResetAll(false)} className="btn-outline !min-h-10 !px-3 !py-2 text-xs font-bold">ยกเลิก</button>
+                      <button type="button" onClick={handleResetAll} className="btn-primary !min-h-10 !bg-rose-600 !px-3 !py-2 text-xs font-bold hover:!bg-rose-700">ยืนยันล้างทั้งหมด</button>
+                    </div>
+                  </div>
+                )}
+              </div>
             </section>
 
             <div className="h-px bg-gradient-to-r from-transparent via-sky-100 to-transparent" />
@@ -219,6 +430,32 @@ export default function Settings() {
                 </div>
                 <p className="mt-3 text-xs leading-6 text-slate-600">รูปใบหน้าถูกอ่านด้วย Canvas และวิเคราะห์พิกเซลภายในเบราว์เซอร์เท่านั้น ไม่มีการส่งไฟล์รูปไปยังเซิร์ฟเวอร์ เมื่อออกจากหน้าแชตหรือล้างบริบท URL ชั่วคราวของรูปจะถูกยกเลิกทันที</p>
               </div>
+            </section>
+
+            <section aria-labelledby="about-heading" className="rounded-[24px] border border-slate-200 bg-slate-50/70 p-5 shadow-clay-sm">
+              <div className="flex items-start gap-3">
+                <span className="flex h-10 w-10 flex-none items-center justify-center rounded-2xl bg-white text-lg shadow-clay-sm" aria-hidden="true">ℹ️</span>
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h2 id="about-heading" className="text-base font-extrabold text-slate-900">เกี่ยวกับแอป</h2>
+                    <span className="rounded-full bg-white px-2.5 py-1 text-[10px] font-bold text-slate-500">เวอร์ชัน {APP_VERSION}</span>
+                  </div>
+                  <p className="mt-2 text-xs leading-relaxed text-slate-600">แอปเรียนรู้เรื่องฝ้าและการดูแลผิว ใช้เพื่อการศึกษา ไม่แทนการวินิจฉัยหรือการรักษาโดยแพทย์</p>
+                </div>
+              </div>
+              <details className="mt-4 rounded-2xl bg-white p-3">
+                <summary className="cursor-pointer text-xs font-bold text-slate-700">มีอะไรใหม่ในแอป</summary>
+                <div className="mt-3 space-y-3">
+                  {CHANGELOG.map(entry => (
+                    <div key={entry.version}>
+                      <p className="text-xs font-extrabold text-sky-800">v{entry.version} · {entry.title}</p>
+                      <ul className="mt-1 space-y-1 text-xs leading-relaxed text-slate-500">
+                        {entry.items.map(item => <li key={item}>• {item}</li>)}
+                      </ul>
+                    </div>
+                  ))}
+                </div>
+              </details>
             </section>
           </div>
         </motion.div>
