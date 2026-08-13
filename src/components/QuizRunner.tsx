@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import type { QuizQuestion, QuizResultItem } from '../lib/quizBank';
 import { shuffleChoices } from '../lib/shuffle';
 import { sfx, vibrate } from '../lib/sound';
+import { apaReference } from '../lib/references';
 
 interface Props {
   questions: QuizQuestion[];
@@ -160,7 +161,7 @@ export default function QuizRunner({
                       {picked === q.correctIndex ? '✓ ถูกต้อง!' : `เฉลย: ${String.fromCharCode(65 + q.correctIndex)}. ${q.choices[q.correctIndex]}`}
                     </p>
                     <p className="text-xs text-slate-700 leading-relaxed">{q.explain}</p>
-                    <p className="text-[10px] text-slate-500 italic mt-1.5 leading-snug">📚 อ้างอิง: {q.source}</p>
+                    <p className="text-[10px] text-slate-500 italic mt-1.5 leading-snug">📚 อ้างอิง: {apaReference(q.source)}</p>
                   </>
                 )}
                 <button onClick={handleNext} className={`btn-primary w-full ${showReveal ? 'mt-3' : ''}`}>

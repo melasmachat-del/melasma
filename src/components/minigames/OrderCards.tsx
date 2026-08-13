@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
+import { apaReference } from '../../lib/references';
 
 interface Props {
   title: string;
@@ -123,7 +124,7 @@ export default function OrderCards({ title, cards, correctOrder, onComplete, sou
           </p>
           {source && (
             <p className="text-[10px] text-gray-500 mb-3 leading-snug">
-              📚 อ้างอิง: {source}
+              📚 อ้างอิง: {apaReference(source)}
             </p>
           )}
           <button onClick={() => onComplete(allCorrect)} className="btn-primary w-full">

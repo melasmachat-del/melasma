@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import type { WordMatchPair } from '../../types';
+import { apaReference } from '../../lib/references';
 
 interface Props {
   title: string;
@@ -220,7 +221,7 @@ export default function WordMatch({ title, pairs, onComplete, source }: Props) {
           </p>
           {source && (
             <p className="text-[10px] text-gray-500 mb-2 leading-snug text-center">
-              📚 อ้างอิงรวมของมินิเกม: {source}
+              📚 อ้างอิงรวมของมินิเกม: {apaReference(source)}
             </p>
           )}
           {/* แหล่งอ้างอิงของแต่ละคู่ — แสดงเฉพาะคู่ที่มี source */}
@@ -233,7 +234,7 @@ export default function WordMatch({ title, pairs, onComplete, source }: Props) {
                 {pairs.map((p, i) => p.source && (
                   <li key={i} className="text-[10px] text-gray-600 leading-snug">
                     <b>{p.left}</b> ↔ <b>{p.right}</b><br/>
-                    <span className="text-gray-500">อ้างอิง: {p.source}</span>
+                    <span className="text-gray-500">อ้างอิง: {apaReference(p.source)}</span>
                   </li>
                 ))}
               </ul>

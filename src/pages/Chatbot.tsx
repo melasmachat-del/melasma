@@ -4,7 +4,7 @@ import BackButton from '../components/BackButton';
 import { asset } from '../lib/asset';
 import { sfx } from '../lib/sound';
 import { CHAT_CLEAR_EVENT, clearChatSession } from '../lib/chatSession';
-import { getFaqAnswer } from '../lib/melasmaFaq';
+import { getFaqAnswer, getRelevantFaqAnswers } from '../lib/melasmaFaq';
 import { assessPhotoQuality } from '../lib/photoQuality';
 import { askAi, askAiImage, type AiImageInput } from '../lib/cloudSync';
 import { apaReferenceByUrl } from '../lib/references';
@@ -58,6 +58,8 @@ interface AiChatMessage {
   text: string;
 }
 
+type PhotoReviewMode = 'quick' | 'detailed';
+
 const AI_SUGGESTED_QUESTIONS = [
   'ฝ้าคืออะไร และเกิดขึ้นได้อย่างไร?',
   'ควรเลือกครีมกันแดดแบบไหนถ้ามีฝ้า?',
@@ -68,17 +70,17 @@ const MEDICAL_REFERENCES: MedicalReference[] = [
   { title: 'American Academy of Dermatology — Melasma: diagnosis and treatment', url: 'https://www.aad.org/public/diseases/a-z/melasma-treatment' },
   { title: 'DermNet NZ — Melasma', url: 'https://dermnetnz.org/topics/melasma' },
   { title: 'StatPearls / NCBI Bookshelf — Melasma', url: 'https://www.ncbi.nlm.nih.gov/books/NBK459271/' },
-  { title: 'คณะแพทยศาสตร์ศิริราชพยาบาล — ความรู้เรื่องฝ้า', url: 'https://si.mahidol.ac.th/sidoctor/sirirajonline2021/Article_files/1003_1.pdf' },
+  { title: 'คณะแพทยศาสตร์ศิริราชพยาบาล — ความรู้เรื่องฝ้า', url: 'https://www.si.mahidol.ac.th/TH/healthdetail.asp?aid=303' },
   { title: 'American Academy of Dermatology — Melasma: self-care', url: 'https://www.aad.org/public/diseases/a-z/melasma-self-care' },
   { title: 'สำนักงานคณะกรรมการอาหารและยา — คำเตือนเครื่องสำอางที่พบไฮโดรควิโนนและสเตียรอยด์', url: 'https://cosmetic.fda.moph.go.th/dangerous-cosmetics/876' },
   { title: 'Update on Melasma — Pathogenesis and environmental triggers (PMC)', url: 'https://pmc.ncbi.nlm.nih.gov/articles/PMC9464278/' },
 ];
 
 const FAQ_GROUPS = [
-  { id: 'identify', icon: '🔎', title: 'รอยนี้อาจเป็นอะไร?', detail: 'รู้จักลักษณะฝ้าและรอยที่คล้ายกัน', questions: ['ฝ้ามีลักษณะอย่างไรและมักขึ้นตรงไหน?', 'ผู้ชายเป็นฝ้าได้ไหม?', 'ฝ้าต่างจากกระและรอยสิวอย่างไร?', 'ฝ้าเป็นโรคติดต่อหรือเป็นมะเร็งไหม?', 'เมื่อไรควรไปพบแพทย์ผิวหนัง?', 'แพทย์วินิจฉัยฝ้าอย่างไร?'] },
+  { id: 'identify', icon: '🔎', title: 'รอยนี้อาจเป็นอะไร?', detail: 'รู้จักลักษณะฝ้าและรอยที่คล้ายกัน', questions: ['ฝ้ามีลักษณะอย่างไรและมักขึ้นตรงไหน?', 'ผู้ชายเป็นฝ้าได้ไหม?', 'ฝ้าต่างจากกระและรอยสิวอย่างไร?', 'ฝ้าเป็นโรคติดต่อหรือเป็นมะเร็งไหม?', 'เมื่อไรควรไปพบแพทย์ผิวหนัง?', 'แพทย์วินิจฉัยฝ้าอย่างไร?', 'ฝ้าตื้น ฝ้าลึก และฝ้าผสมต่างกันอย่างไร?', 'ควรถ่ายรูปติดตามฝ้าบ่อยแค่ไหน?'] },
   { id: 'triggers', icon: '☀️', title: 'ทำไมฝ้าถึงเข้มขึ้น?', detail: 'แดด ฮอร์โมน ความร้อน และการระคายเคือง', questions: ['ฝ้าเข้มขึ้นเพราะอะไร?', 'แสงผ่านหน้าต่างหรือแสงหน้าจอทำให้ฝ้าเข้มไหม?', 'การตั้งครรภ์หรือยาคุมเกี่ยวข้องกับฝ้าไหม?', 'การขัดหน้าและสกินแคร์ที่แสบทำให้ฝ้าแย่ลงไหม?', 'ความร้อนและการทำอาหารทำให้ฝ้ากำเริบไหม?'] },
-  { id: 'protect', icon: '🛡️', title: 'ป้องกันอย่างไร?', detail: 'เลือกและใช้กันแดดให้เหมาะกับฝ้า', questions: ['คนเป็นฝ้าควรเลือกกันแดดแบบไหน?', 'ต้องทากันแดดเท่าไรและทาซ้ำเมื่อไร?', 'กันแดดแบบมีสีและ iron oxide ช่วยอย่างไร?', 'อยู่ในบ้านต้องทากันแดดไหม?', 'แต่งหน้าแล้วจะทากันแดดซ้ำอย่างไร?'] },
-  { id: 'treat', icon: '🧴', title: 'รักษาและดูแลอย่างไร?', detail: 'ยา สกินแคร์ หัตถการ และการดูแลระยะยาว', questions: ['การรักษาแบบไหนปลอดภัยบ้าง?', 'ฝ้าหายขาดได้ไหมและใช้เวลานานแค่ไหน?', 'ไฮโดรควิโนนและกรดวิตามินเอใช้เองได้ไหม?', 'เลเซอร์หรือ tranexamic acid เหมาะกับทุกคนไหม?', 'ระหว่างรักษาฝ้าควรใช้สกินแคร์ประจำวันอย่างไร?'] },
+  { id: 'protect', icon: '🛡️', title: 'ป้องกันอย่างไร?', detail: 'เลือกและใช้กันแดดให้เหมาะกับฝ้า', questions: ['คนเป็นฝ้าควรเลือกกันแดดแบบไหน?', 'ต้องทากันแดดเท่าไรและทาซ้ำเมื่อไร?', 'กันแดดแบบมีสีและ iron oxide ช่วยอย่างไร?', 'อยู่ในบ้านต้องทากันแดดไหม?', 'แต่งหน้าแล้วจะทากันแดดซ้ำอย่างไร?', 'ถ้ากันแดดแสบหรือแพ้ควรทำอย่างไร?'] },
+  { id: 'treat', icon: '🧴', title: 'รักษาและดูแลอย่างไร?', detail: 'ยา สกินแคร์ หัตถการ และการดูแลระยะยาว', questions: ['การรักษาแบบไหนปลอดภัยบ้าง?', 'ฝ้าหายขาดได้ไหมและใช้เวลานานแค่ไหน?', 'ไฮโดรควิโนนและกรดวิตามินเอใช้เองได้ไหม?', 'เลเซอร์หรือ tranexamic acid เหมาะกับทุกคนไหม?', 'ระหว่างรักษาฝ้าควรใช้สกินแคร์ประจำวันอย่างไร?', 'ฝ้ากลับมาเป็นซ้ำไหม?', 'ใช้วิตามินซี ไนอะซินาไมด์ หรือกรดอะเซลาอิกได้ไหม?', 'ครีมขาวเร็วหรือครีมไม่ทราบส่วนผสมอันตรายไหม?'] },
   { id: 'ai', icon: '🩺', title: 'ถามคุณหมอ AI', detail: 'คุยกับอาจารย์ 3D แล้วรับคำอธิบายจากคลังความรู้', questions: AI_SUGGESTED_QUESTIONS },
   { id: 'photo', icon: '📷', title: 'อยากตรวจคุณภาพภาพ', detail: 'เช็กแสงและความคมชัดเบื้องต้น ไม่ใช่การวินิจฉัย', questions: [] },
 ] as const;
@@ -454,6 +456,24 @@ function buildAnswer(question: string, imageAnalysis: ImageFeatures | null): Ans
   const specificAnswer = getFaqAnswer(question);
   if (specificAnswer) return specificAnswer;
 
+  const relevantFaqAnswers = getRelevantFaqAnswers(question, 2);
+  if (relevantFaqAnswers.length > 0) {
+    const relatedSections = relevantFaqAnswers
+      .flatMap(faq => faq.guidanceSections)
+      .filter((section, index, sections) => sections.findIndex(item => item.title === section.title) === index)
+      .slice(0, 4);
+    const relatedCaution = Array.from(new Set(relevantFaqAnswers.flatMap(faq => faq.caution)));
+    const relatedReferences = Array.from(
+      new Map(relevantFaqAnswers.flatMap(faq => faq.references).map(reference => [reference.url, reference])).values()
+    );
+    return {
+      summary: relevantFaqAnswers[0].summary,
+      guidanceSections: relatedSections,
+      caution: relatedCaution,
+      references: relatedReferences,
+    };
+  }
+
   let summary = 'ฝ้าเป็นภาวะสีผิวบนใบหน้าที่พบบ่อย และต้องดูแลด้วยการกันแดด การดูแลผิวอย่างอ่อนโยน และคำแนะนำจากหลักฐานทางการแพทย์';
   if (hasQuestion && asksAboutCause) summary = 'ฝ้ามักเข้มขึ้นจากแสง UV แสงที่มองเห็นได้ ความร้อน ฮอร์โมน การระคายเคือง และปัจจัยทางพันธุกรรมร่วมกัน';
   else if (hasQuestion && asksAboutTreatment) summary = 'การรักษาฝ้ามักต้องควบคุมปัจจัยกระตุ้นร่วมกับยาหรือหัตถการที่เลือกให้เหมาะกับผิว ไม่ใช่การรักษาเพียงครั้งเดียวแล้วจบ';
@@ -553,6 +573,7 @@ export default function Chatbot() {
   const [isAiWorking, setIsAiWorking] = useState(false);
   const [aiError, setAiError] = useState<string | null>(null);
   const [aiImageConsent, setAiImageConsent] = useState(false);
+  const [photoReviewMode, setPhotoReviewMode] = useState<PhotoReviewMode>('quick');
   const [aiImageAnswer, setAiImageAnswer] = useState<string | null>(null);
   const [isAiImageWorking, setIsAiImageWorking] = useState(false);
   const [aiImageError, setAiImageError] = useState<string | null>(null);
@@ -586,6 +607,7 @@ export default function Chatbot() {
       setIsAiWorking(false);
       setAiError(null);
       setAiImageConsent(false);
+      setPhotoReviewMode('quick');
       setAiImageAnswer(null);
       setIsAiImageWorking(false);
       setAiImageError(null);
@@ -831,8 +853,8 @@ export default function Chatbot() {
                   {selectedTopic && <button type="button" onClick={() => { setSelectedTopic(null); setAnswer(null); setQuestion(''); }} className="text-xs font-bold text-sky-700">← เปลี่ยนหัวข้อ</button>}
                 </div>
                 {!selectedTopic ? (
-                  <div className="grid gap-2 sm:grid-cols-2">
-                    {FAQ_GROUPS.map(group => <button key={group.id} type="button" onClick={() => { sfx.click(); setSelectedTopic(group.id); setAnswer(null); }} className="group rounded-[22px] border border-sky-100 bg-gradient-to-br from-white to-sky-50 p-4 text-left transition hover:-translate-y-0.5 hover:border-sky-300 hover:shadow-md"><div className="flex items-start gap-3"><span className="flex h-11 w-11 flex-none items-center justify-center rounded-2xl bg-white text-2xl shadow-sm">{group.icon}</span><div><b className="text-sm text-slate-900">{group.title}</b><p className="mt-1 text-xs leading-relaxed text-slate-500">{group.detail}</p></div></div></button>)}
+                  <div className="grid grid-cols-3 gap-2">
+                    {FAQ_GROUPS.map(group => <button key={group.id} type="button" onClick={() => { sfx.click(); setSelectedTopic(group.id); setAnswer(null); }} className="group rounded-[18px] border border-sky-100 bg-gradient-to-br from-white to-sky-50 p-2 text-left transition hover:-translate-y-0.5 hover:border-sky-300 hover:shadow-md sm:rounded-[22px] sm:p-4"><div className="flex flex-col items-start gap-1.5 sm:flex-row sm:items-start sm:gap-3"><span className="flex h-9 w-9 flex-none items-center justify-center rounded-xl bg-white text-xl shadow-sm sm:h-11 sm:w-11 sm:rounded-2xl sm:text-2xl">{group.icon}</span><div><b className="text-[11px] leading-tight text-slate-900 sm:text-sm">{group.title}</b><p className="mt-1 line-clamp-2 text-[10px] leading-relaxed text-slate-500 sm:text-xs">{group.detail}</p></div></div></button>)}
                   </div>
                 ) : selectedTopic !== 'photo' && selectedTopic !== 'ai' ? (
                   <div className="space-y-2">
@@ -903,6 +925,28 @@ export default function Chatbot() {
 
               {(selectedTopic === 'photo' || previewUrl) && <div>
                 <p className="text-sm font-semibold text-slate-800 mb-2">ตรวจคุณภาพภาพสำหรับติดตาม (ไม่บังคับ)</p>
+                <div className="mb-3 grid grid-cols-2 gap-2" role="tablist" aria-label="โหมดตรวจภาพ">
+                  <button
+                    type="button"
+                    role="tab"
+                    aria-selected={photoReviewMode === 'quick'}
+                    onClick={() => setPhotoReviewMode('quick')}
+                    className={`rounded-2xl border px-3 py-2.5 text-left transition ${photoReviewMode === 'quick' ? 'border-violet-400 bg-violet-100 text-violet-950 shadow-sm' : 'border-sky-100 bg-white text-slate-600 hover:border-violet-200'}`}
+                  >
+                    <span className="block text-xs font-extrabold">✨ ตรวจด้วย AI เบื้องต้น</span>
+                    <span className="mt-0.5 block text-[10px] leading-relaxed">ดูคุณภาพภาพและสิ่งที่มองเห็น</span>
+                  </button>
+                  <button
+                    type="button"
+                    role="tab"
+                    aria-selected={photoReviewMode === 'detailed'}
+                    onClick={() => setPhotoReviewMode('detailed')}
+                    className={`rounded-2xl border px-3 py-2.5 text-left transition ${photoReviewMode === 'detailed' ? 'border-violet-400 bg-violet-100 text-violet-950 shadow-sm' : 'border-sky-100 bg-white text-slate-600 hover:border-violet-200'}`}
+                  >
+                    <span className="block text-xs font-extrabold">📝 แบบละเอียด</span>
+                    <span className="mt-0.5 block text-[10px] leading-relaxed">กรอกข้อมูลที่สังเกตเพิ่มเติม</span>
+                  </button>
+                </div>
                 <label className="block rounded-[22px] border-2 border-dashed border-sky-200 bg-sky-50/60 px-4 py-5 text-center cursor-pointer hover:bg-sky-50 transition-colors">
                   <span className="block text-2xl mb-1">📷</span>
                   <span className="block text-sm font-medium text-slate-700">เลือกรูปเพื่อตรวจความพร้อม</span>
@@ -930,11 +974,21 @@ export default function Chatbot() {
                       onChange={event => setAiImageConsent(event.target.checked)}
                       className="mt-0.5 h-4 w-4 accent-violet-600"
                     />
-                    <span>ยินยอมให้ส่งภาพที่ย่อและบีบอัดแล้วไปให้ Gemini วิเคราะห์เพื่อการเรียนรู้</span>
+                    <span>ยินยอมให้ส่งภาพที่ย่อและบีบอัดแล้วไปยัง Gemini เพื่อประเมินเบื้องต้นสำหรับการเรียนรู้</span>
                   </label>
-                  <p className="mt-2 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-[11px] leading-relaxed text-amber-900">
-                    AI ช่วยดูคุณภาพภาพและสิ่งที่มองเห็นเบื้องต้นเท่านั้น ไม่สามารถยืนยันว่าเป็นฝ้าหรือวินิจฉัยโรคแทนแพทย์ได้
-                  </p>
+                  <div className="mt-2 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5 text-[11px] leading-relaxed text-amber-950">
+                    <p><span className="font-extrabold">คำเตือน:</span> AI ช่วยประเมินภาพเพื่อการเรียนรู้เบื้องต้นเท่านั้น ไม่ใช่การวินิจฉัยโดยแพทย์ อาจแปลผลคลาดเคลื่อนได้ และไม่ควรใช้ตัดสินใจเรื่องยา การรักษา หรือหัตถการ</p>
+                    <details className="mt-2">
+                      <summary className="cursor-pointer font-extrabold text-amber-900">อ่านคำเตือนฉบับเต็ม</summary>
+                      <ul className="mt-1.5 list-disc space-y-1 pl-4">
+                        <li>ฟังก์ชันนี้เป็นเครื่องมือเพื่อการเรียนรู้และประเมินภาพเบื้องต้น ไม่ใช่บริการตรวจโดยแพทย์ และผลลัพธ์ไม่ได้รับการยืนยันโดยแพทย์ผู้เชี่ยวชาญก่อนแสดง</li>
+                        <li>AI วิเคราะห์จากภาพและข้อมูลที่ได้รับเท่านั้น จึงอาจมองไม่เห็นหรือแปลผลคลาดเคลื่อนจากแสง มุมถ่าย ความคมชัด สีผิว เครื่องสำอาง หรือคุณภาพภาพ</li>
+                        <li>ห้ามใช้ผลลัพธ์เพื่อยืนยันว่าเป็นฝ้า วินิจฉัยโรค ซื้อ หยุด หรือเปลี่ยนยา รวมถึงตัดสินใจทำเลเซอร์หรือหัตถการด้วยตนเอง</li>
+                        <li>หากรอยนูนขึ้น เปลี่ยนเร็ว มีอาการคันหรือเจ็บ มีแผล เลือดออก หรือกังวลเกี่ยวกับผิว ควรพบแพทย์ผิวหนังเพื่อประเมินจริง</li>
+                        <li>อย่าใส่ข้อมูลระบุตัวตนที่ไม่จำเป็นในภาพหรือข้อความ ภาพจะถูกส่งไปยังบริการ AI ภายนอกก็ต่อเมื่อกดยินยอมและเริ่มวิเคราะห์</li>
+                      </ul>
+                    </details>
+                  </div>
                   <button
                     type="button"
                     onClick={handleAiImageAnalysis}
@@ -947,12 +1001,17 @@ export default function Chatbot() {
                 </div>
               )}
 
-              {previewUrl && !isWorking && (
-                <div className="space-y-4 rounded-[24px] border border-violet-100 bg-violet-50/50 p-4">
-                  <div>
-                    <p className="text-sm font-extrabold text-slate-900">สำรวจลักษณะที่คุณมองเห็น</p>
-                    <p className="mt-1 text-xs leading-relaxed text-slate-600">ตอบจากสิ่งที่เห็นด้วยตนเอง ระบบจะช่วยเรียบเรียงระดับการสังเกตและขั้นตอนต่อไป ไม่ได้วินิจฉัยจากรูป</p>
-                  </div>
+              {previewUrl && !isWorking && photoReviewMode === 'detailed' && (
+                <details open className="rounded-[24px] border border-violet-100 bg-violet-50/50 p-4">
+                  <summary className="flex cursor-pointer list-none items-center justify-between gap-3">
+                    <div>
+                      <p className="text-sm font-extrabold text-slate-900">สำรวจลักษณะที่คุณมองเห็น <span className="text-[10px] font-bold text-violet-600">(ไม่บังคับ)</span></p>
+                      <p className="mt-1 text-xs leading-relaxed text-slate-600">เปิดแบบสำรวจเพิ่มเติมได้ หรือกดให้ AI วิเคราะห์ภาพด้านบนได้ทันที</p>
+                    </div>
+                    <span className="flex-none rounded-full bg-white px-3 py-1.5 text-[11px] font-extrabold text-violet-700 shadow-sm">เปิดแบบสำรวจ</span>
+                  </summary>
+                  <div className="mt-4 space-y-4">
+                    <p className="rounded-xl border border-violet-100 bg-white/70 px-3 py-2 text-[11px] leading-relaxed text-slate-600">ตอบจากสิ่งที่เห็นด้วยตนเอง ระบบจะช่วยเรียบเรียงระดับการสังเกตและขั้นตอนต่อไป ไม่ได้วินิจฉัยจากรูป</p>
 
                   <ObservationChoice
                     label="1. เห็นรอยสีต่างจากผิวรอบข้างกี่บริเวณ?"
@@ -1039,7 +1098,8 @@ export default function Chatbot() {
                   <p className="text-[11px] leading-relaxed text-slate-500">
                     คำถามอ้างอิงลักษณะฝ้าทั่วไปและหลักการตรวจแยกจาก AAD, DermNet และ StatPearls ส่วนระดับที่แสดงเป็นแบบสำรวจสำหรับการเรียนรู้ ไม่ใช่คะแนน MASI/mMASI และยังไม่ได้ผ่านการทดสอบเพื่อใช้วินิจฉัย
                   </p>
-                </div>
+                  </div>
+                </details>
               )}
 
               {error && (

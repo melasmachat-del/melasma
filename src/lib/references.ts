@@ -13,21 +13,35 @@ export interface ApaReference {
 
 const WEBSITE_REFERENCES: Array<{ aliases: string[]; reference: ApaReference }> = [
   {
-    aliases: ['melasma symptoms', 'อาการและลักษณะของฝ้า', 'signs and symptoms', 'american academy of dermatology'],
+    aliases: [
+      'melasma symptoms', 'melasma: signs and symptoms', 'อาการและลักษณะของฝ้า', 'signs and symptoms',
+      'ความรู้ทั่วไปเกี่ยวกับฝ้า', 'ความรู้ทั่วไปเกี่ยวกับฝ้า (melasma)', 'เรื่องเข้าใจผิดเกี่ยวกับฝ้า',
+    ],
     reference: {
       citation: 'American Academy of Dermatology Association. (n.d.). Melasma: Signs and symptoms.',
       url: 'https://www.aad.org/public/diseases/a-z/melasma-symptoms',
     },
   },
   {
-    aliases: ['melasma treatment', 'diagnosis and treatment', 'diagnosis andแนวทางรักษา', 'การวินิจฉัยและแนวทางรักษาฝ้า', 'aad: melasma treatment'],
+    aliases: [
+      'melasma treatment', 'melasma: diagnosis and treatment', 'diagnosis and treatment', 'diagnosis andแนวทางรักษา',
+      'การวินิจฉัยและแนวทางรักษาฝ้า', 'aad: melasma treatment',
+      'แนวทางการดูแลฝ้าในระยะยาว', 'การดูแลฝ้าในระยะยาว',
+      'แบบทดสอบถูก–ผิด: การรักษาและการดูแลฝ้า',
+      'ข้อควรระวังเมื่อรอยดำผิดปกติ',
+    ],
     reference: {
       citation: 'American Academy of Dermatology Association. (n.d.). Melasma: Diagnosis and treatment.',
       url: 'https://www.aad.org/public/diseases/a-z/melasma-treatment',
     },
   },
   {
-    aliases: ['melasma self-care', 'self-care', 'การดูแลตนเอง', 'การป้องกันแสงที่มองเห็นได้', 'aad patient education'],
+    aliases: [
+      'melasma self-care', 'melasma: self-care', 'self-care', 'การดูแลตนเอง', 'การป้องกันแสงที่มองเห็นได้',
+      'aad patient education', 'การป้องกันผิว', 'การเลือกครีมกันแดด',
+      'การใช้ครีมกันแดดอย่างถูกวิธี', 'การป้องกันผิวในร่ม', 'การป้องกันผิวและการใช้ครีมกันแดด',
+      'การเลือกครีมกันแดดสำหรับฝ้า', 'คำแนะนำการเลือกค่า spf', 'แบบทดสอบถูก–ผิด: การป้องกันฝ้า',
+    ],
     reference: {
       citation: 'American Academy of Dermatology Association. (2023, September 12). Melasma: Self-care.',
       url: 'https://www.aad.org/public/diseases/a-z/melasma-self-care',
@@ -41,7 +55,11 @@ const WEBSITE_REFERENCES: Array<{ aliases: string[]; reference: ApaReference }> 
     },
   },
   {
-    aliases: ['melasma causes', 'overview and causes', 'ปัจจัยที่เกี่ยวข้องกับการเกิดฝ้า'],
+    aliases: [
+      'melasma causes', 'melasma: causes', 'melasma: overview and causes', 'overview and causes', 'ปัจจัยที่เกี่ยวข้องกับการเกิดฝ้า',
+      'สิ่งกระตุ้นรอบตัวในชีวิตประจำวัน', 'สิ่งกระตุ้นรอบตัว', 'ปัจจัยทางฮอร์โมน',
+      'แบบทดสอบถูก–ผิด: ปัจจัยกระตุ้นฝ้า',
+    ],
     reference: {
       citation: 'American Academy of Dermatology Association. (n.d.). Melasma: Causes.',
       url: 'https://www.aad.org/public/diseases/a-z/melasma-causes',
@@ -69,7 +87,12 @@ const WEBSITE_REFERENCES: Array<{ aliases: string[]; reference: ApaReference }> 
     },
   },
   {
-    aliases: ['update on melasma', 'pathogenesis and environmental triggers', 'pathogenesis and treatment', 'pubmed reviews on melasma', 'pigmentary disorder reviews'],
+    aliases: [
+      'update on melasma', 'pathogenesis and environmental triggers', 'pathogenesis and treatment',
+      'pubmed reviews on melasma', 'pigmentary disorder reviews', 'การทำงานของเซลล์เม็ดสี',
+      'ความรู้เรื่องชนิดของฝ้า', 'กลไกการเกิดฝ้า', 'กลไกการเกิดฝ้าจากเซลล์สร้างเม็ดสี',
+      'แบบทดสอบถูก–ผิด: กลไกการเกิดฝ้า',
+    ],
     reference: {
       citation: 'Espósito, A. C. C., Cassiano, D. P., da Silva, C. N., Lima, P. B., Dias, J. A. F., Hassun, K., Bagatin, E., Miot, L. D. B., & Miot, H. A. (2022). Update on melasma—Part I: Pathogenesis. Dermatology and Therapy, 12(9), 1967–1988. https://doi.org/10.1007/s13555-022-00779-x',
       url: 'https://pmc.ncbi.nlm.nih.gov/articles/PMC9464278/',
@@ -92,8 +115,8 @@ const WEBSITE_REFERENCES: Array<{ aliases: string[]; reference: ApaReference }> 
   {
     aliases: ['siriraj', 'ศิริราช', 'ความรู้เรื่องฝ้า'],
     reference: {
-      citation: 'คณะแพทยศาสตร์ศิริราชพยาบาล. (n.d.). ความรู้เรื่องฝ้า [เอกสาร PDF].',
-      url: 'https://si.mahidol.ac.th/sidoctor/sirirajonline2021/Article_files/1003_1.pdf',
+      citation: 'คณะแพทยศาสตร์ศิริราชพยาบาล. (n.d.). ความรู้เรื่องฝ้า. Siriraj Doctor.',
+      url: 'https://www.si.mahidol.ac.th/TH/healthdetail.asp?aid=303',
     },
   },
   {
@@ -264,7 +287,7 @@ const WEBSITE_REFERENCES: Array<{ aliases: string[]; reference: ApaReference }> 
     },
   },
   {
-    aliases: ['health detective', 'การทำงานของเซลล์เม็ดสี', 'ความรู้เรื่องชนิดของฝ้า', 'สิ่งกระตุ้นรอบตัว', 'ปัจจัยทางฮอร์โมน', 'การป้องกันผิว', 'การเลือกครีมกันแดด', 'แนวทางการดูแลฝ้า', 'เรื่องเข้าใจผิดเกี่ยวกับฝ้า'],
+    aliases: ['health detective'],
     reference: {
       citation: 'Health Detective. (2026). บทเรียนโต้ตอบเรื่องฝ้า [สื่อการเรียนรู้ดิจิทัล].',
     },

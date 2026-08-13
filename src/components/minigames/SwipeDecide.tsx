@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
 import { motion, AnimatePresence, type PanInfo } from 'framer-motion';
 import type { SwipeCard } from '../../types';
+import { apaReference } from '../../lib/references';
 
 interface Props {
   title: string;
@@ -119,7 +120,7 @@ export default function SwipeDecide({ title, cards, onComplete }: Props) {
                 )}
                 {current.source && (
                   <p className="text-[10px] text-gray-500 mt-1.5 leading-snug">
-                    📚 อ้างอิง: {current.source}
+                    📚 อ้างอิง: {apaReference(current.source)}
                   </p>
                 )}
               </div>

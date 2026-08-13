@@ -29,8 +29,6 @@ import RiskRank from '../components/minigames/RiskRank';
 import Confetti from '../components/Confetti';
 import { asset } from '../lib/asset';
 import { sfx, vibrate } from '../lib/sound';
-import { speak, stopSpeaking, ttsSupported } from '../lib/tts';
-import { useSettingsStore } from '../store/settingsStore';
 import { useProgressStore } from '../store/progressStore';
 import { shareChallenge } from '../lib/liff';
 import { apaReference } from '../lib/references';
@@ -307,20 +305,6 @@ export default function ScenarioPage() {
     }, 60);
     return () => clearTimeout(t);
   }, [currentNodeId, showIntro]);
-
-  // หยุดเสียงอ่านบทสนทนาเมื่อออกจากด่าน
-  useEffect(() => stopSpeaking, []);
-
-  // พากย์บทสนทนาอัตโนมัติเมื่อขึ้น dialogue ใหม่ (ถ้าเปิด TTS ในตั้งค่า)
-  const ttsEnabled = useSettingsStore(s => s.ttsEnabled);
-  useEffect(() => {
-    if (showIntro || !ttsEnabled || !ttsSupported()) return;
-    const node = scenario?.nodes.find(n => n.id === currentNodeId);
-    if (node && node.type === 'dialogue' && node.text) {
-      speak(node.text);
-    }
-    return () => stopSpeaking();
-  }, [currentNodeId, showIntro, ttsEnabled, scenario]);
 
   // รีเซ็ตดาวประเมินเมื่อเปลี่ยนด่าน (ให้คะแนนใหม่ได้ทุกด่าน)
   useEffect(() => { setFunStars(0); }, [stageId]);
@@ -891,9 +875,12 @@ export default function ScenarioPage() {
                     <div className="mb-3 flex items-start gap-3 rounded-[22px] border border-detective-100 bg-gradient-to-br from-detective-50 to-white px-4 py-3 shadow-sm">
                       <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-2xl bg-detective-600 text-lg text-white shadow-md" aria-hidden>?</div>
                       <div className="flex-1 min-w-0">
-                        <p className="mb-0.5 text-[11px] font-bold uppercase tracking-wider text-detective-500">เลือกคำตอบที่ดีที่สุด</p>
+                        <p className="mb-0.5 text-[11px] font-bold uppercase tracking-wider text-detective-500">เลือกเส้นทางการเรียนรู้</p>
                         <p className="text-[15px] font-bold leading-snug text-detective-800">
                           {currentNode.prompt}
+                        </p>
+                        <p className="mt-1 text-[11px] leading-relaxed text-slate-500">
+                          เลือกตามที่คิดหรืออยากเรียนรู้ได้เลย บางทางจะพาไปฟังคุณหมออธิบายเพิ่มครับ
                         </p>
                       </div>
                       {!hintShown && hintTokens > 0 && (

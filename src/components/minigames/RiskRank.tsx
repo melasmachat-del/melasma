@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { RiskBucket, RiskItem } from '../../types';
+import { apaReference } from '../../lib/references';
 
 interface Props {
   title: string;
@@ -211,7 +212,7 @@ export default function RiskRank({ title, buckets, items, onComplete, source }: 
           </p>
           {source && (
             <p className="text-[10px] text-gray-500 mb-2 leading-snug text-center">
-              📚 อ้างอิงรวมของมินิเกม: {source}
+              📚 อ้างอิงรวมของมินิเกม: {apaReference(source)}
             </p>
           )}
           {/* แหล่งอ้างอิงรายข้อ */}
@@ -224,7 +225,7 @@ export default function RiskRank({ title, buckets, items, onComplete, source }: 
                 {items.map(it => it.source && (
                   <li key={it.id} className="text-[10px] text-gray-600 leading-snug">
                     <b>{it.text}</b><br/>
-                    <span className="text-gray-500">อ้างอิง: {it.source}</span>
+                    <span className="text-gray-500">อ้างอิง: {apaReference(it.source)}</span>
                   </li>
                 ))}
               </ul>

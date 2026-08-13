@@ -48,6 +48,30 @@ const LEARNING_VIDEOS = [
     source: 'Suandok Channel. (n.d.). ฝ้า กระ รักษาอย่างไรให้หาย [วิดีโอ]. YouTube. https://www.youtube.com/watch?v=HUznaUT7qCc',
     language: 'ภาษาไทย',
   },
+  {
+    id: 'ram-sun-protection',
+    videoId: 'Zx9m7mkG9U8',
+    title: 'วิธีปกป้องผิวจากแสงแดด',
+    detail: 'รู้จักการป้องกันแสงแดดที่ทำให้ฝ้าและจุดด่างดำเข้มขึ้น',
+    source: 'โรงพยาบาลรามคำแหง. (2023). วิธีปกป้องผิวจากแสงแดด [วิดีโอ]. YouTube. https://www.youtube.com/watch?v=Zx9m7mkG9U8',
+    language: 'ภาษาไทย',
+  },
+  {
+    id: 'ram-pigment-disorders',
+    videoId: 'cov6Y2SZy28',
+    title: 'ฝ้า กระ รอยดำ และปัญหาเม็ดสีผิว',
+    detail: 'ทำความเข้าใจความผิดปกติของเม็ดสีและแนวทางดูแลอย่างถูกวิธี',
+    source: 'โรงพยาบาลรามคำแหง. (2024). ปัญหาเม็ดสีผิวผิดปกติ ฝ้า กระ รอยดำ รอยสัก รักษาได้! [วิดีโอ]. YouTube. https://www.youtube.com/watch?v=cov6Y2SZy28',
+    language: 'ภาษาไทย',
+  },
+  {
+    id: 'asds-melasma-dos-donts',
+    videoId: 'KUYfAP3CedI',
+    title: 'Melasma Do’s and Don’ts',
+    detail: 'ข้อควรทำและสิ่งที่ควรหลีกเลี่ยงสำหรับผู้มีฝ้า โดยผู้เชี่ยวชาญผิวหนัง',
+    source: 'American Society for Dermatologic Surgery. (n.d.). Melasma Do’s and Don’ts [วิดีโอ]. YouTube. https://www.youtube.com/watch?v=KUYfAP3CedI',
+    language: 'English',
+  },
 ] as const;
 
 const SECTIONS: LearningSection[] = [
@@ -300,7 +324,7 @@ export default function Knowledge() {
             <p className="text-xs font-semibold text-slate-500">หมวด {activeTopic.number} จาก {KNOWLEDGE_TOPICS.length}</p>
           </div>
 
-          <nav aria-label="หัวข้อความรู้" className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
+          <nav aria-label="หัวข้อความรู้" className="mt-4 grid grid-cols-3 gap-2">
             {KNOWLEDGE_TOPICS.map(section => {
               const selected = section.id === activeSectionId;
               return (
@@ -310,10 +334,10 @@ export default function Knowledge() {
                   role="tab"
                   aria-selected={selected}
                   onClick={() => chooseSection(section.id)}
-                  className={`rounded-[20px] border px-3 py-3 text-left shadow-clay-sm transition hover:-translate-y-0.5 ${selected ? 'border-sky-400 bg-sky-600 text-white shadow-md' : 'border-white/80 bg-white text-slate-800 hover:text-sky-700'}`}
+                  className={`rounded-[20px] border px-2 py-2.5 text-left shadow-clay-sm transition hover:-translate-y-0.5 sm:px-3 sm:py-3 ${selected ? 'border-sky-400 bg-sky-600 text-white shadow-md' : 'border-white/80 bg-white text-slate-800 hover:text-sky-700'}`}
                 >
                   <span className={`text-xs font-extrabold ${selected ? 'text-sky-100' : 'text-sky-500'}`}>{section.number}</span>
-                  <span className="mt-1 block text-xs font-extrabold leading-tight sm:text-sm">{section.title}</span>
+                  <span className="mt-1 block text-[11px] font-extrabold leading-tight sm:text-sm">{section.title}</span>
                 </button>
               );
             })}
@@ -548,10 +572,10 @@ function VideoTopicContent({
           <h2 className="mt-1 text-lg font-extrabold text-slate-900 sm:text-xl">ดูวิดีโอเรื่องฝ้า</h2>
           <p className="mt-1 text-xs leading-relaxed text-slate-500 sm:text-sm">เลือกวิดีโอที่สนใจ แล้วกดปุ่ม ▶ ตรงกลางวิดีโอเพื่อเริ่มดู</p>
         </div>
-        <span className="w-fit rounded-full bg-sky-100 px-3 py-1 text-xs font-bold text-sky-700">เลือกได้ 3 วิดีโอ</span>
+        <span className="w-fit rounded-full bg-sky-100 px-3 py-1 text-xs font-bold text-sky-700">เลือกได้ 6 วิดีโอ</span>
       </div>
 
-      <div className="grid gap-3 border-b border-sky-100 bg-sky-50/35 p-4 sm:grid-cols-3 sm:p-5">
+      <div className="grid grid-cols-3 gap-2 border-b border-sky-100 bg-sky-50/35 p-2 sm:gap-3 sm:p-5">
         {LEARNING_VIDEOS.map(video => {
           const selected = video.id === activeVideo.id;
           return (
@@ -574,14 +598,14 @@ function VideoTopicContent({
                   <span className="flex h-11 w-11 items-center justify-center rounded-full bg-white text-lg text-sky-700 shadow-lg ring-4 ring-white/40">▶</span>
                 </span>
               </div>
-              <div className="p-3">
+              <div className="p-2 sm:p-3">
                 <div className="flex items-start justify-between gap-2">
-                  <p className="text-sm font-extrabold leading-tight text-slate-900">{video.title}</p>
-                  <span className="flex-none rounded-full bg-sky-50 px-2 py-0.5 text-[10px] font-bold text-sky-700">{video.language}</span>
+                  <p className="text-[11px] font-extrabold leading-tight text-slate-900 sm:text-sm">{video.title}</p>
+                  <span className="hidden flex-none rounded-full bg-sky-50 px-2 py-0.5 text-[10px] font-bold text-sky-700 sm:inline-flex">{video.language}</span>
                 </div>
-                <p className="mt-1 text-xs leading-relaxed text-slate-500">{video.detail}</p>
-                <p className="mt-2 line-clamp-2 text-[11px] font-semibold leading-relaxed text-slate-400">{apaReference(video.source)}</p>
-                <span className={`mt-3 flex items-center justify-center rounded-full px-3 py-2 text-xs font-extrabold transition ${selected ? 'bg-sky-600 text-white' : 'bg-sky-50 text-sky-700 group-hover:bg-sky-100'}`}>
+                <p className="mt-1 line-clamp-2 text-[10px] leading-relaxed text-slate-500 sm:text-xs">{video.detail}</p>
+                <p className="mt-2 hidden line-clamp-2 text-[11px] font-semibold leading-relaxed text-slate-400 sm:block">{apaReference(video.source)}</p>
+                <span className={`mt-2 flex items-center justify-center rounded-full px-1.5 py-1.5 text-[10px] font-extrabold transition sm:mt-3 sm:px-3 sm:py-2 sm:text-xs ${selected ? 'bg-sky-600 text-white' : 'bg-sky-50 text-sky-700 group-hover:bg-sky-100'}`}>
                   {selected ? '✓ วิดีโอนี้กำลังแสดงด้านล่าง' : '▶ เลือกวิดีโอนี้'}
                 </span>
               </div>

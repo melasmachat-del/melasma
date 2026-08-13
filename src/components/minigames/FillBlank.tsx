@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { FillBlankQuestion } from '../../types';
+import { apaReference } from '../../lib/references';
 
 interface Props {
   title: string;
@@ -123,7 +124,7 @@ export default function FillBlank({ title, questions, onComplete }: Props) {
                 {q.reveal && <p className="text-xs text-gray-600 leading-relaxed">{q.reveal}</p>}
                 {q.source && (
                   <p className="text-[10px] text-gray-500 mt-1.5 leading-snug">
-                    📚 อ้างอิง: {q.source}
+                    📚 อ้างอิง: {apaReference(q.source)}
                   </p>
                 )}
                 <button onClick={handleNext} className="btn-primary w-full mt-3">

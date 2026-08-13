@@ -9,9 +9,15 @@ interface ReviewQuestion {
   kind: 'choice' | 'true-false';
   prompt: string;
   answer: string;
-  options?: string[];
+  options?: ReviewOption[];
   explanation?: string;
   source?: string;
+}
+
+interface ReviewOption {
+  label: string;
+  guidance?: string;
+  recommended?: boolean;
 }
 
 interface LearningFact {
@@ -23,6 +29,17 @@ interface LearningFact {
 function buildStageReview(scenario: Scenario) {
   const questions: ReviewQuestion[] = [];
   const facts: LearningFact[] = [];
+  const pathLessons: LearningFact[] = [];
+
+  const getChoiceGuidance = (choice: { next: string; reflection?: string }) => {
+    if (choice.reflection) return choice.reflection;
+    const next = scenario.nodes.find(node => node.id === choice.next);
+    if (!next) return undefined;
+    if (next.type === 'dialogue') return next.text;
+    if (next.type === 'feedback') return next.body;
+    if (next.type === 'choice') return 'ทางนี้จะพากลับไปทบทวนคำถามเดิมอีกครั้ง ลองเลือกใหม่ได้โดยไม่ต้องรีบครับ';
+    return undefined;
+  };
 
   for (const node of scenario.nodes) {
     if (node.type === 'choice') {
@@ -38,7 +55,11 @@ function buildStageReview(scenario: Scenario) {
         kind: 'choice',
         prompt: node.prompt,
         answer: best.label,
-        options: node.choices.map(choice => choice.label),
+        options: node.choices.map(choice => ({
+          label: choice.label,
+          guidance: getChoiceGuidance(choice),
+          recommended: (choice.xp ?? 0) === (best.xp ?? 0) && (choice.xp ?? 0) > 0,
+        })),
         source: best.source,
       });
     }
@@ -62,9 +83,20 @@ function buildStageReview(scenario: Scenario) {
     if (node.type === 'educationalPopup') {
       facts.push({ title: 'เกล็ดความรู้', body: node.fact, source: node.source });
     }
+
+    // เส้นทางใหม่มีบทสนทนาคุณหมอเฉพาะทางเลือก — ดึงมาไว้ในคลังความรู้ด้วย
+    // เพื่อให้เด็กทบทวนคำอธิบายได้ แม้ไม่ได้เลือกเส้นทางนั้นตอนเล่น
+    if (node.type === 'dialogue' && (
+      node.id.startsWith('teach_') || node.id.startsWith('carePlan') || node.id === 'intro4'
+    )) {
+      pathLessons.push({
+        title: node.id.startsWith('carePlan') ? 'คุณหมอช่วยวางแผนดูแล' : 'คุณหมออธิบายจากสถานการณ์',
+        body: node.text,
+      });
+    }
   }
 
-  return { questions, facts };
+  return { questions, facts, pathLessons };
 }
 
 export default function AllStagesReview() {
@@ -76,12 +108,13 @@ export default function AllStagesReview() {
   }).filter((stage): stage is NonNullable<typeof stage> => Boolean(stage));
   const totalQuestions = stages.reduce((sum, stage) => sum + stage.review.questions.length, 0);
   const totalFacts = stages.reduce((sum, stage) => sum + stage.review.facts.length, 0);
+  const totalPathLessons = stages.reduce((sum, stage) => sum + stage.review.pathLessons.length, 0);
 
   return (
     <div className="min-h-screen bg-[#EEF6FF] pb-12">
       <PageHeader
         title="สรุปบทเรียนทั้งหมด"
-        subtitle="รวมคำถาม คำตอบ และเกล็ดความรู้จากทั้ง 5 ด่าน"
+        subtitle="รวมคำถาม คำตอบ เส้นทางเลือก และคำอธิบายจากคุณหมอทั้ง 5 ด่าน"
         backTo="/map"
       />
 
@@ -90,17 +123,18 @@ export default function AllStagesReview() {
           <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-violet-600">ทบทวนก่อนลงมือดูแลผิว</p>
           <h1 className="mt-1 font-display text-2xl font-extrabold text-slate-900 sm:text-3xl">คลังความรู้จากภารกิจทั้งหมด</h1>
           <p className="mt-3 max-w-3xl text-sm leading-7 text-slate-600 sm:text-base">
-            เปิดดูคำถามและคำตอบที่ใช้ในเกม พร้อมคำอธิบายและเกล็ดความรู้ของแต่ละด่านได้ในหน้าเดียว ไม่ต้องเล่นซ้ำเพื่อทบทวน
+            เปิดดูคำถามและคำตอบที่ใช้ในเกม พร้อมเหตุผลของแต่ละทางเลือก คำอธิบายจากคุณหมอ และเกล็ดความรู้ของแต่ละด่านได้ในหน้าเดียว ไม่ต้องเล่นซ้ำเพื่อทบทวน
           </p>
-          <div className="mt-5 grid grid-cols-3 gap-2 sm:max-w-xl sm:gap-3">
+          <div className="mt-5 grid grid-cols-2 gap-2 sm:max-w-2xl sm:grid-cols-4 sm:gap-3">
             <SummaryStat value={stages.length} label="ด่าน" />
-            <SummaryStat value={totalQuestions} label="คำถาม/ข้อควรรู้" />
+            <SummaryStat value={totalQuestions} label="คำถาม/ทางเลือก" />
             <SummaryStat value={totalFacts} label="เกล็ดความรู้" />
+            <SummaryStat value={totalPathLessons} label="คำอธิบายคุณหมอ" />
           </div>
         </section>
 
         <div className="mt-5 rounded-[20px] border border-sky-100 bg-sky-50/80 px-4 py-3 text-sm leading-relaxed text-sky-900">
-          <b>วิธีใช้หน้านี้:</b> เปิดทีละด่าน แล้วกดเปิดคำถามเพื่อดูคำตอบที่แนะนำและเหตุผล
+          <b>วิธีใช้หน้านี้:</b> เปิดทีละด่าน แล้วกดเปิดคำถามเพื่อดูแก่นความรู้ เหตุผลของทุกตัวเลือก และคำอธิบายจากคุณหมอ บางข้อมีหลายทางที่พาไปเรียนรู้ต่อได้ครับ
         </div>
 
         <section className="mt-5 space-y-4" aria-label="สรุปเนื้อหาทั้งหมด">
@@ -153,9 +187,17 @@ export default function AllStagesReview() {
                           {question.explanation && <p className="mt-2 text-xs leading-relaxed text-slate-600">💡 {question.explanation}</p>}
                           {question.options && (
                             <details className="mt-3">
-                              <summary className="cursor-pointer text-xs font-bold text-sky-700">ดูตัวเลือกในเกม</summary>
-                              <ul className="mt-2 space-y-1 text-xs leading-relaxed text-slate-500">
-                                {question.options.map(option => <li key={option}>• {option}</li>)}
+                              <summary className="cursor-pointer text-xs font-bold text-sky-700">ดูทุกตัวเลือกและคำอธิบาย</summary>
+                              <ul className="mt-2 space-y-2">
+                                {question.options.map(option => (
+                                  <li key={option.label} className="rounded-xl border border-slate-100 bg-slate-50 px-3 py-2 text-xs leading-relaxed text-slate-600">
+                                    <p className="font-semibold text-slate-700">
+                                      {option.recommended && <span className="mr-1 text-emerald-600">✓</span>}
+                                      {option.label}
+                                    </p>
+                                    {option.guidance && <p className="mt-1 text-slate-500">คุณหมออธิบาย: {option.guidance}</p>}
+                                  </li>
+                                ))}
                               </ul>
                             </details>
                           )}
@@ -164,6 +206,24 @@ export default function AllStagesReview() {
                       ))}
                     </div>
                   </section>
+
+                  {review.pathLessons.length > 0 && (
+                    <section className="mt-5">
+                      <div className="flex items-center justify-between gap-3">
+                        <h2 className="text-base font-extrabold text-slate-900">🩺 คำอธิบายจากคุณหมอตามทางเลือก</h2>
+                        <span className="text-xs font-bold text-slate-500">{review.pathLessons.length} เรื่อง</span>
+                      </div>
+                      <p className="mt-1 text-xs leading-relaxed text-slate-500">บทสนทนาเหล่านี้มาจากเส้นทางต่าง ๆ ในเกม เปิดอ่านได้แม้ตอนเล่นเราไม่ได้เลือกทางนั้น</p>
+                      <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                        {review.pathLessons.map((lesson, lessonIndex) => (
+                          <article key={`${lesson.title}-${lessonIndex}`} className="rounded-[20px] border border-violet-100 bg-violet-50/70 p-4">
+                            <h3 className="text-sm font-extrabold text-violet-900">{lesson.title}</h3>
+                            <p className="mt-2 text-sm leading-relaxed text-violet-950/80">{lesson.body}</p>
+                          </article>
+                        ))}
+                      </div>
+                    </section>
+                  )}
 
                   {review.facts.length > 0 && (
                     <section className="mt-5">

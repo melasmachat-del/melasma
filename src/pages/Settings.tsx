@@ -292,13 +292,6 @@ export default function Settings() {
                   onChange={settings.toggleVibration}
                 />
                 <SwitchRow
-                  icon="🗣️"
-                  title="อ่านบทสนทนาออกเสียง"
-                  description="แสดงปุ่มอ่านออกเสียงภาษาไทยในบทสนทนาที่รองรับ"
-                  checked={settings.ttsEnabled}
-                  onChange={settings.toggleTts}
-                />
-                <SwitchRow
                   icon="✨"
                   title="ลดการเคลื่อนไหว"
                   description="ลดแอนิเมชันและเอฟเฟกต์ที่อาจทำให้เวียนหัว"

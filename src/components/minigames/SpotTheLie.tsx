@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { SpotTheLieClaim } from '../../types';
+import { apaReference } from '../../lib/references';
 
 interface Props {
   title: string;
@@ -90,7 +91,7 @@ export default function SpotTheLie({ title, claims, onComplete }: Props) {
                 <p className="text-sm text-gray-700">{claim.reveal}</p>
                 {claim.source && (
                   <p className="text-[11px] text-gray-500 mt-1.5 leading-snug">
-                    📚 อ้างอิง: {claim.source}
+                    📚 อ้างอิง: {apaReference(claim.source)}
                   </p>
                 )}
                 <button onClick={handleNext} className="btn-primary w-full mt-3">

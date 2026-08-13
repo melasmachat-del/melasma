@@ -2,8 +2,6 @@ import { motion } from 'framer-motion';
 import type { DialogueVisual, SpeakerKey } from '../types';
 import { usePlayerStore } from '../store/playerStore';
 import { useAvatarStore } from '../store/avatarStore';
-import { useSettingsStore } from '../store/settingsStore';
-import { speak, useTtsAvailable } from '../lib/tts';
 import { getPlayerCharacter, NPC_CHARACTERS } from '../lib/characters';
 import { asset } from '../lib/asset';
 
@@ -38,10 +36,6 @@ export default function DialogueBubble({ speaker, text, visual }: Props) {
   const isDoctor = speaker === 'doctor';
   // ตัวละครประกอบใช้ภาพตามบท ส่วน player ใช้ตัวแทน 3D ที่เลือกจาก onboarding
   const npc = NPC_CHARACTERS[speaker];
-  // ปุ่มอ่านออกเสียง — โผล่เฉพาะเมื่อเปิดในตั้งค่า + เครื่องมีเสียงไทย
-  const ttsEnabled = useSettingsStore(st => st.ttsEnabled);
-  const ttsAvailable = useTtsAvailable();
-  const showTts = ttsEnabled && ttsAvailable && !!text;
   const isCloudCharacter = isDoctor || isPlayer;
   const bubbleStyle = isDoctor
     ? 'border-2 border-mint-200 bg-gradient-to-br from-white via-mint-50/95 to-sky-50 text-slate-800 shadow-[0_10px_24px_-12px_rgba(43,202,171,0.6)]'
@@ -130,16 +124,6 @@ export default function DialogueBubble({ speaker, text, visual }: Props) {
               <p className="mt-1 text-[11px] leading-relaxed text-slate-500">{visual.caption}</p>
             </figcaption>
           </motion.figure>
-        )}
-        {showTts && (
-          <button
-            type="button"
-            onClick={() => speak(text)}
-            aria-label="อ่านออกเสียง"
-            className="mt-1 px-2 py-0.5 text-xs text-slate-500 hover:text-detective-600 active:opacity-70 flex items-center gap-1"
-          >
-            🔊 ฟังอีกครั้ง
-          </button>
         )}
       </div>
     </motion.div>
