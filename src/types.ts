@@ -224,9 +224,15 @@ export interface PlayerProfile {
   // final exam
   examBestScore?: number;   // % คะแนนสูงสุดในแบบทดสอบรวม
   examBonusClaimed?: boolean; // รับโบนัสเหรียญครั้งแรกแล้วหรือยัง
-  // pre/post assessment
-  preTestScore?: number;    // % แบบประเมินก่อนเรียน
-  postTestScore?: number;   // % แบบประเมินหลังเรียน
+  // pre/post assessment & tracking
+  realName?: string;        // ชื่อ-นามสกุลจริง
+  lineDisplayName?: string; // ชื่อบัญชี LINE Display Name
+  studentCode?: string;     // รหัสนักศึกษา / ห้องเรียน
+  preTestScore?: number;    // % แบบประเมินความรู้ก่อนเรียน
+  preTestSkillScore?: number; // คะแนนทักษะก่อนเรียน
+  postTestScore?: number;   // % แบบประเมินความรู้หลังเรียน
+  postTestSkillScore?: number; // คะแนนทักษะหลังเรียน
+  chatbotSurveyScore?: number; // คะแนนประเมินประโยชน์ของแชตบอต ตอนที่ 5 (1-5)
   preTestAt?: string;
   postTestAt?: string;
   // ความพึงพอใจ/ความสนุก (ดาว 1-5) — เก็บล่าสุด + ผลรวมเพื่อหาค่าเฉลี่ยเชิงวิจัย

@@ -37,6 +37,10 @@ export interface SyncPayload {
   hintTokens?: number;
   coinX2Remaining?: number;
   streakShields?: number;
+  // identity mapping
+  realName?: string;
+  lineDisplayName?: string;
+  studentCode?: string;
   // streak / daily challenge / final exam / pre-post assessment
   streakDays?: number;
   lastPlayDate?: string;
@@ -46,7 +50,10 @@ export interface SyncPayload {
   examBestScore?: number;
   examBonusClaimed?: boolean;
   preTestScore?: number;
+  preTestSkillScore?: number;
   postTestScore?: number;
+  postTestSkillScore?: number;
+  chatbotSurveyScore?: number;
   preTestAt?: string;
   postTestAt?: string;
   // ความพึงพอใจ/ความสนุก (ดาว 1-5)
@@ -385,6 +392,103 @@ export async function pingBackend(): Promise<boolean> {
     const data = await res.json();
     return data.ok === true;
   } catch {
+    return false;
+  }
+}
+
+export interface CloudStudentsResponse {
+  ok: boolean;
+  total?: number;
+  students?: Array<{
+    userIdHash: string;
+    nickname: string;
+    realName?: string;
+    lineDisplayName?: string;
+    studentCode?: string;
+    grade?: string;
+    school?: string;
+    totalXP: number;
+    level: number;
+    stagesCompleted: number[];
+    certificateNo?: string;
+    certificateIssuedAt?: string;
+    preTestScore?: number;
+    postTestScore?: number;
+    preTestSkillScore?: number;
+    postTestSkillScore?: number;
+    chatbotSurveyScore?: number;
+    preTestAt?: string;
+    postTestAt?: string;
+    lastActiveAt: string;
+  }>;
+  sheetUrl?: string;
+  error?: string;
+}
+
+/**
+ * ดึงข้อมูลนักศึกษาทุกคนจาก Google Sheets (สำหรับ Teacher Admin)
+ */
+export async function fetchAllStudentsFromCloud(): Promise<CloudStudentsResponse> {
+  if (!SYNC_URL) return { ok: false, error: 'no_sync_url' };
+  try {
+    const url = `${SYNC_URL}?action=get_all_students`;
+    const res = await fetchWithRetry(url, { method: 'GET' });
+    const data = await res.json();
+    return data as CloudStudentsResponse;
+  } catch (err) {
+    console.warn('[cloudSync] fetchAllStudents failed:', err);
+    return { ok: false, error: 'network_error' };
+  }
+}
+
+export interface TeacherConfigPayload {
+  requirePreTest?: boolean;
+  enablePostTest?: boolean;
+  enableChatbotEvaluation?: boolean;
+  demoUnlockAllStages?: boolean;
+  showInstantQuizFeedback?: boolean;
+  schoolName?: string;
+  classCode?: string;
+  academicYear?: string;
+}
+
+/**
+ * ดึงการตั้งค่ากลางของอาจารย์จาก Google Apps Script (ทุกคนที่เข้าเกมจะได้การตั้งค่านี้)
+ */
+export async function fetchGlobalTeacherConfig(): Promise<{ ok: boolean; config?: TeacherConfigPayload }> {
+  if (!SYNC_URL) return { ok: false };
+  try {
+    const url = `${SYNC_URL}?action=get_teacher_config`;
+    const res = await fetchWithRetry(url, { method: 'GET' });
+    const data = await res.json();
+    if (data && data.ok && data.config) {
+      return { ok: true, config: data.config };
+    }
+    return { ok: false };
+  } catch (err) {
+    console.warn('[cloudSync] fetchGlobalTeacherConfig failed:', err);
+    return { ok: false };
+  }
+}
+
+/**
+ * บันทึกการตั้งค่ากลางของอาจารย์ไปยัง Google Apps Script (กระจายผลไปสู่เครื่องของนักศึกษาทุกคน)
+ */
+export async function saveGlobalTeacherConfig(config: TeacherConfigPayload): Promise<boolean> {
+  if (!SYNC_URL) return false;
+  try {
+    const res = await fetch(SYNC_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({
+        action: 'save_teacher_config',
+        ...config,
+      }),
+    });
+    const data = await res.json();
+    return data && data.ok === true;
+  } catch (err) {
+    console.warn('[cloudSync] saveGlobalTeacherConfig failed:', err);
     return false;
   }
 }

@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { usePlayerStore } from '../store/playerStore';
+import { useTeacherStore } from '../store/teacherStore';
 import { sfx } from '../lib/sound';
 import { CERT_STAGE_COUNT, certificateStageProgress, hasCompletedCertificatePath } from '../scenarios';
 import { asset } from '../lib/asset';
@@ -8,13 +9,28 @@ import { asset } from '../lib/asset';
 export default function Home() {
   const nav = useNavigate();
   const player = usePlayerStore();
+  const teacher = useTeacherStore();
   const completedCount = certificateStageProgress(player.stagesCompleted);
   const certificateReady = hasCompletedCertificatePath(player.stagesCompleted);
   const progressPercent = Math.round((completedCount / CERT_STAGE_COUNT) * 100);
 
+  const needPreTest = teacher.requirePreTest && player.preTestScore === undefined;
+  const isAllDone = completedCount >= CERT_STAGE_COUNT;
+  const needPostTest = teacher.enablePostTest && isAllDone && player.postTestScore === undefined;
+
   const goTo = (path: string) => {
     sfx.click();
     nav(path);
+  };
+
+  const handleMainCTA = () => {
+    if (needPreTest) {
+      goTo('/survey?kind=pre');
+    } else if (needPostTest) {
+      goTo('/survey?kind=post');
+    } else {
+      goTo('/map');
+    }
   };
 
   return (
@@ -45,10 +61,16 @@ export default function Home() {
                   เรียนรู้ผ่านเรื่องสั้น เกมฝึกคิด และคำแนะนำที่อ้างอิงข้อมูลทางการแพทย์
                 </p>
                 <button
-                  onClick={() => goTo('/map')}
-                  className="btn-primary mt-2 !min-h-8 w-fit !px-4 text-[10px] font-bold shadow-[0_12px_25px_-10px_rgba(0,114,204,0.65)] sm:mt-5 sm:!min-h-12 sm:w-fit sm:!px-6 sm:text-sm"
+                  onClick={handleMainCTA}
+                  className={`btn-primary mt-2 !min-h-8 w-fit !px-4 text-[10px] font-bold shadow-[0_12px_25px_-10px_rgba(0,114,204,0.65)] sm:mt-5 sm:!min-h-12 sm:w-fit sm:!px-6 sm:text-sm ${
+                    needPreTest ? '!bg-amber-600 hover:!bg-amber-700' : needPostTest ? '!bg-emerald-600 hover:!bg-emerald-700' : ''
+                  }`}
                 >
-                  เริ่มภารกิจ <span className="ml-2 text-lg" aria-hidden="true">→</span>
+                  {needPreTest
+                    ? 'ทำแบบสอบถามก่อนเรียน (Pre-test) →'
+                    : needPostTest
+                    ? 'ทำแบบสอบถามหลังเรียน (Post-test) →'
+                    : 'เริ่มภารกิจ →'}
                 </button>
               </div>
               <section

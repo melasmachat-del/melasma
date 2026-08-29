@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { getScenarioById, SCENARIO_META, isStageUnlocked, getStageDifficulty, hasCompletedCertificatePath } from '../scenarios';
 import { getBadge } from '../lib/badges';
 import { usePlayerStore } from '../store/playerStore';
+import { useTeacherStore } from '../store/teacherStore';
 import { useCertNameStore } from '../store/certNameStore';
 import { useUIStore } from '../store/uiStore';
 import DialogueBubble from '../components/DialogueBubble';
@@ -167,6 +168,10 @@ export default function ScenarioPage() {
   const [askResume, setAskResume] = useState(false);
   // ===== ท้าเพื่อน (async) — แต้มที่ได้ในด่านนี้ + คำท้าที่ค้างอยู่ =====
   const nickname = usePlayerStore(s => s.nickname);
+  const stagesCompleted = usePlayerStore(s => s.stagesCompleted);
+  const preTestScore = usePlayerStore(s => s.preTestScore);
+  const postTestScore = usePlayerStore(s => s.postTestScore);
+  const teacher = useTeacherStore();
   const [stageScore, setStageScore] = useState(0);
   const [challenge, setChallenge] = useState<PendingChallenge | null>(null);
   const [shareMsg, setShareMsg] = useState<string | null>(null);
@@ -183,6 +188,16 @@ export default function ScenarioPage() {
 
   // reset state เมื่อเปลี่ยน stage + เช็คว่ามี save ค้างไว้ไหม
   useEffect(() => {
+    // ถ้าด่านยังไม่ปลดล็อก (หรือติดเงื่อนไขบังคับทำ Pre-test) ให้ redirect ออก
+    if (!isStageUnlocked(stageId, stagesCompleted)) {
+      if (teacher.requirePreTest && preTestScore === undefined) {
+        nav('/survey?kind=pre', { replace: true });
+      } else {
+        nav('/map', { replace: true });
+      }
+      return;
+    }
+
     setHistory([]);
     setCurrentNodeId(scenario?.startNode || '');
     setStageScore(0);
@@ -201,7 +216,7 @@ export default function ScenarioPage() {
     }
     setAskResume(false);
     setShowIntro(true);
-  }, [stageId, scenario, getProgress]);
+  }, [stageId, scenario, getProgress, stagesCompleted, teacher.requirePreTest, preTestScore, nav]);
 
   // กดเล่นต่อจาก save
   const handleResume = () => {
@@ -1170,6 +1185,14 @@ export default function ScenarioPage() {
                         className="btn-primary w-full"
                       >
                         ▶ ไปด่าน {nextMeta.id}: {nextMeta.title}
+                      </button>
+                    )}
+                    {teacher.enablePostTest && postTestScore === undefined && !canPlayNext && (
+                      <button
+                        onClick={() => { sfx.click(); nav('/survey?kind=post'); }}
+                        className="btn-primary !bg-emerald-600 hover:!bg-emerald-700 w-full font-bold shadow-clay-blue"
+                      >
+                        🎓 ทำแบบสอบถามหลังเรียน (Post-test) & ประเมินแชตบอต →
                       </button>
                     )}
                     <button

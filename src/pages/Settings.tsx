@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { clearChatSession } from '../lib/chatSession';
 import { sfx } from '../lib/sound';
@@ -63,6 +64,7 @@ const BACKUP_KEYS = [
 type SyncStatus = 'idle' | 'checking' | 'online' | 'offline';
 
 export default function Settings() {
+  const nav = useNavigate();
   const settings = useSettingsStore();
   const completedCount = usePlayerStore(state => certificateStageProgress(state.stagesCompleted));
   const resetLearningProgress = usePlayerStore(state => state.resetLearningProgress);
@@ -400,6 +402,36 @@ export default function Settings() {
                     </div>
                   </div>
                 )}
+              </div>
+            </section>
+
+            <div className="h-px bg-gradient-to-r from-transparent via-sky-100 to-transparent" />
+
+            {/* Teacher & Instructor Admin Section */}
+            <section aria-labelledby="teacher-admin-heading" className="rounded-[26px] border border-amber-200 bg-gradient-to-br from-amber-50/70 via-white to-amber-50/40 p-5 sm:p-6 shadow-clay-sm">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div className="flex items-start gap-3.5">
+                  <span className="flex h-12 w-12 flex-none items-center justify-center rounded-2xl bg-amber-100 text-2xl text-amber-800 shadow-clay-sm" aria-hidden="true">
+                    🎓
+                  </span>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="rounded-full bg-amber-100 px-2.5 py-0.5 text-[10px] font-extrabold text-amber-900">สำหรับอาจารย์</span>
+                      <h2 id="teacher-admin-heading" className="text-base font-extrabold text-slate-900">ตั้งค่าในส่วนของอาจารย์ (Teacher Admin)</h2>
+                    </div>
+                    <p className="mt-1 text-xs leading-relaxed text-slate-600">
+                      ระบบติดตามคะแนนนักศึกษา, ควบคุมข้อสอบ Pre/Post Test, ตอนที่ 5 ประโยชน์ของแชตบอต, โหมดสาธิตการสอน และส่งออกรายงาน CSV
+                    </p>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => { sfx.click(); nav('/admin'); }}
+                  className="btn-primary !bg-amber-600 hover:!bg-amber-700 text-xs sm:text-sm font-bold !px-5 !py-2.5 w-full sm:w-auto shadow-clay-sm flex-none"
+                >
+                  เข้าสู่ระบบอาจารย์ →
+                </button>
               </div>
             </section>
 

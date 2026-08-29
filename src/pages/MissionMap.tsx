@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { usePlayerStore } from '../store/playerStore';
+import { useTeacherStore } from '../store/teacherStore';
 import { SCENARIO_META, getStageDifficulty, isStageUnlocked, certificateStageProgress, CERT_STAGE_COUNT } from '../scenarios';
 import BackButton from '../components/BackButton';
 import { asset } from '../lib/asset';
@@ -23,9 +24,15 @@ const DIFFICULTY = {
 
 export default function MissionMap() {
   const nav = useNavigate();
-  const completed = usePlayerStore(s => s.stagesCompleted);
+  const player = usePlayerStore();
+  const completed = player.stagesCompleted;
   const done = certificateStageProgress(completed);
+  const teacher = useTeacherStore();
   const go = (path: string) => { sfx.click(); nav(path); };
+
+  const needPreTest = teacher.requirePreTest && player.preTestScore === undefined;
+  const isAllDone = done >= CERT_STAGE_COUNT;
+  const needPostTest = teacher.enablePostTest && isAllDone && player.postTestScore === undefined;
 
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_top_right,rgba(52,211,153,.12),transparent_30%),#EEF6FF] pb-12">
@@ -43,6 +50,60 @@ export default function MissionMap() {
             </div>
           </div>
         </section>
+
+        {/* Banner: Required Pre-test */}
+        {needPreTest && (
+          <div className="mb-5 overflow-hidden rounded-[26px] border border-amber-200 bg-gradient-to-r from-amber-500/15 via-white to-amber-500/10 p-4 sm:p-5 shadow-clay-sm flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="flex items-center gap-3.5">
+              <span className="flex h-12 w-12 flex-none items-center justify-center rounded-2xl bg-amber-100 text-2xl text-amber-800 shadow-clay-sm">
+                📝
+              </span>
+              <div>
+                <span className="rounded-full bg-amber-100 px-2.5 py-0.5 text-[10px] font-extrabold text-amber-900">ขั้นตอนสำคัญ</span>
+                <h2 className="text-sm sm:text-base font-extrabold text-slate-900 mt-0.5">
+                  กรุณาทำแบบสอบถามก่อนเรียน (Pre-test)
+                </h2>
+                <p className="text-xs text-slate-600">
+                  อาจารย์กำหนดให้นักศึกษาทำแบบสอบถามความรู้และทักษะก่อนเริ่มภารกิจ 5 ด่าน
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => go('/survey?kind=pre')}
+              className="btn-primary !bg-amber-600 hover:!bg-amber-700 font-bold text-xs sm:text-sm !px-5 !py-2.5 w-full sm:w-auto shadow-clay-sm flex-none"
+            >
+              เริ่มทำ Pre-test ทันที →
+            </button>
+          </div>
+        )}
+
+        {/* Banner: Available Post-test */}
+        {needPostTest && (
+          <div className="mb-5 overflow-hidden rounded-[26px] border border-emerald-200 bg-gradient-to-r from-emerald-500/15 via-white to-emerald-500/10 p-4 sm:p-5 shadow-clay-sm flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="flex items-center gap-3.5">
+              <span className="flex h-12 w-12 flex-none items-center justify-center rounded-2xl bg-emerald-100 text-2xl text-emerald-800 shadow-clay-sm">
+                🎓
+              </span>
+              <div>
+                <span className="rounded-full bg-emerald-100 px-2.5 py-0.5 text-[10px] font-extrabold text-emerald-900">ผ่านครบ 5 ด่านแล้ว!</span>
+                <h2 className="text-sm sm:text-base font-extrabold text-slate-900 mt-0.5">
+                  ทำแบบสอบถามหลังเรียน (Post-test) & ประเมินแชตบอต
+                </h2>
+                <p className="text-xs text-slate-600">
+                  ทำแบบทดสอบวัดพัฒนาการและประเมินประโยชน์ของแชตบอต (ตอนที่ 5) เพื่อบันทึกผลให้อาจารย์
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => go('/survey?kind=post')}
+              className="btn-primary !bg-emerald-600 hover:!bg-emerald-700 font-bold text-xs sm:text-sm !px-5 !py-2.5 w-full sm:w-auto shadow-clay-sm flex-none"
+            >
+              ทำ Post-test & รับผล →
+            </button>
+          </div>
+        )}
 
         <div className="mb-5 rounded-[22px] border border-white bg-white/90 p-4 shadow-sm">
           <div className="mb-2 flex items-center justify-between text-sm"><b className="text-slate-800">เส้นทางของคุณ</b><b className="text-sky-700">{done}/{CERT_STAGE_COUNT} ด่าน</b></div>
@@ -75,7 +136,18 @@ export default function MissionMap() {
                   ) : unlocked ? (
                     <button onClick={() => go(`/scenario/${stage.id}`)} className="btn-primary mt-3 w-full !px-2 text-xs sm:mt-4 sm:text-sm">เริ่มไขคดี <span className="ml-1 sm:ml-2">→</span></button>
                   ) : (
-                    <div className="mt-3 rounded-2xl bg-slate-50 px-2 py-2.5 text-center text-[10px] font-semibold leading-relaxed text-slate-500 sm:mt-4 sm:px-4 sm:py-3 sm:text-xs">จบด่าน {stage.unlockAfter} เพื่อปลดล็อก</div>
+                    needPreTest ? (
+                      <button
+                        onClick={() => go('/survey?kind=pre')}
+                        className="btn-primary mt-3 w-full !bg-amber-600 hover:!bg-amber-700 !px-2 text-xs sm:mt-4 sm:text-sm font-bold shadow-clay-sm"
+                      >
+                        🔒 ทำ Pre-test เพื่อปลดล็อก →
+                      </button>
+                    ) : (
+                      <div className="mt-3 rounded-2xl bg-slate-50 px-2 py-2.5 text-center text-[10px] font-semibold leading-relaxed text-slate-500 sm:mt-4 sm:px-4 sm:py-3 sm:text-xs">
+                        จบด่าน {stage.unlockAfter} เพื่อปลดล็อก
+                      </div>
+                    )
                   )}
                 </div>
               </motion.article>

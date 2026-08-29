@@ -43,6 +43,21 @@ interface PlayerState extends PlayerProfile {
   recordExam: (percent: number, passed: boolean, bonusCoins: number) => boolean;
   /** บันทึกผลแบบประเมิน pre/post */
   recordAssessment: (kind: 'pre' | 'post', percent: number) => void;
+  /** บันทึกผลแบบสอบถามวิจัย 5 ตอน (ความรู้ + ทักษะ + แชตบอต) */
+  recordSurveyResults: (
+    kind: 'pre' | 'post',
+    knowledgePercent: number,
+    skillScore?: number,
+    chatbotScore?: number
+  ) => void;
+  /** อัปเดตข้อมูลนักศึกษาสำหรับอาจารย์ติดตามผล */
+  setStudentInfo: (info: {
+    realName?: string;
+    lineDisplayName?: string;
+    studentCode?: string;
+    grade?: string;
+    school?: string;
+  }) => void;
   /** บันทึกคะแนนความสนุก/พึงพอใจ (ดาว 1-5) หลังจบด่าน */
   rateFun: (stars: number) => void;
   /** เรียกตอนเล่นเกม — อัพเดท streak ถ้าเล่นต่อเนื่องได้ */
@@ -59,6 +74,9 @@ interface PlayerState extends PlayerProfile {
 const blankProfile = (): PlayerProfile => ({
   userIdHash: '',
   nickname: '',
+  realName: '',
+  lineDisplayName: '',
+  studentCode: '',
   grade: '',
   school: '',
   avatar: 1,
@@ -107,6 +125,15 @@ export const usePlayerStore = create<PlayerState>()(
 
       updateNickname: (nickname) => {
         set({ nickname, lastActiveAt: new Date().toISOString() });
+        get().syncIfReady();
+      },
+
+      setStudentInfo: (info) => {
+        const patch: Partial<PlayerProfile> = { ...info, lastActiveAt: new Date().toISOString() };
+        if (info.realName) {
+          try { useCertNameStore.getState().setRealName(info.realName); } catch {}
+        }
+        set(patch);
         get().syncIfReady();
       },
 
@@ -305,6 +332,27 @@ export const usePlayerStore = create<PlayerState>()(
         get().syncIfReady();
       },
 
+      recordSurveyResults: (kind, knowledgePercent, skillScore, chatbotScore) => {
+        const now = new Date().toISOString();
+        if (kind === 'pre') {
+          set({
+            preTestScore: knowledgePercent,
+            preTestSkillScore: skillScore,
+            preTestAt: now,
+            lastActiveAt: now,
+          });
+        } else {
+          set({
+            postTestScore: knowledgePercent,
+            postTestSkillScore: skillScore,
+            chatbotSurveyScore: chatbotScore !== undefined ? chatbotScore : get().chatbotSurveyScore,
+            postTestAt: now,
+            lastActiveAt: now,
+          });
+        }
+        get().syncIfReady();
+      },
+
       reset: () => {
         set({ ...blankProfile(), isInitialized: false });
         // ลบชื่อจริงบนเกียรติบัตร (local-only) ออกด้วยเมื่อล้างข้อมูล
@@ -318,7 +366,10 @@ export const usePlayerStore = create<PlayerState>()(
           stagesCompleted: [],
           badges: [],
           preTestScore: undefined,
+          preTestSkillScore: undefined,
           postTestScore: undefined,
+          postTestSkillScore: undefined,
+          chatbotSurveyScore: undefined,
           preTestAt: undefined,
           postTestAt: undefined,
           examBestScore: undefined,
@@ -344,6 +395,9 @@ export const usePlayerStore = create<PlayerState>()(
             syncProgress({
               userIdHash: s.userIdHash,
               nickname: s.nickname,
+              realName: s.realName,
+              lineDisplayName: s.lineDisplayName,
+              studentCode: s.studentCode,
               grade: s.grade,
               school: s.school,
               avatar: s.avatar,
@@ -370,7 +424,10 @@ export const usePlayerStore = create<PlayerState>()(
               examBestScore: s.examBestScore,
               examBonusClaimed: s.examBonusClaimed,
               preTestScore: s.preTestScore,
+              preTestSkillScore: s.preTestSkillScore,
               postTestScore: s.postTestScore,
+              postTestSkillScore: s.postTestSkillScore,
+              chatbotSurveyScore: s.chatbotSurveyScore,
               preTestAt: s.preTestAt,
               postTestAt: s.postTestAt,
               funRating: s.funRating,
@@ -383,14 +440,15 @@ export const usePlayerStore = create<PlayerState>()(
     }),
     {
       name: 'hd_player',
-      // เวอร์ชัน schema ของ save — เพิ่มเลขนี้เมื่อแก้โครงสร้าง store แล้วเขียน migrate ให้รองรับ
-      // ของเดิม (ไม่มี version) ถือเป็น v0 schema เดียวกัน → migrate คืนค่าเดิม ไม่ทำให้ข้อมูลนักเรียนหาย
       version: 1,
       migrate: (persisted) => persisted as PlayerState,
       storage: createJSONStorage(() => localStorage),
       partialize: (s) => ({
         userIdHash: s.userIdHash,
         nickname: s.nickname,
+        realName: s.realName,
+        lineDisplayName: s.lineDisplayName,
+        studentCode: s.studentCode,
         grade: s.grade,
         school: s.school,
         avatar: s.avatar,
@@ -418,7 +476,10 @@ export const usePlayerStore = create<PlayerState>()(
         examBestScore: s.examBestScore,
         examBonusClaimed: s.examBonusClaimed,
         preTestScore: s.preTestScore,
+        preTestSkillScore: s.preTestSkillScore,
         postTestScore: s.postTestScore,
+        postTestSkillScore: s.postTestSkillScore,
+        chatbotSurveyScore: s.chatbotSurveyScore,
         preTestAt: s.preTestAt,
         postTestAt: s.postTestAt,
         funRating: s.funRating,

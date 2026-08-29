@@ -75,7 +75,17 @@ export function getScenarioById(id: number): Scenario | null {
   }
 }
 
+import { useTeacherStore } from '../store/teacherStore';
+import { usePlayerStore } from '../store/playerStore';
+
 export function isStageUnlocked(stageId: number, completed: number[]): boolean {
+  if (useTeacherStore.getState().demoUnlockAllStages) return true;
+
+  // ถ้าอาจารย์เปิดโหมดบังคับทำ Pre-test และผู้เรียนยังไม่ได้ทำ Pre-test จะล็อกทุกด่าน
+  if (useTeacherStore.getState().requirePreTest && usePlayerStore.getState().preTestScore === undefined) {
+    return false;
+  }
+
   const meta = SCENARIO_META.find(m => m.id === stageId);
   if (!meta) return false;
   if (!meta.unlockAfter) return true;

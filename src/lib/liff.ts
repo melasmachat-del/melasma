@@ -11,6 +11,7 @@ const MOCK_USER_KEY = 'hd_mock_user_id';
 
 let initialized = false;
 let cachedUserId: string | null = null;
+let cachedDisplayName: string = 'ผู้ทดสอบ';
 
 /** สร้างหรืออ่าน mock user ID (เก็บใน localStorage) */
 function getOrCreateMockUserId(): string {
@@ -27,6 +28,7 @@ export async function initLiff(): Promise<void> {
   if (initialized) return;
   if (MOCK_MODE) {
     cachedUserId = getOrCreateMockUserId();
+    cachedDisplayName = localStorage.getItem('hd_line_display_name') || 'ผู้ทดสอบ (Web)';
     initialized = true;
     console.info('[LIFF] Forced MOCK mode. UserID:', cachedUserId);
     return;
@@ -34,6 +36,7 @@ export async function initLiff(): Promise<void> {
 
   if (!LIFF_ID || LIFF_ID === '2000000000-AbCdEfGh') {
     initialized = true;
+    cachedDisplayName = 'ผู้ทดสอบ';
     throw new Error('VITE_LIFF_ID is missing or still uses the placeholder value');
   }
 
@@ -58,8 +61,10 @@ export async function initLiff(): Promise<void> {
 
     const profile = await liff.getProfile();
     cachedUserId = profile.userId;
+    cachedDisplayName = profile.displayName || 'ผู้ใช้ LINE';
+    try { localStorage.setItem('hd_line_display_name', cachedDisplayName); } catch {}
     initialized = true;
-    console.info('[LIFF] Real mode. UserID:', cachedUserId);
+    console.info('[LIFF] Real mode. UserID:', cachedUserId, 'Name:', cachedDisplayName);
   } catch (err) {
     initialized = true;
     console.error('[LIFF] init failed:', err);
@@ -75,12 +80,11 @@ export async function getUserIdHash(): Promise<string> {
 }
 
 export function getDisplayName(): string {
-  if (MOCK_MODE) return 'ผู้ทดสอบ';
-  try {
-    return liff.isInClient() ? 'ผู้เล่น' : 'ผู้ทดสอบ';
-  } catch {
-    return 'ผู้เล่น';
-  }
+  return cachedDisplayName || (MOCK_MODE ? 'ผู้ทดสอบ' : 'ผู้เล่น');
+}
+
+export function getLineDisplayName(): string {
+  return cachedDisplayName || localStorage.getItem('hd_line_display_name') || 'ผู้ใช้ LINE';
 }
 
 export function isMockMode(): boolean {

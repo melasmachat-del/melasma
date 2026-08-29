@@ -5,17 +5,20 @@
  *  Project    : Melasma learning game for skin health
  *  Account    : melasmachat@gmail.com
  *  Frontend   : https://melasmachat-del.github.io/melasma/
- *  Version    : 1.7.1  (รองรับการ fallback เมื่อ Apps Script redirect POST เป็น GET)
+ *  Version    : 1.8.0  (รองรับ Teacher Admin, Global Cloud Settings, และ 44 คอลัมน์)
  *
  *  Endpoints  :
- *    POST  body {action:'sync', ...}        บันทึก/อัปเดต progress (รับ field ครบ)
- *    POST  body {action:'issueCert', ...}   ออกเกียรติบัตร
- *    GET   ?action=verify&code=XXXXXX       ตรวจเกียรติบัตร
- *    GET   ?action=restore&hash=...         กู้ progress (เปลี่ยนเครื่อง)
- *    GET   ?action=ping                     เช็ค backend ทำงานไหม
- *    GET   ?action=leaderboard&hash=...     กระดานอันดับรวม (PDPA)
+ *    POST  body {action:'sync', ...}                 บันทึก/อัปเดต progress (44 columns)
+ *    POST  body {action:'issueCert', ...}            ออกเกียรติบัตร
+ *    POST  body {action:'save_teacher_config', ...}  บันทึกการตั้งค่าระบบกลางสำหรับอาจารย์
+ *    GET   ?action=get_all_students                  ดึงข้อมูลนักศึกษาทุกคนสำหรับแดชบอร์ดอาจารย์
+ *    GET   ?action=get_teacher_config                ดึงการตั้งค่าระบบกลางของอาจารย์
+ *    GET   ?action=verify&code=XXXXXX                ตรวจเกียรติบัตร
+ *    GET   ?action=restore&hash=...                  กู้ progress (เปลี่ยนเครื่อง)
+ *    GET   ?action=ping                              เช็คสถานะ backend & teacherConfig
+ *    GET   ?action=leaderboard&hash=...              กระดานอันดับรวม (PDPA)
  *
- *  Sheet "Players" — 38 columns:
+ *  Sheet "Players" — 44 columns:
  *    A  userIdHash         B  nickname        C  grade               D  school
  *    E  createdAt          F  lastActiveAt    G  totalXP             H  level
  *    I  stagesCompleted    J  badges          K  certificateNo       L  certificateIssuedAt
@@ -28,9 +31,11 @@
  *    AD examBestScore      AE examBonusClaimed
  *    AF preTestScore       AG postTestScore   AH preTestAt          AI postTestAt
  *    AJ funRating          AK funRatingCount  AL funRatingSum
+ *    AM realName           AN lineDisplayName AO studentCode
+ *    AP preTestSkillScore  AQ postTestSkillScore AR chatbotSurveyScore
  *
- *  ⚠️ ต้องรัน `setupSheets()` ครั้งเดียวก่อนใช้ — เพิ่ม columns ใหม่ใน Players sheet
- *     ผู้ใช้เก่า: รัน `setupSheets()` (หรือ `migrateToV130()`) ทับได้ — แค่เขียน header ใหม่ ข้อมูลเดิมไม่หาย
+ *  ⚠️ วิธีอัปเดต Google Sheet สำหรับผู้ใช้:
+ *     เปิด Apps Script Editor → เลือกฟังก์ชัน "migrateToV180" → กด Run 1 ครั้ง
  * ============================================================================
  */
 
@@ -38,7 +43,7 @@ const CONFIG = {
   CERT_PREFIX: 'MEL',
   CERT_YEAR: new Date().getFullYear(),
   STAGES_REQUIRED: 5,
-  BACKEND_VERSION: '1.7.1',
+  BACKEND_VERSION: '1.8.0',
   SHEET_NAMES: {
     PLAYERS: 'Players',
     EVENTS: 'Events',
@@ -86,8 +91,14 @@ const COL = {
   FUN_RATING: 36,
   FUN_RATING_COUNT: 37,
   FUN_RATING_SUM: 38,
+  REAL_NAME: 39,
+  LINE_DISPLAY_NAME: 40,
+  STUDENT_CODE: 41,
+  PRE_TEST_SKILL_SCORE: 42,
+  POST_TEST_SKILL_SCORE: 43,
+  CHATBOT_SURVEY_SCORE: 44,
 };
-const PLAYERS_COLS = 38;
+const PLAYERS_COLS = 44;
 
 // ---------- Helpers ----------
 function getSheet_(name) {
@@ -437,6 +448,13 @@ function buildPlayerRow_(p, existing) {
   row[COL.FUN_RATING - 1]            = pick(p.funRating, COL.FUN_RATING, '');
   row[COL.FUN_RATING_COUNT - 1]      = pick(p.funRatingCount, COL.FUN_RATING_COUNT, 0);
   row[COL.FUN_RATING_SUM - 1]        = pick(p.funRatingSum, COL.FUN_RATING_SUM, 0);
+  // ข้อมูลระบุตัวตนและคะแนนวิจัย (v1.8.0)
+  row[COL.REAL_NAME - 1]             = pick(p.realName, COL.REAL_NAME, '');
+  row[COL.LINE_DISPLAY_NAME - 1]     = pick(p.lineDisplayName, COL.LINE_DISPLAY_NAME, '');
+  row[COL.STUDENT_CODE - 1]          = pick(p.studentCode, COL.STUDENT_CODE, '');
+  row[COL.PRE_TEST_SKILL_SCORE - 1]  = pick(p.preTestSkillScore, COL.PRE_TEST_SKILL_SCORE, '');
+  row[COL.POST_TEST_SKILL_SCORE - 1] = pick(p.postTestSkillScore, COL.POST_TEST_SKILL_SCORE, '');
+  row[COL.CHATBOT_SURVEY_SCORE - 1]  = pick(p.chatbotSurveyScore, COL.CHATBOT_SURVEY_SCORE, '');
   return row;
 }
 
@@ -664,6 +682,107 @@ function handleLeaderboard_(params) {
   });
 }
 
+// ---------- Endpoint: getAllStudents (สำหรับอาจารย์ / Teacher Admin) ----------
+function handleGetAllStudents_(params) {
+  const sheet = getSheet_(CONFIG.SHEET_NAMES.PLAYERS);
+  const data = sheet.getDataRange().getValues();
+  if (data.length <= 1) {
+    return jsonResponse_({ ok: true, total: 0, students: [] });
+  }
+
+  const students = [];
+  for (let i = 1; i < data.length; i++) {
+    const r = data[i];
+    const hash = String(r[COL.USER_ID_HASH - 1] || '');
+    if (!hash) continue;
+    const stagesStr = String(r[COL.STAGES_COMPLETED - 1] || '');
+    const preScore = (r[COL.PRE_TEST_SCORE - 1] !== '' && r[COL.PRE_TEST_SCORE - 1] !== null && r[COL.PRE_TEST_SCORE - 1] !== undefined)
+      ? Number(r[COL.PRE_TEST_SCORE - 1]) : undefined;
+    const postScore = (r[COL.POST_TEST_SCORE - 1] !== '' && r[COL.POST_TEST_SCORE - 1] !== null && r[COL.POST_TEST_SCORE - 1] !== undefined)
+      ? Number(r[COL.POST_TEST_SCORE - 1]) : undefined;
+    const preSkill = (r[COL.PRE_TEST_SKILL_SCORE - 1] !== '' && r[COL.PRE_TEST_SKILL_SCORE - 1] !== null && r[COL.PRE_TEST_SKILL_SCORE - 1] !== undefined)
+      ? Number(r[COL.PRE_TEST_SKILL_SCORE - 1]) : undefined;
+    const postSkill = (r[COL.POST_TEST_SKILL_SCORE - 1] !== '' && r[COL.POST_TEST_SKILL_SCORE - 1] !== null && r[COL.POST_TEST_SKILL_SCORE - 1] !== undefined)
+      ? Number(r[COL.POST_TEST_SKILL_SCORE - 1]) : undefined;
+    const chatbotScore = (r[COL.CHATBOT_SURVEY_SCORE - 1] !== '' && r[COL.CHATBOT_SURVEY_SCORE - 1] !== null && r[COL.CHATBOT_SURVEY_SCORE - 1] !== undefined)
+      ? Number(r[COL.CHATBOT_SURVEY_SCORE - 1]) : undefined;
+
+    students.push({
+      userIdHash: hash,
+      nickname: String(r[COL.NICKNAME - 1] || 'ผู้เรียน'),
+      realName: String(r[COL.REAL_NAME - 1] || r[COL.NICKNAME - 1] || '-'),
+      lineDisplayName: String(r[COL.LINE_DISPLAY_NAME - 1] || '-'),
+      studentCode: String(r[COL.STUDENT_CODE - 1] || '-'),
+      grade: String(r[COL.GRADE - 1] || ''),
+      school: String(r[COL.SCHOOL - 1] || ''),
+      totalXP: numOr_(r[COL.TOTAL_XP - 1], 0),
+      level: numOr_(r[COL.LEVEL - 1], 1),
+      stagesCompleted: stagesStr ? stagesStr.split(',').filter(Boolean).map(Number) : [],
+      certificateNo: r[COL.CERTIFICATE_NO - 1] || undefined,
+      certificateIssuedAt: r[COL.CERTIFICATE_ISSUED_AT - 1] || undefined,
+      preTestScore: preScore,
+      postTestScore: postScore,
+      preTestSkillScore: preSkill,
+      postTestSkillScore: postSkill,
+      chatbotSurveyScore: chatbotScore,
+      preTestAt: r[COL.PRE_TEST_AT - 1] || undefined,
+      postTestAt: r[COL.POST_TEST_AT - 1] || undefined,
+      lastActiveAt: String(r[COL.LAST_ACTIVE_AT - 1] || r[COL.CREATED_AT - 1] || nowIso_()),
+    });
+  }
+
+  let sheetUrl = '';
+  try {
+    sheetUrl = sheet.getParent().getUrl();
+  } catch (err) {}
+
+  return jsonResponse_({
+    ok: true,
+    total: students.length,
+    students: students,
+    sheetUrl: sheetUrl,
+  });
+}
+
+// ---------- Endpoint: Teacher Config (Global Settings Sync) ----------
+function handleSaveTeacherConfig_(payload) {
+  const props = PropertiesService.getScriptProperties();
+  const config = {
+    requirePreTest: payload.requirePreTest !== undefined ? !!payload.requirePreTest : true,
+    enablePostTest: payload.enablePostTest !== undefined ? !!payload.enablePostTest : true,
+    enableChatbotEvaluation: payload.enableChatbotEvaluation !== undefined ? !!payload.enableChatbotEvaluation : true,
+    demoUnlockAllStages: payload.demoUnlockAllStages !== undefined ? !!payload.demoUnlockAllStages : false,
+    showInstantQuizFeedback: payload.showInstantQuizFeedback !== undefined ? !!payload.showInstantQuizFeedback : true,
+    schoolName: String(payload.schoolName || 'มหาวิทยาลัยวลัยลักษณ์'),
+    classCode: String(payload.classCode || 'ชั้น ม.1-3'),
+    academicYear: String(payload.academicYear || '2569'),
+    updatedAt: nowIso_(),
+  };
+  props.setProperty('GLOBAL_TEACHER_CONFIG', JSON.stringify(config));
+  return jsonResponse_({ ok: true, config: config });
+}
+
+function handleGetTeacherConfig_() {
+  const props = PropertiesService.getScriptProperties();
+  const raw = props.getProperty('GLOBAL_TEACHER_CONFIG');
+  let config = {
+    requirePreTest: true,
+    enablePostTest: true,
+    enableChatbotEvaluation: true,
+    demoUnlockAllStages: false,
+    showInstantQuizFeedback: true,
+    schoolName: 'มหาวิทยาลัยวลัยลักษณ์',
+    classCode: 'ชั้น ม.1-3',
+    academicYear: '2569',
+  };
+  if (raw) {
+    try {
+      config = Object.assign(config, JSON.parse(raw));
+    } catch (err) {}
+  }
+  return jsonResponse_({ ok: true, config: config });
+}
+
 // ---------- Routers ----------
 function parsePostPayload_(e) {
   if (!e || !e.postData || !e.postData.contents) return null;
@@ -679,10 +798,11 @@ function doPost(e) {
   try {
     const payload = parsePostPayload_(e);
     if (!payload) return jsonResponse_({ ok: false, error: 'invalid_json' });
-    if (payload.action === 'sync')          return handleSync_(payload);
-    if (payload.action === 'issueCert')    return handleIssueCert_(payload);
-    if (payload.action === 'ask_ai')       return handleAskAi_(payload);
-    if (payload.action === 'ask_ai_image') return handleAskAiImage_(payload);
+    if (payload.action === 'sync')                return handleSync_(payload);
+    if (payload.action === 'issueCert')          return handleIssueCert_(payload);
+    if (payload.action === 'ask_ai')             return handleAskAi_(payload);
+    if (payload.action === 'ask_ai_image')       return handleAskAiImage_(payload);
+    if (payload.action === 'save_teacher_config') return handleSaveTeacherConfig_(payload);
     return jsonResponse_({ ok: false, error: 'unknown_action' });
   } catch (err) {
     console.error('POST router failed: ' + String(err));
@@ -693,9 +813,13 @@ function doPost(e) {
 function doGet(e) {
   try {
     const action = e.parameter.action;
-    if (action === 'verify')      return handleVerify_(e.parameter);
-    if (action === 'restore')     return handleRestore_(e.parameter);
-    if (action === 'leaderboard') return handleLeaderboard_(e.parameter);
+    if (action === 'verify')              return handleVerify_(e.parameter);
+    if (action === 'restore')             return handleRestore_(e.parameter);
+    if (action === 'leaderboard')         return handleLeaderboard_(e.parameter);
+    if (action === 'get_all_students')    return handleGetAllStudents_(e.parameter);
+    if (action === 'all_players')         return handleGetAllStudents_(e.parameter);
+    if (action === 'get_teacher_config')  return handleGetTeacherConfig_();
+    if (action === 'teacher_config')      return handleGetTeacherConfig_();
     // Apps Script may redirect a browser POST to a GET request. Keep a small
     // text-only fallback for the chat endpoint so the question is not lost.
     if (action === 'ask_ai') {
@@ -706,12 +830,14 @@ function doGet(e) {
     }
     if (action === 'ping') {
       const gemini = getGeminiConfig_();
+      const teacherConfig = handleGetTeacherConfig_();
       return jsonResponse_({
         ok: true,
         time: nowIso_(),
         version: CONFIG.BACKEND_VERSION,
-        features: { askAi: true, askAiImage: true },
+        features: { askAi: true, askAiImage: true, teacherAdmin: true, globalConfig: true },
         gemini: { configured: !!gemini.apiKey, model: gemini.model },
+        config: teacherConfig ? teacherConfig.config : undefined,
       });
     }
     return jsonResponse_({ok:false, error:'unknown_action'});
@@ -737,6 +863,8 @@ function setupSheets() {
     'examBestScore','examBonusClaimed',
     'preTestScore','postTestScore','preTestAt','postTestAt',
     'funRating','funRatingCount','funRatingSum',
+    'realName','lineDisplayName','studentCode',
+    'preTestSkillScore','postTestSkillScore','chatbotSurveyScore',
   ];
 
   const setup = [
@@ -761,32 +889,34 @@ function setupSheets() {
   const def = ss.getSheetByName('Sheet1');
   if (def && ss.getSheets().length > 1) ss.deleteSheet(def);
 
-  console.log('✅ Setup complete (v1.3.0): ' + setup.map(function (x) { return x.name; }).join(', '));
+  console.log('✅ Setup complete (v1.8.0): ' + setup.map(function (x) { return x.name; }).join(', '));
 }
 
 // ---------- Migration helper สำหรับผู้ใช้เก่า ----------
 /**
  * รันครั้งเดียวเพื่อ migrate sheet จาก v1.1.0 (12 column) → v1.2.0 (35 column)
- * - ไม่ลบข้อมูลเดิม แค่เพิ่ม header ของ column ใหม่
- * - แถวที่มีอยู่จะมีค่าว่างใน column ใหม่ — frontend จะใช้ default (0/[]/undefined)
- * - ตอนผู้เล่นเล่นครั้งถัดไปและ syncIfReady ยิงมา ค่าจะถูกเติมโดยอัตโนมัติ
- *
- * 👉 วิธีใช้: เปิด Apps Script Editor → เลือกฟังก์ชัน "migrateToV120" → กด Run
  */
 function migrateToV120() {
   setupSheets();
-  console.log('✅ Migration v1.1.0 → v1.2.0 done. ผู้เล่นเก่าจะค่อยๆ ถูกเติม field ใหม่ตอน sync ครั้งถัดไป');
+  console.log('✅ Migration v1.1.0 → v1.2.0 done.');
 }
 
 /**
- * รันครั้งเดียวเพื่อ migrate sheet → v1.3.0 (38 column) — เพิ่ม funRating/funRatingCount/funRatingSum
- * - ไม่ลบข้อมูลเดิม แค่เพิ่ม 3 column ใหม่ท้ายตาราง (AJ/AK/AL)
- * - แถวเดิมจะมีค่าว่าง — frontend ใช้ default, ค่าจะถูกเติมตอนผู้เล่นให้ดาวประเมินครั้งถัดไป
- *
- * 👉 วิธีใช้: เปิด Apps Script Editor → เลือกฟังก์ชัน "migrateToV130" → กด Run
- *    จากนั้น Deploy → Manage deployments → Edit → New version → Deploy
+ * รันครั้งเดียวเพื่อ migrate sheet → v1.3.0 (38 column)
  */
 function migrateToV130() {
   setupSheets();
   console.log('✅ Migration → v1.3.0 done. เพิ่มคอลัมน์ funRating/funRatingCount/funRatingSum แล้ว');
+}
+
+/**
+ * รันครั้งเดียวเพื่อ migrate sheet → v1.8.0 (44 column)
+ * เพิ่มคอลัมน์ realName, lineDisplayName, studentCode, preTestSkillScore, postTestSkillScore, chatbotSurveyScore
+ *
+ * 👉 วิธีใช้: เปิด Apps Script Editor → เลือกฟังก์ชัน "migrateToV180" → กด Run
+ *    จากนั้น Deploy → Manage deployments → Edit → New version → Deploy
+ */
+function migrateToV180() {
+  setupSheets();
+  console.log('✅ Migration → v1.8.0 done. เพิ่มคอลัมน์ข้อมูลระบุตัวตนและคะแนนวิจัย 44 คอลัมน์สมบูรณ์แล้ว');
 }

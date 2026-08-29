@@ -1,10 +1,11 @@
 import { useEffect, useState, lazy, Suspense } from 'react';
 import { Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { initLiff, getUserIdHash, isMockMode } from './lib/liff';
-import { flushQueue, restoreProgress } from './lib/cloudSync';
+import { flushQueue, restoreProgress, fetchGlobalTeacherConfig } from './lib/cloudSync';
 import { parseChallengeFromSearch, setPendingChallenge } from './lib/challenge';
 import { startBgm, stopBgm } from './lib/bgm';
 import { usePlayerStore } from './store/playerStore';
+import { useTeacherStore } from './store/teacherStore';
 import { useSettingsStore } from './store/settingsStore';
 import { SHOP_ITEMS } from './lib/shopItems';
 import Toaster from './components/Toaster';
@@ -26,6 +27,8 @@ const Verify       = lazy(() => import('./pages/Verify.tsx'));
 const Settings     = lazy(() => import('./pages/Settings.tsx'));
 const Knowledge    = lazy(() => import('./pages/Knowledge.tsx'));
 const Chatbot      = lazy(() => import('./pages/Chatbot.tsx'));
+const ComprehensiveSurvey = lazy(() => import('./pages/ComprehensiveSurvey.tsx'));
+const TeacherAdmin = lazy(() => import('./pages/TeacherAdmin.tsx'));
 
 function PageLoader() {
   return (
@@ -183,6 +186,16 @@ export default function App() {
 
         flushQueue().catch(() => { /* silent */ });
 
+        // ดึงการตั้งค่าระบบกลางจากอาจารย์ (Global Teacher Config: บังคับ Pre-test, เปิด Post-test ฯลฯ)
+        try {
+          const cfgRes = await fetchGlobalTeacherConfig();
+          if (cfgRes.ok && cfgRes.config) {
+            useTeacherStore.getState().applyCloudConfig(cfgRes.config);
+          }
+        } catch (e) {
+          console.warn('[App] fetch teacher config failed (silent):', e);
+        }
+
         // คำท้าจากเพื่อน (?challenge=...) — มาก่อน target ปกติ
         const challenge = parseChallengeFromSearch(window.location.search);
         if (challenge) {
@@ -240,6 +253,9 @@ export default function App() {
             <Route path="/settings" element={<Settings />} />
             <Route path="/certificate" element={<Certificate />} />
             <Route path="/chatbot" element={<Chatbot />} />
+            <Route path="/survey" element={<ComprehensiveSurvey />} />
+            <Route path="/admin" element={<TeacherAdmin />} />
+            <Route path="/teacher-settings" element={<TeacherAdmin />} />
             <Route path="/daily" element={<Navigate to="/chatbot" replace />} />
             <Route path="/verify" element={<Verify />} />
             <Route path="/knowledge" element={<Knowledge />} />
