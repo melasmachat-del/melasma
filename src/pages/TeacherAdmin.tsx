@@ -1,10 +1,11 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useTeacherStore, type StudentRecord } from '../store/teacherStore';
 import { usePlayerStore } from '../store/playerStore';
 import { KNOWLEDGE_QUESTIONS, SKILL_QUESTIONS, CHATBOT_EVALUATION_QUESTIONS } from '../lib/surveyBank';
 import { pingBackend, fetchAllStudentsFromCloud, saveGlobalTeacherConfig } from '../lib/cloudSync';
+import { isInLineClient, openExternalBrowser } from '../lib/liff';
 import { asset } from '../lib/asset';
 import { sfx } from '../lib/sound';
 import PageHeader from '../components/PageHeader';
@@ -15,6 +16,7 @@ export default function TeacherAdmin() {
   const nav = useNavigate();
   const teacher = useTeacherStore();
   const player = usePlayerStore();
+  const inLine = isInLineClient();
 
   const [enteredPin, setEnteredPin] = useState('');
   const [pinError, setPinError] = useState(false);
@@ -30,6 +32,8 @@ export default function TeacherAdmin() {
   const [isSyncingCloud, setIsSyncingCloud] = useState(false);
   const [cloudSheetUrl, setCloudSheetUrl] = useState<string | null>(null);
   const [cloudSyncMsg, setCloudSyncMsg] = useState<string | null>(null);
+  const [showLineExportModal, setShowLineExportModal] = useState(false);
+  const [copySuccess, setCopySuccess] = useState(false);
 
   // Synchronize current active player into cached student list if not present
   const allStudents = useMemo(() => {
@@ -165,9 +169,76 @@ export default function TeacherAdmin() {
     }
   };
 
+  // คัดลอกตารางข้อมูลทั้งหมดลงคลิปบอร์ด (TSV format สำหรับ Paste ลง Excel / Google Sheets ได้ทันที)
+  const handleCopyTableToClipboard = async () => {
+    sfx.click();
+    const headers = [
+      'ลำดับ',
+      'รหัสนักศึกษา',
+      'ชื่อ-นามสกุลจริง',
+      'ชื่อในแอป (นามสมมุติ)',
+      'ชื่อโปรไฟล์ LINE',
+      'คะแนนก่อนเรียน (Pre-test %)',
+      'คะแนนทักษะก่อนเรียน (เต็ม 100)',
+      'วันเวลาทำ Pre-test',
+      'ด่านที่ผ่าน',
+      'คะแนนรวม XP',
+      'คะแนนหลังเรียน (Post-test %)',
+      'คะแนนทักษะหลังเรียน (เต็ม 100)',
+      'วันเวลาทำ Post-test',
+      'พัฒนาการความรู้ (Delta %)',
+      'ประเมินแชตบอต ตอนที่ 5 (1-5)',
+      'เลขที่เกียรติบัตร',
+      'วันที่ออกเกียรติบัตร',
+      'เข้าใช้งานล่าสุด',
+    ];
+
+    const rows = allStudents.map((s, idx) => {
+      const delta = (s.postTestScore !== undefined && s.preTestScore !== undefined)
+        ? s.postTestScore - s.preTestScore
+        : '-';
+
+      return [
+        idx + 1,
+        s.studentCode || '-',
+        s.realName || '-',
+        s.nickname || '-',
+        s.lineDisplayName || '-',
+        s.preTestScore !== undefined ? `${s.preTestScore}%` : '-',
+        s.preTestSkillScore !== undefined ? s.preTestSkillScore : '-',
+        s.preTestAt ? new Date(s.preTestAt).toLocaleString('th-TH') : '-',
+        `${s.stagesCompleted?.length || 0}/5`,
+        s.totalXP || 0,
+        s.postTestScore !== undefined ? `${s.postTestScore}%` : '-',
+        s.postTestSkillScore !== undefined ? s.postTestSkillScore : '-',
+        s.postTestAt ? new Date(s.postTestAt).toLocaleString('th-TH') : '-',
+        typeof delta === 'number' ? (delta >= 0 ? `+${delta}%` : `${delta}%`) : '-',
+        s.chatbotSurveyScore !== undefined ? s.chatbotSurveyScore : '-',
+        s.certificateNo || '-',
+        s.certificateIssuedAt ? new Date(s.certificateIssuedAt).toLocaleString('th-TH') : '-',
+        s.lastActiveAt ? new Date(s.lastActiveAt).toLocaleString('th-TH') : '-',
+      ].join('\t');
+    });
+
+    const tsvContent = [headers.join('\t'), ...rows].join('\n');
+
+    try {
+      await navigator.clipboard.writeText(tsvContent);
+      setCopySuccess(true);
+      setCloudSyncMsg('📋 คัดลอกข้อมูลตารางนักศึกษาทั้งหมดลงคลิปบอร์ดแล้ว! สามารถนำไป Paste ใน Microsoft Excel หรือ Google Sheets ได้ทันที');
+      setTimeout(() => setCopySuccess(false), 4000);
+    } catch (e) {
+      console.warn('Clipboard write failed:', e);
+      setCloudSyncMsg('⚠️ กรุณากดปุ่ม "เปิดใน Safari / Chrome" ด้านบนเพื่อใช้งานเต็มรูปแบบ');
+    }
+  };
+
   // ส่งออกเป็น Excel .xls (Formatted Spreadsheet พร้อมสี ตาราง และฟอนต์ภาษาไทย)
   const handleExportExcel = () => {
     sfx.click();
+    if (inLine) {
+      setShowLineExportModal(true);
+    }
     const tableHtml = `
       <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
       <head>
@@ -261,6 +332,9 @@ export default function TeacherAdmin() {
 
   const handleExportCSV = () => {
     sfx.click();
+    if (inLine) {
+      setShowLineExportModal(true);
+    }
     const headers = [
       'ลำดับ',
       'รหัสนักศึกษา',
@@ -436,19 +510,47 @@ export default function TeacherAdmin() {
           </div>
         </div>
 
+        {/* LINE In-App Browser Warning & Helper Banner */}
+        {inLine && (
+          <div className="mb-5 rounded-[24px] border border-amber-300 bg-gradient-to-r from-amber-100 via-amber-50 to-amber-100 p-4 sm:p-5 shadow-clay-sm flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="flex items-center gap-3.5">
+              <span className="flex h-12 w-12 flex-none items-center justify-center rounded-2xl bg-amber-200 text-2xl text-amber-950 shadow-sm">
+                📱
+              </span>
+              <div>
+                <span className="rounded-full bg-amber-200/80 px-2.5 py-0.5 text-[10px] font-extrabold text-amber-950">
+                  กำลังใช้งานผ่านแอป LINE (In-App Browser)
+                </span>
+                <h4 className="text-xs sm:text-sm font-extrabold text-slate-900 mt-0.5">
+                  แนะนำเปิดในเบราว์เซอร์จริง (Safari / Chrome) เพื่อดาวน์โหลดไฟล์ Excel ได้ทันที
+                </h4>
+                <p className="text-[11px] text-amber-900 leading-relaxed mt-0.5">
+                  แอป LINE มีระบบบล็อกการดาวน์โหลดไฟล์ .xls ลงเครื่อง แนะนำให้กดปุ่มเปิดบราวเซอร์จริง หรือใช้ปุ่ม <b>"คัดลอกตาราง"</b> ไป Paste ใน Excel ได้เลยครับ
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => { sfx.click(); openExternalBrowser(window.location.href); }}
+              className="btn-primary !bg-amber-600 hover:!bg-amber-700 font-bold text-xs sm:text-sm !px-5 !py-3 whitespace-nowrap w-full sm:w-auto shadow-clay-sm flex-none"
+            >
+              🌐 เปิดใน Safari / Chrome →
+            </button>
+          </div>
+        )}
+
         {/* Cloud Sync Status Banner */}
         {cloudSyncMsg && (
           <div className="mb-5 rounded-2xl bg-sky-50 border border-sky-200 p-3.5 text-xs font-bold text-sky-900 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-sm">
             <span>{cloudSyncMsg}</span>
             {cloudSheetUrl && (
-              <a
-                href={cloudSheetUrl}
-                target="_blank"
-                rel="noreferrer"
-                className="underline hover:text-sky-700 whitespace-nowrap text-sky-800"
+              <button
+                type="button"
+                onClick={() => { sfx.click(); openExternalBrowser(cloudSheetUrl); }}
+                className="underline hover:text-sky-700 whitespace-nowrap text-sky-800 font-bold"
               >
                 📊 เปิด Google Sheets ต้นฉบับ ↗
-              </a>
+              </button>
             )}
           </div>
         )}
@@ -807,8 +909,8 @@ export default function TeacherAdmin() {
               </button>
             </div>
 
-            {/* Export Cards Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Export Cards Grid (3 Options: Excel, CSV, Clipboard) */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {/* Card 1: Excel .xls */}
               <div className="p-5 rounded-2xl bg-emerald-50/80 border border-emerald-200 flex flex-col justify-between space-y-4">
                 <div>
@@ -819,19 +921,30 @@ export default function TeacherAdmin() {
                     </h4>
                   </div>
                   <p className="text-xs text-emerald-800 mt-2 leading-relaxed">
-                    ส่งออกเป็นตาราง Excel แบบจัดแต่งสไตล์ (สีหัวตาราง, สีไฮไลท์คะแนนก่อน-หลังเรียน, ฟอนต์ภาษาไทย Tahoma) เหมาะสำหรับเปิดในโปรแกรม Microsoft Excel บน Windows และ Mac ได้ทันทีโดยภาษาไทยไม่เพี้ยน
+                    ส่งออกเป็นตาราง Excel แบบจัดแต่งสไตล์ (สีหัวตาราง, สีคะแนนก่อน-หลังเรียน, ฟอนต์ Tahoma) เปิดใน Microsoft Excel ได้ทันทีโดยภาษาไทยไม่เพี้ยน
                   </p>
                   <p className="text-[11px] font-bold text-emerald-900 mt-2">
-                    รวมนักศึกษาในระบบทั้งหมด: {allStudents.length} คน
+                    นักศึกษาทั้งหมด: {allStudents.length} คน
                   </p>
                 </div>
-                <button
-                  type="button"
-                  onClick={handleExportExcel}
-                  className="btn-primary !bg-emerald-600 hover:!bg-emerald-700 font-bold text-xs !py-3 w-full shadow-sm"
-                >
-                  📥 ดาวน์โหลดไฟล์ Excel (.xls) →
-                </button>
+                <div className="space-y-2">
+                  <button
+                    type="button"
+                    onClick={handleExportExcel}
+                    className="btn-primary !bg-emerald-600 hover:!bg-emerald-700 font-bold text-xs !py-3 w-full shadow-sm"
+                  >
+                    📥 ดาวน์โหลดไฟล์ Excel (.xls) →
+                  </button>
+                  {inLine && (
+                    <button
+                      type="button"
+                      onClick={() => { sfx.click(); openExternalBrowser(window.location.href); }}
+                      className="btn-outline !text-[11px] !py-1.5 w-full text-emerald-800 border-emerald-300 hover:bg-emerald-100 font-bold"
+                    >
+                      🌐 เปิดใน Safari/Chrome โหลดไฟล์
+                    </button>
+                  )}
+                </div>
               </div>
 
               {/* Card 2: CSV UTF-8 BOM */}
@@ -840,22 +953,62 @@ export default function TeacherAdmin() {
                   <div className="flex items-center gap-2">
                     <span className="text-2xl">📑</span>
                     <h4 className="font-extrabold text-sky-950 text-sm">
-                      ไฟล์ข้อมูลสถิติ CSV (UTF-8 BOM)
+                      ไฟล์ข้อมูลสถิติ CSV (UTF-8)
                     </h4>
                   </div>
                   <p className="text-xs text-sky-800 mt-2 leading-relaxed">
-                    ไฟล์ CSV แบบมีรหัสภาษาไทย UTF-8 BOM มาตรฐาน สำหรับนำไปประมวลผลต่อในโปรแกรมสถิติงานวิจัย (SPSS, R, Python, Google Sheets) ครบถ้วนทุกตัวแปรคะแนน 5 ตอน
+                    ไฟล์ CSV มีรหัสภาษาไทย UTF-8 BOM มาตรฐาน สำหรับนำไปประมวลผลต่อในโปรแกรมสถิติงานวิจัย (SPSS, R, Python, Google Sheets) ครบ 5 ตอน
                   </p>
                   <p className="text-[11px] font-bold text-sky-900 mt-2">
-                    รวมนักศึกษาในระบบทั้งหมด: {allStudents.length} คน
+                    นักศึกษาทั้งหมด: {allStudents.length} คน
+                  </p>
+                </div>
+                <div className="space-y-2">
+                  <button
+                    type="button"
+                    onClick={handleExportCSV}
+                    className="btn-primary !bg-sky-600 hover:!bg-sky-700 font-bold text-xs !py-3 w-full shadow-sm"
+                  >
+                    📥 ดาวน์โหลดไฟล์ CSV (.csv) →
+                  </button>
+                  {inLine && (
+                    <button
+                      type="button"
+                      onClick={() => { sfx.click(); openExternalBrowser(window.location.href); }}
+                      className="btn-outline !text-[11px] !py-1.5 w-full text-sky-800 border-sky-300 hover:bg-sky-100 font-bold"
+                    >
+                      🌐 เปิดใน Safari/Chrome โหลดไฟล์
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* Card 3: Direct Clipboard Copy (Best for Mobile & LINE LIFF) */}
+              <div className="p-5 rounded-2xl bg-amber-50/80 border border-amber-200 flex flex-col justify-between space-y-4">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-2xl">📋</span>
+                    <h4 className="font-extrabold text-amber-950 text-sm">
+                      คัดลอกตารางข้อมูลทั้งหมด (Clipboard)
+                    </h4>
+                  </div>
+                  <p className="text-xs text-amber-800 mt-2 leading-relaxed">
+                    คัดลอกข้อมูลตารางนักศึกษาทุกคนลงคลิปบอร์ดในรูปแบบคอลัมน์มาตรฐาน สามารถนำไปกด <b>Paste (วาง)</b> ใน Microsoft Excel หรือ Google Sheets บนมือถือได้ทันที
+                  </p>
+                  <p className="text-[11px] font-bold text-amber-900 mt-2">
+                    {copySuccess ? '✓ คัดลอกเรียบร้อยแล้ว!' : 'แตะครั้งเดียวคัดลอกได้ทันที'}
                   </p>
                 </div>
                 <button
                   type="button"
-                  onClick={handleExportCSV}
-                  className="btn-primary !bg-sky-600 hover:!bg-sky-700 font-bold text-xs !py-3 w-full shadow-sm"
+                  onClick={handleCopyTableToClipboard}
+                  className={`btn-primary font-bold text-xs !py-3 w-full shadow-sm transition-all ${
+                    copySuccess
+                      ? '!bg-emerald-600 hover:!bg-emerald-700 text-white'
+                      : '!bg-amber-600 hover:!bg-amber-700 text-white'
+                  }`}
                 >
-                  📥 ดาวน์โหลดไฟล์ CSV (.csv) →
+                  {copySuccess ? '✓ คัดลอกข้อมูลตารางแล้ว!' : '📋 คัดลอกตารางข้อมูลทั้งหมด →'}
                 </button>
               </div>
             </div>
@@ -880,17 +1033,16 @@ export default function TeacherAdmin() {
                   disabled={isSyncingCloud}
                   className="btn-primary !bg-indigo-600 hover:!bg-indigo-700 font-bold text-xs !px-4 !py-2.5 whitespace-nowrap w-full sm:w-auto shadow-sm"
                 >
-                  {isSyncingCloud ? '⏳ ซิงค์...' : '🔄 ซิงค์ทุกคนจาก Sheets'}
+                  {isSyncingCloud ? '⏳ กำลังซิงค์...' : '🔄 ซิงค์ทุกคนจาก Sheets'}
                 </button>
                 {cloudSheetUrl && (
-                  <a
-                    href={cloudSheetUrl}
-                    target="_blank"
-                    rel="noreferrer"
+                  <button
+                    type="button"
+                    onClick={() => { sfx.click(); openExternalBrowser(cloudSheetUrl); }}
                     className="btn-outline text-xs font-bold text-indigo-800 border-indigo-300 hover:bg-indigo-100 !px-4 !py-2.5 whitespace-nowrap text-center w-full sm:w-auto"
                   >
                     📊 เปิด Google Sheet ↗
-                  </a>
+                  </button>
                 )}
               </div>
             </div>
@@ -998,6 +1150,88 @@ export default function TeacherAdmin() {
           </div>
         )}
       </main>
+
+      {/* LINE In-App Browser Export Helper Dialog Modal */}
+      <AnimatePresence>
+        {showLineExportModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm"
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="w-full max-w-md rounded-[28px] border border-white bg-white p-6 shadow-clay space-y-4 text-center"
+            >
+              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-amber-100 text-3xl">
+                📱
+              </div>
+
+              <div>
+                <h3 className="text-base font-extrabold text-slate-900">
+                  ดาวน์โหลดรายงานผ่านแอป LINE
+                </h3>
+                <p className="text-xs text-slate-600 mt-1.5 leading-relaxed">
+                  เนื่องจากระบบความปลอดภัยของ LINE ไม่อนุญาตให้ดาวน์โหลดไฟล์ .xls ลงเครื่องโดยตรง กรุณาเลือกวิธีที่สะดวกสำหรับอาจารย์:
+                </p>
+              </div>
+
+              <div className="space-y-2.5 pt-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    sfx.click();
+                    setShowLineExportModal(false);
+                    openExternalBrowser(window.location.href);
+                  }}
+                  className="btn-primary !bg-sky-600 hover:!bg-sky-700 w-full text-xs font-bold !py-3 flex items-center justify-center gap-2 shadow-sm"
+                >
+                  <span>🌐</span>
+                  <span>1. เปิดใน Safari / Chrome (โหลดไฟล์ทันที)</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={async () => {
+                    await handleCopyTableToClipboard();
+                    setShowLineExportModal(false);
+                  }}
+                  className="btn-primary !bg-amber-600 hover:!bg-amber-700 w-full text-xs font-bold !py-3 flex items-center justify-center gap-2 shadow-sm"
+                >
+                  <span>📋</span>
+                  <span>2. คัดลอกตารางข้อมูล (ไป Paste ใน Excel)</span>
+                </button>
+
+                {cloudSheetUrl && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      sfx.click();
+                      setShowLineExportModal(false);
+                      openExternalBrowser(cloudSheetUrl);
+                    }}
+                    className="btn-outline w-full text-xs font-bold !py-3 flex items-center justify-center gap-2 border-indigo-200 text-indigo-900 hover:bg-indigo-50"
+                  >
+                    <span>📊</span>
+                    <span>3. เปิดดู Google Sheets สดออนไลน์</span>
+                  </button>
+                )}
+              </div>
+
+              <button
+                type="button"
+                onClick={() => { sfx.click(); setShowLineExportModal(false); }}
+                className="text-xs font-bold text-slate-400 hover:text-slate-600 pt-2 block mx-auto"
+              >
+                ปิดหน้าต่างนี้
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

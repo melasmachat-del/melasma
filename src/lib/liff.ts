@@ -132,3 +132,28 @@ export async function sha256Hex(input: string): Promise<string> {
     .map(b => b.toString(16).padStart(2, '0'))
     .join('');
 }
+
+/** ตรวจสอบว่ากำลังทำงานอยู่ภายใน In-App Browser ของแอป LINE หรือไม่ */
+export function isInLineClient(): boolean {
+  try {
+    return !MOCK_MODE && liff.isInClient();
+  } catch {
+    return false;
+  }
+}
+
+/** เปิด URL ใน External Browser ของระบบ (Safari บน iOS หรือ Chrome บน Android) */
+export function openExternalBrowser(url: string): void {
+  try {
+    if (!MOCK_MODE && liff.isInClient()) {
+      liff.openWindow({
+        url,
+        external: true,
+      });
+      return;
+    }
+  } catch (e) {
+    console.warn('[LIFF] openWindow external failed, fallback:', e);
+  }
+  window.open(url, '_blank', 'noopener,noreferrer');
+}
