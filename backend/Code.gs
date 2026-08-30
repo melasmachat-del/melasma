@@ -783,6 +783,34 @@ function handleGetTeacherConfig_() {
   return jsonResponse_({ ok: true, config: config });
 }
 
+// ---------- Cloud Teacher Password Auth ----------
+function handleTeacherVerifyPin_(payload) {
+  const props = PropertiesService.getScriptProperties();
+  const storedPin = props.getProperty('TEACHER_PIN') || 'wu2535';
+  const enteredPin = String(payload.pin || payload.enteredPin || '').trim();
+  const isValid = (enteredPin === storedPin.trim());
+  return jsonResponse_({ ok: true, valid: isValid });
+}
+
+function handleTeacherChangePin_(payload) {
+  const props = PropertiesService.getScriptProperties();
+  const storedPin = props.getProperty('TEACHER_PIN') || 'wu2535';
+  const oldPin = String(payload.oldPin || '').trim();
+  const newPin = String(payload.newPin || '').trim();
+
+  if (!newPin || newPin.length < 4) {
+    return jsonResponse_({ ok: false, error: 'invalid_new_pin', message: 'รหัสผ่านใหม่ต้องมีความยาวอย่างน้อย 4 ตัวอักษร' });
+  }
+
+  // If oldPin is provided, verify it matches current stored pin
+  if (oldPin && oldPin !== storedPin.trim()) {
+    return jsonResponse_({ ok: false, error: 'wrong_old_pin', message: 'รหัสผ่านเดิมไม่ถูกต้อง' });
+  }
+
+  props.setProperty('TEACHER_PIN', newPin);
+  return jsonResponse_({ ok: true, success: true, message: 'เปลี่ยนรหัสผ่านคลาวด์สำเร็จเรียบร้อย' });
+}
+
 // ---------- Routers ----------
 function parsePostPayload_(e) {
   if (!e || !e.postData || !e.postData.contents) return null;
@@ -803,6 +831,8 @@ function doPost(e) {
     if (payload.action === 'ask_ai')             return handleAskAi_(payload);
     if (payload.action === 'ask_ai_image')       return handleAskAiImage_(payload);
     if (payload.action === 'save_teacher_config') return handleSaveTeacherConfig_(payload);
+    if (payload.action === 'teacher_verify_pin')  return handleTeacherVerifyPin_(payload);
+    if (payload.action === 'teacher_change_pin')  return handleTeacherChangePin_(payload);
     return jsonResponse_({ ok: false, error: 'unknown_action' });
   } catch (err) {
     console.error('POST router failed: ' + String(err));
@@ -820,6 +850,7 @@ function doGet(e) {
     if (action === 'all_players')         return handleGetAllStudents_(e.parameter);
     if (action === 'get_teacher_config')  return handleGetTeacherConfig_();
     if (action === 'teacher_config')      return handleGetTeacherConfig_();
+    if (action === 'teacher_verify_pin')  return handleTeacherVerifyPin_(e.parameter);
     // Apps Script may redirect a browser POST to a GET request. Keep a small
     // text-only fallback for the chat endpoint so the question is not lost.
     if (action === 'ask_ai') {

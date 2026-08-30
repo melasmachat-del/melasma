@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useTeacherStore, type StudentRecord } from '../store/teacherStore';
 import { usePlayerStore } from '../store/playerStore';
 import { KNOWLEDGE_QUESTIONS, SKILL_QUESTIONS, CHATBOT_EVALUATION_QUESTIONS } from '../lib/surveyBank';
-import { pingBackend, fetchAllStudentsFromCloud, saveGlobalTeacherConfig } from '../lib/cloudSync';
+import { pingBackend, fetchAllStudentsFromCloud, saveGlobalTeacherConfig, verifyTeacherPinCloud, changeTeacherPinCloud } from '../lib/cloudSync';
 import { isInLineClient, openExternalBrowser } from '../lib/liff';
 import { asset } from '../lib/asset';
 import { sfx } from '../lib/sound';
@@ -20,8 +20,10 @@ export default function TeacherAdmin() {
 
   const [enteredPin, setEnteredPin] = useState('');
   const [pinError, setPinError] = useState(false);
+  const [isVerifyingPin, setIsVerifyingPin] = useState(false);
   const [newPin, setNewPin] = useState('');
   const [pinChangeMsg, setPinChangeMsg] = useState<string | null>(null);
+  const [isSavingPin, setIsSavingPin] = useState(false);
 
   const [activeTab, setActiveTab] = useState<AdminTab>('controls');
   const [searchTerm, setSearchTerm] = useState('');
@@ -146,26 +148,60 @@ export default function TeacherAdmin() {
     });
   };
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (teacher.login(enteredPin)) {
-      sfx.click();
-      setPinError(false);
-      setEnteredPin('');
-    } else {
-      sfx.wrong();
-      setPinError(true);
+    if (!enteredPin.trim() || isVerifyingPin) return;
+
+    setIsVerifyingPin(true);
+    setPinError(false);
+
+    try {
+      const res = await verifyTeacherPinCloud(enteredPin);
+      setIsVerifyingPin(false);
+
+      if (res.valid) {
+        sfx.click();
+        teacher.setTeacherPin(enteredPin.trim());
+        teacher.login(enteredPin.trim());
+        setPinError(false);
+        setEnteredPin('');
+      } else {
+        sfx.wrong();
+        setPinError(true);
+      }
+    } catch {
+      setIsVerifyingPin(false);
+      if (teacher.login(enteredPin)) {
+        sfx.click();
+        setPinError(false);
+        setEnteredPin('');
+      } else {
+        sfx.wrong();
+        setPinError(true);
+      }
     }
   };
 
-  const handleChangePin = (e: React.FormEvent) => {
+  const handleChangePin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (teacher.setTeacherPin(newPin)) {
+    if (!newPin || newPin.trim().length < 4 || isSavingPin) {
+      setPinChangeMsg('รหัสผ่านต้องมีความยาวอย่างน้อย 4 ตัวอักษร');
+      return;
+    }
+
+    setIsSavingPin(true);
+    setPinChangeMsg('กำลังบันทึกรหัสผ่านใหม่ไปยังระบบคลาวด์กลาง...');
+
+    const cloudRes = await changeTeacherPinCloud(teacher.teacherPin, newPin.trim());
+    setIsSavingPin(false);
+
+    if (cloudRes.ok && cloudRes.success) {
       sfx.click();
-      setPinChangeMsg('เปลี่ยนรหัสผ่าน PIN สำเร็จเรียบร้อย');
+      teacher.setTeacherPin(newPin.trim());
+      setPinChangeMsg('✓ บันทึกรหัสผ่านใหม่ไปยังระบบคลาวด์สำเร็จแล้ว! ทุกเครื่องจะใช้รหัสใหม่นี้ทันที');
       setNewPin('');
     } else {
-      setPinChangeMsg('รหัสผ่านต้องมีความยาวอย่างน้อย 4 ตัวอักษร');
+      setPinChangeMsg(cloudRes.message || '⚠️ ไม่สามารถบันทึกไปยังคลาวด์ได้ กรุณาลองใหม่');
     }
   };
 
@@ -430,7 +466,8 @@ export default function TeacherAdmin() {
                 value={enteredPin}
                 onChange={(e) => { setEnteredPin(e.target.value); setPinError(false); }}
                 placeholder="กรอกรหัสผ่านอาจารย์"
-                className="w-full rounded-2xl border border-slate-300 px-4 py-3 text-center text-xl font-bold tracking-widest focus:border-sky-500 focus:outline-none"
+                disabled={isVerifyingPin}
+                className="w-full rounded-2xl border border-slate-300 px-4 py-3 text-center text-xl font-bold tracking-widest focus:border-sky-500 focus:outline-none disabled:bg-slate-50"
                 autoFocus
               />
               {pinError && (
@@ -442,15 +479,17 @@ export default function TeacherAdmin() {
               <button
                 type="button"
                 onClick={() => nav('/settings')}
-                className="btn-outline w-1/3 text-xs font-bold"
+                disabled={isVerifyingPin}
+                className="btn-outline w-1/3 text-xs font-bold disabled:opacity-50"
               >
                 ← ยกเลิก
               </button>
               <button
                 type="submit"
-                className="btn-primary w-2/3 text-sm font-bold"
+                disabled={isVerifyingPin || !enteredPin.trim()}
+                className="btn-primary w-2/3 text-sm font-bold disabled:opacity-60"
               >
-                เข้าสู่ระบบอาจารย์ →
+                {isVerifyingPin ? '⏳ กำลังตรวจสอบ...' : 'เข้าสู่ระบบอาจารย์ →'}
               </button>
             </div>
           </form>
@@ -1111,18 +1150,25 @@ export default function TeacherAdmin() {
 
             {/* Change PIN */}
             <form onSubmit={handleChangePin} className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-3">
-              <h4 className="font-bold text-sm text-slate-900">เปลี่ยนรหัสผ่านอาจารย์</h4>
-              <p className="text-xs text-slate-500">รหัสปัจจุบัน: •••••• (กรอกรหัสใหม่อย่างน้อย 4 ตัวอักษร)</p>
+              <h4 className="font-bold text-sm text-slate-900">เปลี่ยนรหัสผ่านอาจารย์ (บันทึกซิงค์ไปยังคลาวด์กลาง)</h4>
+              <p className="text-xs text-slate-500">รหัสปัจจุบัน: •••••• (กรอกรหัสใหม่อย่างน้อย 4 ตัวอักษร — ทุกเครื่องจะอัปเดตใช้รหัสใหม่ทันที)</p>
               <div className="flex gap-2 max-w-sm">
                 <input
                   type="password"
                   maxLength={20}
                   value={newPin}
+                  disabled={isSavingPin}
                   onChange={(e) => { setNewPin(e.target.value); setPinChangeMsg(null); }}
                   placeholder="รหัสผ่านใหม่"
-                  className="flex-1 rounded-xl border border-slate-300 px-3 py-2 text-xs font-bold focus:border-sky-500 focus:outline-none"
+                  className="flex-1 rounded-xl border border-slate-300 px-3 py-2 text-xs font-bold focus:border-sky-500 focus:outline-none disabled:bg-slate-100"
                 />
-                <button type="submit" className="btn-primary text-xs font-bold !px-4">บันทึกรหัสผ่าน</button>
+                <button
+                  type="submit"
+                  disabled={isSavingPin || !newPin.trim()}
+                  className="btn-primary text-xs font-bold !px-4 disabled:opacity-60"
+                >
+                  {isSavingPin ? '⏳ กำลังบันทึก...' : 'บันทึกรหัสผ่าน'}
+                </button>
               </div>
               {pinChangeMsg && <p className="text-xs font-bold text-sky-700">{pinChangeMsg}</p>}
             </form>

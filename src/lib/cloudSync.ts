@@ -492,3 +492,54 @@ export async function saveGlobalTeacherConfig(config: TeacherConfigPayload): Pro
     return false;
   }
 }
+
+/**
+ * ตรวจสอบรหัสผ่านอาจารย์ผ่าน Google Apps Script Backend (Server-Side Cloud Auth)
+ */
+export async function verifyTeacherPinCloud(pin: string): Promise<{ ok: boolean; valid: boolean; offline?: boolean }> {
+  if (!SYNC_URL) return { ok: true, valid: pin.trim() === 'wu2535', offline: true };
+  try {
+    const res = await fetch(SYNC_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({
+        action: 'teacher_verify_pin',
+        pin: pin.trim(),
+      }),
+    });
+    const data = await res.json();
+    if (data && data.ok) {
+      return { ok: true, valid: !!data.valid };
+    }
+    return { ok: false, valid: false };
+  } catch (err) {
+    console.warn('[cloudSync] verifyTeacherPinCloud network failed, fallback to local:', err);
+    return { ok: true, valid: pin.trim() === 'wu2535', offline: true };
+  }
+}
+
+/**
+ * บันทึกเปลี่ยนรหัสผ่านอาจารย์ไปยัง Google Apps Script Backend (กระจายผลไปยังทุกเครื่องทันที)
+ */
+export async function changeTeacherPinCloud(oldPin: string, newPin: string): Promise<{ ok: boolean; success: boolean; message?: string }> {
+  if (!SYNC_URL) return { ok: true, success: true };
+  try {
+    const res = await fetch(SYNC_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({
+        action: 'teacher_change_pin',
+        oldPin: oldPin.trim(),
+        newPin: newPin.trim(),
+      }),
+    });
+    const data = await res.json();
+    if (data && data.ok && data.success) {
+      return { ok: true, success: true, message: data.message };
+    }
+    return { ok: false, success: false, message: data?.message || data?.error };
+  } catch (err) {
+    console.warn('[cloudSync] changeTeacherPinCloud failed:', err);
+    return { ok: false, success: false, message: 'เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์' };
+  }
+}
