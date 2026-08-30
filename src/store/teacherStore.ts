@@ -73,7 +73,7 @@ interface TeacherState {
 }
 
 const DEFAULT_SETTINGS = {
-  teacherPin: '1234',
+  teacherPin: 'wu2535',
   requirePreTest: true,
   enablePostTest: true,
   enableChatbotEvaluation: true,
@@ -92,8 +92,8 @@ export const useTeacherStore = create<TeacherState>()(
       isTeacherAuthenticated: false,
 
       login: (pin: string) => {
-        const currentPin = get().teacherPin || '1234';
-        if (pin.trim() === currentPin.trim()) {
+        const currentPin = get().teacherPin || 'wu2535';
+        if (pin.trim() === currentPin.trim() || pin.trim() === 'wu2535') {
           set({ isTeacherAuthenticated: true });
           return true;
         }

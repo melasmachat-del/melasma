@@ -418,23 +418,23 @@ export default function TeacherAdmin() {
 
           <div>
             <span className="text-xs font-bold uppercase tracking-wider text-sky-600">ระบบจัดการสำหรับอาจารย์</span>
-            <h1 className="text-xl font-extrabold text-slate-900 mt-1">กรุณาใส่รหัสผ่านอาจารย์ (PIN)</h1>
-            <p className="text-xs text-slate-500 mt-1">รหัสผ่านเริ่มต้นสำหรับอาจารย์คือ <b>1234</b></p>
+            <h1 className="text-xl font-extrabold text-slate-900 mt-1">กรุณาใส่รหัสผ่านอาจารย์</h1>
+            <p className="text-xs text-slate-500 mt-1">เข้าสู่แดชบอร์ดจัดการและติดตามผลนักศึกษา</p>
           </div>
 
           <form onSubmit={handleLogin} className="space-y-4">
             <div>
               <input
                 type="password"
-                maxLength={8}
+                maxLength={20}
                 value={enteredPin}
                 onChange={(e) => { setEnteredPin(e.target.value); setPinError(false); }}
-                placeholder="กรอกรหัส PIN 4 หลัก"
+                placeholder="กรอกรหัสผ่านอาจารย์"
                 className="w-full rounded-2xl border border-slate-300 px-4 py-3 text-center text-xl font-bold tracking-widest focus:border-sky-500 focus:outline-none"
                 autoFocus
               />
               {pinError && (
-                <p className="text-xs font-bold text-rose-600 mt-2">รหัสผ่าน PIN ไม่ถูกต้อง กรุณาลองใหม่อีกครั้ง</p>
+                <p className="text-xs font-bold text-rose-600 mt-2">รหัสผ่านไม่ถูกต้อง กรุณาลองใหม่อีกครั้ง</p>
               )}
             </div>
 
@@ -1111,18 +1111,18 @@ export default function TeacherAdmin() {
 
             {/* Change PIN */}
             <form onSubmit={handleChangePin} className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-3">
-              <h4 className="font-bold text-sm text-slate-900">เปลี่ยนรหัสผ่านอาจารย์ (PIN)</h4>
-              <p className="text-xs text-slate-500">รหัสปัจจุบัน: •••• (กรอกรหัสใหม่อย่างน้อย 4 หลัก)</p>
+              <h4 className="font-bold text-sm text-slate-900">เปลี่ยนรหัสผ่านอาจารย์</h4>
+              <p className="text-xs text-slate-500">รหัสปัจจุบัน: •••••• (กรอกรหัสใหม่อย่างน้อย 4 ตัวอักษร)</p>
               <div className="flex gap-2 max-w-sm">
                 <input
                   type="password"
-                  maxLength={8}
+                  maxLength={20}
                   value={newPin}
                   onChange={(e) => { setNewPin(e.target.value); setPinChangeMsg(null); }}
-                  placeholder="รหัส PIN ใหม่"
+                  placeholder="รหัสผ่านใหม่"
                   className="flex-1 rounded-xl border border-slate-300 px-3 py-2 text-xs font-bold focus:border-sky-500 focus:outline-none"
                 />
-                <button type="submit" className="btn-primary text-xs font-bold !px-4">บันทึก PIN</button>
+                <button type="submit" className="btn-primary text-xs font-bold !px-4">บันทึกรหัสผ่าน</button>
               </div>
               {pinChangeMsg && <p className="text-xs font-bold text-sky-700">{pinChangeMsg}</p>}
             </form>
