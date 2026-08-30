@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useTeacherStore, type StudentRecord } from '../store/teacherStore';
 import { usePlayerStore } from '../store/playerStore';
 import { KNOWLEDGE_QUESTIONS, SKILL_QUESTIONS, CHATBOT_EVALUATION_QUESTIONS } from '../lib/surveyBank';
-import { pingBackend, fetchAllStudentsFromCloud, saveGlobalTeacherConfig, verifyTeacherPinCloud, changeTeacherPinCloud } from '../lib/cloudSync';
+import { pingBackend, fetchAllStudentsFromCloud, saveGlobalTeacherConfig, verifyTeacherPinCloud, changeTeacherPinCloud, getBackendDownloadUrl } from '../lib/cloudSync';
 import { isInLineClient, openExternalBrowser } from '../lib/liff';
 import { asset } from '../lib/asset';
 import { sfx } from '../lib/sound';
@@ -64,15 +64,20 @@ export default function TeacherAdmin() {
     return list;
   }, [teacher.cachedStudents, player]);
 
+  const backendExcelUrl = useMemo(() => getBackendDownloadUrl('excel'), []);
+  const backendCsvUrl = useMemo(() => getBackendDownloadUrl('csv'), []);
+
   const directExcelDownloadUrl = useMemo(() => {
+    if (backendExcelUrl) return backendExcelUrl;
     if (!cloudSheetUrl) return null;
     return cloudSheetUrl.replace(/\/edit.*$/, '') + '/export?format=xlsx';
-  }, [cloudSheetUrl]);
+  }, [backendExcelUrl, cloudSheetUrl]);
 
   const directCsvDownloadUrl = useMemo(() => {
+    if (backendCsvUrl) return backendCsvUrl;
     if (!cloudSheetUrl) return null;
     return cloudSheetUrl.replace(/\/edit.*$/, '') + '/export?format=csv';
-  }, [cloudSheetUrl]);
+  }, [backendCsvUrl, cloudSheetUrl]);
 
   const filteredStudents = useMemo(() => {
     if (!searchTerm.trim()) return allStudents;

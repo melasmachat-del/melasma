@@ -543,3 +543,14 @@ export async function changeTeacherPinCloud(oldPin: string, newPin: string): Pro
     return { ok: false, success: false, message: 'เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์' };
   }
 }
+
+/**
+ * สร้าง Direct Download URL จาก Apps Script Backend
+ * (ดาวน์โหลดไฟล์ตรงโดยรันด้วยสิทธิ์เจ้าของ Apps Script — ไม่ติด Permission ของ Google Sheet และไม่ต้องล็อกอิน LINE)
+ */
+export function getBackendDownloadUrl(format: 'excel' | 'csv' | 'xls'): string {
+  if (!SYNC_URL) return '';
+  const action = format === 'csv' ? 'download_csv' : 'download_excel';
+  const delimiter = SYNC_URL.includes('?') ? '&' : '?';
+  return `${SYNC_URL}${delimiter}action=${action}`;
+}
