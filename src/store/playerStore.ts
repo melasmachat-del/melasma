@@ -58,8 +58,8 @@ interface PlayerState extends PlayerProfile {
     grade?: string;
     school?: string;
   }) => void;
-  /** บันทึกคะแนนความสนุก/พึงพอใจ (ดาว 1-5) หลังจบด่าน */
-  rateFun: (stars: number) => void;
+  /** บันทึก/แก้ไขคะแนนความสนุกและพึงพอใจ (ดาว 1-5) หลังจบด่าน */
+  rateFun: (stars: number, prevStars?: number) => void;
   /** เรียกตอนเล่นเกม — อัพเดท streak ถ้าเล่นต่อเนื่องได้ */
   pingDailyPlay: () => void;
   reset: () => void;
@@ -225,15 +225,25 @@ export const usePlayerStore = create<PlayerState>()(
       equipBackdrop:  (id)    => set({ equippedBackdrop: id }),
       equipCertDeco:  (id)    => set({ equippedCertDeco: id }),
 
-      rateFun: (stars) => {
+      rateFun: (stars, prevStars) => {
         if (stars < 1 || stars > 5) return;
         const cur = get();
-        set({
-          funRating: stars,
-          funRatingCount: (cur.funRatingCount || 0) + 1,
-          funRatingSum: (cur.funRatingSum || 0) + stars,
-          lastActiveAt: new Date().toISOString(),
-        });
+        if (prevStars && prevStars >= 1 && prevStars <= 5) {
+          // มีการแก้ไขคะแนนเดิม: ปรับผลรวมตามผลต่าง และไม่เพิ่ม count ซ้ำ
+          set({
+            funRating: stars,
+            funRatingSum: Math.max(0, (cur.funRatingSum || 0) - prevStars + stars),
+            lastActiveAt: new Date().toISOString(),
+          });
+        } else {
+          // ให้คะแนนครั้งแรก
+          set({
+            funRating: stars,
+            funRatingCount: (cur.funRatingCount || 0) + 1,
+            funRatingSum: (cur.funRatingSum || 0) + stars,
+            lastActiveAt: new Date().toISOString(),
+          });
+        }
         get().syncIfReady();
       },
 
