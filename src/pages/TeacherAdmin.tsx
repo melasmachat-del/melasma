@@ -1253,35 +1253,6 @@ export default function TeacherAdmin() {
               </div>
 
               <div className="space-y-2.5 pt-1">
-                {directExcelDownloadUrl ? (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      sfx.click();
-                      setShowLineExportModal(false);
-                      openExternalBrowser(directExcelDownloadUrl);
-                    }}
-                    className="btn-primary !bg-emerald-600 hover:!bg-emerald-700 w-full text-xs font-bold !py-3 flex items-center justify-center gap-2 shadow-sm"
-                  >
-                    <span>📊</span>
-                    <span>1. ดาวน์โหลดไฟล์ Excel (.xlsx) ทันที</span>
-                  </button>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      sfx.click();
-                      setShowLineExportModal(false);
-                      if (cloudSheetUrl) openExternalBrowser(cloudSheetUrl);
-                      else handleSyncFromCloud();
-                    }}
-                    className="btn-primary !bg-emerald-600 hover:!bg-emerald-700 w-full text-xs font-bold !py-3 flex items-center justify-center gap-2 shadow-sm"
-                  >
-                    <span>📊</span>
-                    <span>1. เปิดดาวน์โหลดใน Google Sheets</span>
-                  </button>
-                )}
-
                 {directCsvDownloadUrl && (
                   <button
                     type="button"
@@ -1290,10 +1261,13 @@ export default function TeacherAdmin() {
                       setShowLineExportModal(false);
                       openExternalBrowser(directCsvDownloadUrl);
                     }}
-                    className="btn-primary !bg-sky-600 hover:!bg-sky-700 w-full text-xs font-bold !py-3 flex items-center justify-center gap-2 shadow-sm"
+                    className="btn-primary !bg-sky-600 hover:!bg-sky-700 w-full text-xs font-bold !py-3 flex flex-col items-center justify-center gap-0.5 shadow-sm"
                   >
-                    <span>📑</span>
-                    <span>2. ดาวน์โหลดไฟล์ CSV (.csv) ทันที</span>
+                    <div className="flex items-center gap-1.5">
+                      <span>📑</span>
+                      <span>1. ดาวน์โหลดไฟล์ CSV (.csv) — แนะนำ ⭐</span>
+                    </div>
+                    <span className="text-[10px] font-normal opacity-90">เปิดใน Excel มือถือได้ 100% ภาษาไทยคมชัด ไม่ขึ้นไฟล์เสียหาย</span>
                   </button>
                 )}
 
@@ -1303,11 +1277,29 @@ export default function TeacherAdmin() {
                     await handleCopyTableToClipboard();
                     setShowLineExportModal(false);
                   }}
-                  className="btn-primary !bg-amber-600 hover:!bg-amber-700 w-full text-xs font-bold !py-3 flex items-center justify-center gap-2 shadow-sm"
+                  className="btn-primary !bg-amber-600 hover:!bg-amber-700 w-full text-xs font-bold !py-3 flex flex-col items-center justify-center gap-0.5 shadow-sm"
                 >
-                  <span>📋</span>
-                  <span>3. คัดลอกตารางข้อมูล (ไป Paste ใน Excel)</span>
+                  <div className="flex items-center gap-1.5">
+                    <span>📋</span>
+                    <span>2. คัดลอกตารางข้อมูลทั้งหมด (Clipboard)</span>
+                  </div>
+                  <span className="text-[10px] font-normal opacity-90">แตะครั้งเดียวแล้วไปเปิดแอป Excel แล้วกด "วาง (Paste)"</span>
                 </button>
+
+                {directExcelDownloadUrl && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      sfx.click();
+                      setShowLineExportModal(false);
+                      openExternalBrowser(directExcelDownloadUrl);
+                    }}
+                    className="btn-primary !bg-emerald-600 hover:!bg-emerald-700 w-full text-xs font-bold !py-2.5 flex items-center justify-center gap-2 shadow-sm"
+                  >
+                    <span>📊</span>
+                    <span>3. ดาวน์โหลดไฟล์ Excel (.xlsx แท้)</span>
+                  </button>
+                )}
 
                 {cloudSheetUrl && (
                   <button
@@ -1317,7 +1309,7 @@ export default function TeacherAdmin() {
                       setShowLineExportModal(false);
                       openExternalBrowser(cloudSheetUrl);
                     }}
-                    className="btn-outline w-full text-xs font-bold !py-2.5 flex items-center justify-center gap-2 border-indigo-200 text-indigo-900 hover:bg-indigo-50"
+                    className="btn-outline w-full text-xs font-bold !py-2 flex items-center justify-center gap-2 border-indigo-200 text-indigo-900 hover:bg-indigo-50"
                   >
                     <span>🌐</span>
                     <span>4. เปิดดู Google Sheets สดออนไลน์</span>

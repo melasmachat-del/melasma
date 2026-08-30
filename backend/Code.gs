@@ -821,83 +821,12 @@ function handleTeacherChangePin_(payload) {
   return jsonResponse_({ ok: true, success: true, message: 'เปลี่ยนรหัสผ่านคลาวด์สำเร็จเรียบร้อย' });
 }
 
-// ---------- Download Report Endpoints (Direct download from Apps Script) ----------
 function handleDownloadExcel_(params) {
   const sheet = getSheet_(CONFIG.SHEET_NAMES.PLAYERS);
-  const data = sheet.getDataRange().getValues();
-  const props = PropertiesService.getScriptProperties();
-  const rawConfig = props.getProperty('GLOBAL_TEACHER_CONFIG');
-  let schoolName = 'มหาวิทยาลัยวลัยลักษณ์';
-  let classCode = 'ชั้น ม.1-3';
-  let academicYear = '2569';
-  if (rawConfig) {
-    try {
-      const cfg = JSON.parse(rawConfig);
-      if (cfg.schoolName) schoolName = cfg.schoolName;
-      if (cfg.classCode) classCode = cfg.classCode;
-      if (cfg.academicYear) academicYear = cfg.academicYear;
-    } catch(e) {}
-  }
-
-  let rowsHtml = '';
-  for (let i = 1; i < data.length; i++) {
-    const r = data[i];
-    const hash = String(r[COL.USER_ID_HASH - 1] || '');
-    if (!hash) continue;
-    const stagesStr = String(r[COL.STAGES_COMPLETED - 1] || '');
-    const pre = (r[COL.PRE_TEST_SCORE - 1] !== '' && r[COL.PRE_TEST_SCORE - 1] !== null) ? Number(r[COL.PRE_TEST_SCORE - 1]) : null;
-    const post = (r[COL.POST_TEST_SCORE - 1] !== '' && r[COL.POST_TEST_SCORE - 1] !== null) ? Number(r[COL.POST_TEST_SCORE - 1]) : null;
-    const preSkill = r[COL.PRE_TEST_SKILL_SCORE - 1] !== '' ? r[COL.PRE_TEST_SKILL_SCORE - 1] : '-';
-    const postSkill = r[COL.POST_TEST_SKILL_SCORE - 1] !== '' ? r[COL.POST_TEST_SKILL_SCORE - 1] : '-';
-    const chatbot = r[COL.CHATBOT_SURVEY_SCORE - 1] !== '' ? r[COL.CHATBOT_SURVEY_SCORE - 1] : '-';
-    const delta = (pre !== null && post !== null) ? (post - pre) : null;
-    const deltaStr = delta !== null ? (delta >= 0 ? '+' + delta + '%' : delta + '%') : '-';
-    const certNo = r[COL.CERTIFICATE_NO - 1] || '-';
-    const certDate = r[COL.CERTIFICATE_ISSUED_AT - 1] ? new Date(r[COL.CERTIFICATE_ISSUED_AT - 1]).toLocaleString('th-TH') : '-';
-    const lastActive = r[COL.LAST_ACTIVE_AT - 1] ? new Date(r[COL.LAST_ACTIVE_AT - 1]).toLocaleString('th-TH') : '-';
-    const preDate = r[COL.PRE_TEST_AT - 1] ? new Date(r[COL.PRE_TEST_AT - 1]).toLocaleString('th-TH') : '-';
-    const postDate = r[COL.POST_TEST_AT - 1] ? new Date(r[COL.POST_TEST_AT - 1]).toLocaleString('th-TH') : '-';
-
-    rowsHtml += '<tr style="text-align:center;' + (i % 2 === 0 ? 'background-color:#f8fafc;' : '') + '">'
-      + '<td style="padding:6px;">' + i + '</td>'
-      + '<td style="padding:6px;text-align:left;">' + (r[COL.STUDENT_CODE - 1] || '-') + '</td>'
-      + '<td style="padding:6px;text-align:left;font-weight:bold;">' + (r[COL.REAL_NAME - 1] || r[COL.NICKNAME - 1] || '-') + '</td>'
-      + '<td style="padding:6px;text-align:left;">' + (r[COL.NICKNAME - 1] || '-') + '</td>'
-      + '<td style="padding:6px;text-align:left;">' + (r[COL.LINE_DISPLAY_NAME - 1] || '-') + '</td>'
-      + '<td style="padding:6px;background-color:#f0f9ff;font-weight:bold;">' + (pre !== null ? pre + '%' : '-') + '</td>'
-      + '<td style="padding:6px;">' + preSkill + '</td>'
-      + '<td style="padding:6px;font-size:8.5pt;">' + preDate + '</td>'
-      + '<td style="padding:6px;">' + (stagesStr ? stagesStr.split(',').filter(Boolean).length : 0) + '/5</td>'
-      + '<td style="padding:6px;">' + (r[COL.TOTAL_XP - 1] || 0) + '</td>'
-      + '<td style="padding:6px;background-color:#ecfdf5;font-weight:bold;color:#047857;">' + (post !== null ? post + '%' : '-') + '</td>'
-      + '<td style="padding:6px;">' + postSkill + '</td>'
-      + '<td style="padding:6px;font-size:8.5pt;">' + postDate + '</td>'
-      + '<td style="padding:6px;font-weight:bold;color:' + (delta !== null && delta >= 0 ? '#16a34a' : '#dc2626') + ';">' + deltaStr + '</td>'
-      + '<td style="padding:6px;background-color:#fffbeb;font-weight:bold;color:#b45309;">' + chatbot + '</td>'
-      + '<td style="padding:6px;">' + certNo + '</td>'
-      + '<td style="padding:6px;font-size:8.5pt;">' + certDate + '</td>'
-      + '<td style="padding:6px;font-size:8.5pt;">' + lastActive + '</td>'
-      + '</tr>';
-  }
-
-  const tableHtml = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">'
-    + '<head><meta charset="utf-8" /><!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet><x:Name>คะแนนนักศึกษา</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]--></head>'
-    + '<body>'
-    + '<h2 style="font-family:Tahoma,sans-serif;color:#0369a1;">รายงานผลการประเมินการเรียนรู้เรื่องโรคฝ้า - ' + schoolName + '</h2>'
-    + '<p style="font-family:Tahoma,sans-serif;font-size:10pt;color:#475569;">กลุ่ม/ห้อง: ' + classCode + ' | ปีการศึกษา: ' + academicYear + ' | วันที่ส่งออก: ' + new Date().toLocaleString('th-TH') + ' | นักศึกษาทั้งหมด: ' + (data.length - 1) + ' คน</p>'
-    + '<table border="1" style="border-collapse:collapse;font-family:Tahoma,sans-serif;font-size:10pt;">'
-    + '<thead><tr style="background-color:#0284c7;color:#ffffff;font-weight:bold;text-align:center;">'
-    + '<th style="padding:8px;">ลำดับ</th><th style="padding:8px;">รหัสนักศึกษา</th><th style="padding:8px;">ชื่อ-นามสกุลจริง</th><th style="padding:8px;">ชื่อในแอป</th><th style="padding:8px;">ชื่อ LINE</th>'
-    + '<th style="padding:8px;">คะแนนก่อนเรียน (Pre-test %)</th><th style="padding:8px;">คะแนนทักษะก่อนเรียน</th><th style="padding:8px;">วันเวลาทำ Pre-test</th>'
-    + '<th style="padding:8px;">ด่านที่ผ่าน</th><th style="padding:8px;">คะแนนรวม XP</th>'
-    + '<th style="padding:8px;">คะแนนหลังเรียน (Post-test %)</th><th style="padding:8px;">คะแนนทักษะหลังเรียน</th><th style="padding:8px;">วันเวลาทำ Post-test</th>'
-    + '<th style="padding:8px;">พัฒนาการความรู้ (Delta %)</th><th style="padding:8px;">ประเมินแชตบอต ตอนที่ 5</th>'
-    + '<th style="padding:8px;">เลขที่เกียรติบัตร</th><th style="padding:8px;">วันที่ออกเกียรติบัตร</th><th style="padding:8px;">เข้าใช้งานล่าสุด</th>'
-    + '</tr></thead><tbody>' + rowsHtml + '</tbody></table></body></html>';
-
-  return ContentService.createTextOutput(tableHtml)
-    .setMimeType(ContentService.MimeType.TEXT)
-    .downloadAsFile('Melasma_Students_Report_' + new Date().toISOString().slice(0, 10) + '.xls');
+  const ss = sheet.getParent();
+  const exportUrl = ss.getUrl().replace(/\/edit.*$/, '') + '/export?format=xlsx';
+  const html = '<!DOCTYPE html><html><head><meta charset="utf-8"><meta http-equiv="refresh" content="0;url=' + exportUrl + '"><title>กำลังดาวน์โหลด Excel...</title></head><body style="font-family:sans-serif;text-align:center;padding:40px;color:#1e293b;"><h3 style="color:#0284c7;">📊 กำลังดาวน์โหลดไฟล์ Microsoft Excel (.xlsx)...</h3><p style="font-size:14px;color:#64748b;">หากไฟล์ไม่เริ่มดาวน์โหลดอัตโนมัติ <a href="' + exportUrl + '" style="color:#0284c7;font-weight:bold;">คลิกที่นี่เพื่อดาวน์โหลดทันที</a></p><script>window.location.href="' + exportUrl + '";</script></body></html>';
+  return HtmlService.createHtmlOutput(html).setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
 }
 
 function handleDownloadCsv_(params) {
