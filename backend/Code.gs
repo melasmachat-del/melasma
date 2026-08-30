@@ -625,6 +625,16 @@ function handleRestore_(params) {
         ? undefined : numOr_(r[COL.FUN_RATING - 1], undefined),
       funRatingCount: numOr_(r[COL.FUN_RATING_COUNT - 1], 0),
       funRatingSum: numOr_(r[COL.FUN_RATING_SUM - 1], 0),
+      // field ที่เพิ่มใน v1.8.0 — ข้อมูลระบุตัวตนและคะแนนวิจัย
+      realName: strOrUndef_(r[COL.REAL_NAME - 1]),
+      lineDisplayName: strOrUndef_(r[COL.LINE_DISPLAY_NAME - 1]),
+      studentCode: strOrUndef_(r[COL.STUDENT_CODE - 1]),
+      preTestSkillScore: (r[COL.PRE_TEST_SKILL_SCORE - 1] === '' || r[COL.PRE_TEST_SKILL_SCORE - 1] === null)
+        ? undefined : numOr_(r[COL.PRE_TEST_SKILL_SCORE - 1], undefined),
+      postTestSkillScore: (r[COL.POST_TEST_SKILL_SCORE - 1] === '' || r[COL.POST_TEST_SKILL_SCORE - 1] === null)
+        ? undefined : numOr_(r[COL.POST_TEST_SKILL_SCORE - 1], undefined),
+      chatbotSurveyScore: (r[COL.CHATBOT_SURVEY_SCORE - 1] === '' || r[COL.CHATBOT_SURVEY_SCORE - 1] === null)
+        ? undefined : numOr_(r[COL.CHATBOT_SURVEY_SCORE - 1], undefined),
     },
   });
 }
