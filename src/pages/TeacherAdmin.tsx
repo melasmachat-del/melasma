@@ -64,6 +64,16 @@ export default function TeacherAdmin() {
     return list;
   }, [teacher.cachedStudents, player]);
 
+  const directExcelDownloadUrl = useMemo(() => {
+    if (!cloudSheetUrl) return null;
+    return cloudSheetUrl.replace(/\/edit.*$/, '') + '/export?format=xlsx';
+  }, [cloudSheetUrl]);
+
+  const directCsvDownloadUrl = useMemo(() => {
+    if (!cloudSheetUrl) return null;
+    return cloudSheetUrl.replace(/\/edit.*$/, '') + '/export?format=csv';
+  }, [cloudSheetUrl]);
+
   const filteredStudents = useMemo(() => {
     if (!searchTerm.trim()) return allStudents;
     const term = searchTerm.toLowerCase();
@@ -273,7 +283,13 @@ export default function TeacherAdmin() {
   const handleExportExcel = () => {
     sfx.click();
     if (inLine) {
+      if (directExcelDownloadUrl) {
+        openExternalBrowser(directExcelDownloadUrl);
+        setCloudSyncMsg('📥 กำลังเปิดดาวน์โหลดไฟล์ Excel (.xlsx) ผ่าน Google Drive/Docs โดยตรง (ไม่ต้องล็อกอินซ้ำ)...');
+        return;
+      }
       setShowLineExportModal(true);
+      return;
     }
     const tableHtml = `
       <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
@@ -369,7 +385,13 @@ export default function TeacherAdmin() {
   const handleExportCSV = () => {
     sfx.click();
     if (inLine) {
+      if (directCsvDownloadUrl) {
+        openExternalBrowser(directCsvDownloadUrl);
+        setCloudSyncMsg('📥 กำลังเปิดดาวน์โหลดไฟล์ CSV ผ่าน Google Drive/Docs โดยตรง (ไม่ต้องล็อกอินซ้ำ)...');
+        return;
+      }
       setShowLineExportModal(true);
+      return;
     }
     const headers = [
       'ลำดับ',
@@ -972,15 +994,15 @@ export default function TeacherAdmin() {
                     onClick={handleExportExcel}
                     className="btn-primary !bg-emerald-600 hover:!bg-emerald-700 font-bold text-xs !py-3 w-full shadow-sm"
                   >
-                    📥 ดาวน์โหลดไฟล์ Excel (.xls) →
+                    📥 ดาวน์โหลดไฟล์ Excel (.xlsx) →
                   </button>
-                  {inLine && (
+                  {inLine && directExcelDownloadUrl && (
                     <button
                       type="button"
-                      onClick={() => { sfx.click(); openExternalBrowser(window.location.href); }}
+                      onClick={() => { sfx.click(); openExternalBrowser(directExcelDownloadUrl); }}
                       className="btn-outline !text-[11px] !py-1.5 w-full text-emerald-800 border-emerald-300 hover:bg-emerald-100 font-bold"
                     >
-                      🌐 เปิดใน Safari/Chrome โหลดไฟล์
+                      ⚡ โหลดตรงจาก Google (ไม่ต้องล็อกอิน)
                     </button>
                   )}
                 </div>
@@ -1010,13 +1032,13 @@ export default function TeacherAdmin() {
                   >
                     📥 ดาวน์โหลดไฟล์ CSV (.csv) →
                   </button>
-                  {inLine && (
+                  {inLine && directCsvDownloadUrl && (
                     <button
                       type="button"
-                      onClick={() => { sfx.click(); openExternalBrowser(window.location.href); }}
+                      onClick={() => { sfx.click(); openExternalBrowser(directCsvDownloadUrl); }}
                       className="btn-outline !text-[11px] !py-1.5 w-full text-sky-800 border-sky-300 hover:bg-sky-100 font-bold"
                     >
-                      🌐 เปิดใน Safari/Chrome โหลดไฟล์
+                      ⚡ โหลดตรงจาก Google (ไม่ต้องล็อกอิน)
                     </button>
                   )}
                 </div>
@@ -1218,26 +1240,57 @@ export default function TeacherAdmin() {
 
               <div>
                 <h3 className="text-base font-extrabold text-slate-900">
-                  ดาวน์โหลดรายงานผ่านแอป LINE
+                  ดาวน์โหลดรายงานผลการเรียน (ผ่าน Google)
                 </h3>
                 <p className="text-xs text-slate-600 mt-1.5 leading-relaxed">
-                  เนื่องจากระบบความปลอดภัยของ LINE ไม่อนุญาตให้ดาวน์โหลดไฟล์ .xls ลงเครื่องโดยตรง กรุณาเลือกวิธีที่สะดวกสำหรับอาจารย์:
+                  กดปุ่มด้านล่างเพื่อดาวน์โหลดไฟล์เข้าเครื่องทันที <b>(เด้งไป Google โดยตรง ไม่ต้องล็อกอิน LINE ซ้ำ)</b>:
                 </p>
               </div>
 
-              <div className="space-y-2.5 pt-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    sfx.click();
-                    setShowLineExportModal(false);
-                    openExternalBrowser(window.location.href);
-                  }}
-                  className="btn-primary !bg-sky-600 hover:!bg-sky-700 w-full text-xs font-bold !py-3 flex items-center justify-center gap-2 shadow-sm"
-                >
-                  <span>🌐</span>
-                  <span>1. เปิดใน Safari / Chrome (โหลดไฟล์ทันที)</span>
-                </button>
+              <div className="space-y-2.5 pt-1">
+                {directExcelDownloadUrl ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      sfx.click();
+                      setShowLineExportModal(false);
+                      openExternalBrowser(directExcelDownloadUrl);
+                    }}
+                    className="btn-primary !bg-emerald-600 hover:!bg-emerald-700 w-full text-xs font-bold !py-3 flex items-center justify-center gap-2 shadow-sm"
+                  >
+                    <span>📊</span>
+                    <span>1. ดาวน์โหลดไฟล์ Excel (.xlsx) ทันที</span>
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      sfx.click();
+                      setShowLineExportModal(false);
+                      if (cloudSheetUrl) openExternalBrowser(cloudSheetUrl);
+                      else handleSyncFromCloud();
+                    }}
+                    className="btn-primary !bg-emerald-600 hover:!bg-emerald-700 w-full text-xs font-bold !py-3 flex items-center justify-center gap-2 shadow-sm"
+                  >
+                    <span>📊</span>
+                    <span>1. เปิดดาวน์โหลดใน Google Sheets</span>
+                  </button>
+                )}
+
+                {directCsvDownloadUrl && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      sfx.click();
+                      setShowLineExportModal(false);
+                      openExternalBrowser(directCsvDownloadUrl);
+                    }}
+                    className="btn-primary !bg-sky-600 hover:!bg-sky-700 w-full text-xs font-bold !py-3 flex items-center justify-center gap-2 shadow-sm"
+                  >
+                    <span>📑</span>
+                    <span>2. ดาวน์โหลดไฟล์ CSV (.csv) ทันที</span>
+                  </button>
+                )}
 
                 <button
                   type="button"
@@ -1248,7 +1301,7 @@ export default function TeacherAdmin() {
                   className="btn-primary !bg-amber-600 hover:!bg-amber-700 w-full text-xs font-bold !py-3 flex items-center justify-center gap-2 shadow-sm"
                 >
                   <span>📋</span>
-                  <span>2. คัดลอกตารางข้อมูล (ไป Paste ใน Excel)</span>
+                  <span>3. คัดลอกตารางข้อมูล (ไป Paste ใน Excel)</span>
                 </button>
 
                 {cloudSheetUrl && (
@@ -1259,10 +1312,10 @@ export default function TeacherAdmin() {
                       setShowLineExportModal(false);
                       openExternalBrowser(cloudSheetUrl);
                     }}
-                    className="btn-outline w-full text-xs font-bold !py-3 flex items-center justify-center gap-2 border-indigo-200 text-indigo-900 hover:bg-indigo-50"
+                    className="btn-outline w-full text-xs font-bold !py-2.5 flex items-center justify-center gap-2 border-indigo-200 text-indigo-900 hover:bg-indigo-50"
                   >
-                    <span>📊</span>
-                    <span>3. เปิดดู Google Sheets สดออนไลน์</span>
+                    <span>🌐</span>
+                    <span>4. เปิดดู Google Sheets สดออนไลน์</span>
                   </button>
                 )}
               </div>
