@@ -252,77 +252,74 @@ export default function Certificate() {
                       style={{
                         width: CERT_W,
                         height: CERT_H,
-                        backgroundColor: '#F8FCFF',
-                        color: '#123E61',
+                        backgroundColor: '#FCFEFF',
+                        color: '#0F3A5D',
                         fontFamily: '"Noto Sans Thai", "IBM Plex Sans Thai", "Tahoma", sans-serif',
                       }}
                     >
                       {/* Background Gradient */}
                       <div
                         className="absolute inset-0"
-                        style={{ background: 'linear-gradient(135deg, #F8FCFF 0%, #FFFFFF 50%, #EAF6FF 100%)' }}
+                        style={{ background: 'linear-gradient(135deg, #FCFEFF 0%, #FFFFFF 50%, #F1F8FC 100%)' }}
                       />
 
-                      {/* Double Certificate Frame */}
-                      <div className="absolute inset-[8px] border-2 border-[#206A9C]" />
-                      <div className="absolute inset-[13px] border border-[#A7D4EB]" />
+                      {/* Premium Triple Certificate Frame */}
+                      <div className="absolute inset-[8px] border-2 border-[#18537D]" />
+                      <div className="absolute inset-[13px] border border-[#C8A048]" />
+                      <div className="absolute inset-[16px] border border-[#D5EBF7]/60" />
 
-                      {/* Decorative Corner Ornaments */}
-                      <FloralCorner position="top-right" />
-                      <FloralCorner position="bottom-left" />
+                      {/* 4 Corner Ornaments */}
+                      <CertificateCorner position="top-left" />
+                      <CertificateCorner position="top-right" />
+                      <CertificateCorner position="bottom-left" />
+                      <CertificateCorner position="bottom-right" />
 
                       {/* Certificate Layout Flex Container */}
                       <div className="relative z-10 flex h-full flex-col justify-between px-10 py-6 text-center">
 
-                        {/* Top: Header with Logos & Organization */}
+                        {/* Top: Header with Single Official Centered Logo & Title */}
                         <div className="flex flex-col items-center">
-                          <div className="flex items-center justify-center gap-3">
-                            <img
-                              src={asset('brand/logowu.png')}
-                              alt="มหาวิทยาลัยวลัยลักษณ์"
-                              className="h-10 w-auto object-contain"
-                              onError={(e) => { (e.target as HTMLElement).style.display = 'none'; }}
-                            />
-                            <div className="h-6 w-px bg-slate-200" />
-                            <img
-                              src={asset('brand/medical-logo.png')}
-                              alt="โลโก้หน่วยงาน"
-                              className="h-8 w-auto object-contain"
-                              onError={(e) => { (e.target as HTMLElement).style.display = 'none'; }}
-                            />
-                          </div>
-                          <p className="mt-1 text-[12px] font-bold text-[#123E61] tracking-wide">
+                          <img
+                            src={asset('brand/medical-logo.png')}
+                            alt="มหาวิทยาลัยวลัยลักษณ์"
+                            className="h-11 w-auto object-contain"
+                            onError={(e) => { (e.target as HTMLElement).style.display = 'none'; }}
+                          />
+                          <p className="mt-1.5 text-[12px] font-bold text-[#103E65] tracking-wide">
                             {CERT_SITE_NAME}
                           </p>
                           <p className="text-[9.5px] text-[#557B96] font-medium">
-                            โครงการส่งเสริมความรู้และทักษะการดูแลผิว มหาวิทยาลัยวลัยลักษณ์
+                            โครงการพัฒนาสื่อนวัตกรรมการเรียนรู้ มหาวิทยาลัยวลัยลักษณ์
                           </p>
-                          <div className="mt-1.5 h-0.5 w-44 rounded-full bg-gradient-to-r from-transparent via-[#39A9DC] to-transparent" />
+                          <div className="mt-1.5 h-0.5 w-44 rounded-full bg-gradient-to-r from-transparent via-[#C8A048] to-transparent" />
                         </div>
 
                         {/* Middle: Certificate Title, Recipient Name & Statement */}
                         <div className="my-auto flex flex-col items-center space-y-1">
-                          <h2 className="text-[25px] font-extrabold text-[#0E3D60] tracking-wide font-serif">
+                          <h2 className="text-[26px] font-extrabold text-[#0B3558] tracking-widest font-serif">
                             ใบประกาศนียบัตร
                           </h2>
-                          <p className="text-[11px] font-medium text-[#4A728E]">
+                          <p className="text-[9px] font-bold tracking-[0.22em] text-[#B38938] uppercase">
+                            Certificate of Completion
+                          </p>
+                          <p className="pt-0.5 text-[11px] font-medium text-[#4A728E]">
                             เกียรติบัตรฉบับนี้ให้ไว้เพื่อแสดงว่า
                           </p>
 
                           {/* Recipient Name */}
                           <div className="py-1">
                             <h1
-                              className={`font-serif font-extrabold text-[#1B4B72] tracking-tight leading-tight ${
+                              className={`font-serif font-extrabold text-[#144772] tracking-tight leading-tight ${
                                 displayName.length > 30 ? 'text-[22px]' : displayName.length > 20 ? 'text-[26px]' : 'text-[30px]'
                               }`}
                             >
                               {displayName}
                             </h1>
-                            <div className="mx-auto mt-1.5 h-0.5 w-56 rounded-full bg-[#39A9DC]" />
+                            <div className="mx-auto mt-1.5 h-0.5 w-60 rounded-full bg-gradient-to-r from-transparent via-[#C8A048] to-transparent" />
                           </div>
 
                           {/* Description */}
-                          <div className="max-w-[490px] text-[11.5px] leading-[1.6] text-slate-700 font-medium px-2">
+                          <div className="max-w-[500px] text-[11.5px] leading-[1.65] text-slate-700 font-medium px-2">
                             <p>ได้สำเร็จการเรียนรู้เรื่องฝ้า (Melasma) และการดูแลผิวอย่างถูกต้องและปลอดภัย</p>
                             <p>ตามเนื้อหาและเกณฑ์มาตรฐานของโครงการ {CERT_SITE_NAME}</p>
                           </div>
@@ -334,30 +331,30 @@ export default function Certificate() {
                         </div>
 
                         {/* Bottom: Signature / Endorsement & Verification QR Code */}
-                        <div className="w-full border-t border-[#B9DFF0] pt-2.5 flex items-end justify-between px-3 text-left">
+                        <div className="w-full border-t border-[#B9DFF0] pt-2 flex items-end justify-between px-3 text-left">
                           {/* Left: Organization & Certificate ID */}
                           <div className="text-[9.5px] leading-tight text-slate-500">
                             <p className="font-semibold text-[#557B96]">รับรองโดยเว็บไซต์</p>
-                            <p className="mt-0.5 font-bold text-[#123E61]">{CERT_SITE_NAME}</p>
+                            <p className="mt-0.5 font-bold text-[#103E65]">{CERT_SITE_NAME}</p>
                             <p className="mt-1 font-mono text-[8.5px] text-slate-500">
-                              เลขที่: <span className="font-bold text-[#123E61]">{certNo || 'MEL-2026-0001'}</span>
+                              เลขที่เอกสาร: <span className="font-bold text-[#103E65]">{certNo || 'MEL-2026-0001'}</span>
                             </p>
                           </div>
 
                           {/* Right: Approval Seal & QR Code */}
                           <div className="flex items-center gap-3">
                             <div className="flex flex-col items-center">
-                              <div className="flex h-10 w-10 items-center justify-center rounded-full border-2 border-[#39A9DC] bg-white text-[#1B6B9B] shadow-sm">
-                                <span className="text-[8px] font-extrabold leading-tight text-center">
+                              <div className="flex h-11 w-11 items-center justify-center rounded-full border-2 border-[#C8A048] bg-gradient-to-br from-white to-[#FDF9F0] text-[#123E61] shadow-sm ring-2 ring-[#1D6594]/20">
+                                <span className="text-[8px] font-extrabold leading-tight text-center text-[#103E65]">
                                   รับรอง<br />แล้ว
                                 </span>
                               </div>
-                              <span className="mt-0.5 text-[8px] font-bold text-slate-500">เว็บไซต์อนุมัติ</span>
+                              <span className="mt-0.5 text-[8px] font-bold text-[#8A6A23]">ระบบอนุมัติ</span>
                             </div>
 
                             {qrDataUrl && (
                               <div className="flex flex-col items-center">
-                                <div className="border border-[#39A9DC] bg-white p-1 rounded shadow-sm">
+                                <div className="border border-[#C8A048] bg-white p-1 rounded shadow-sm">
                                   <img
                                     src={qrDataUrl}
                                     alt="QR Code สำหรับตรวจสอบใบประกาศนียบัตร"
@@ -433,22 +430,38 @@ export default function Certificate() {
   );
 }
 
-function FloralCorner({ position }: { position: 'top-right' | 'bottom-left' }) {
-  const isBottom = position === 'bottom-left';
+function CertificateCorner({ position }: { position: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right' }) {
+  const getTransform = () => {
+    switch (position) {
+      case 'top-left': return '';
+      case 'top-right': return 'scaleX(-1)';
+      case 'bottom-left': return 'scaleY(-1)';
+      case 'bottom-right': return 'scale(-1)';
+    }
+  };
+  const getPositionClass = () => {
+    switch (position) {
+      case 'top-left': return 'top-0 left-0';
+      case 'top-right': return 'top-0 right-0';
+      case 'bottom-left': return 'bottom-0 left-0';
+      case 'bottom-right': return 'bottom-0 right-0';
+    }
+  };
+
   return (
     <svg
-      viewBox="0 0 150 150"
-      className={`pointer-events-none absolute z-0 ${isBottom ? 'bottom-0 left-0 rotate-180' : 'right-0 top-0'}`}
-      style={{ width: 94, height: 94, opacity: 0.48 }}
+      viewBox="0 0 100 100"
+      className={`pointer-events-none absolute z-0 ${getPositionClass()}`}
+      style={{ width: 68, height: 68, transform: getTransform(), opacity: 0.7 }}
       aria-hidden
     >
-      <path d="M150 0C116 18 108 45 119 68C129 89 119 116 82 150" fill="none" stroke="#76B9D9" strokeWidth="2" opacity="0.72" />
-      <path d="M147 16C128 29 127 49 143 55C150 58 150 58 150 58" fill="none" stroke="#3C8EB9" strokeWidth="2" />
-      <path d="M132 31C110 27 100 40 113 54C123 64 134 59 140 51" fill="#C4EDFC" opacity="0.88" />
-      <path d="M119 57C96 48 89 64 103 77C113 86 125 76 131 68" fill="#8FD4F0" opacity="0.82" />
-      <path d="M105 84C85 74 77 90 91 103C103 113 114 101 117 92" fill="#DDF5FF" opacity="0.96" />
-      <circle cx="137" cy="24" r="7" fill="#EAF8FF" stroke="#5DA8D2" strokeWidth="1" />
-      <circle cx="123" cy="38" r="4" fill="#5DA8D2" opacity="0.85" />
+      {/* Outer corner bracket */}
+      <path d="M 14 36 L 14 14 L 36 14" fill="none" stroke="#C8A048" strokeWidth="1.5" />
+      <path d="M 18 42 L 18 18 L 42 18" fill="none" stroke="#1D6594" strokeWidth="1" opacity="0.6" />
+      {/* Decorative flourish */}
+      <path d="M 14 14 Q 28 28 46 20 Q 32 32 20 46 Q 28 28 14 14" fill="#E8F4FB" stroke="#78B9DC" strokeWidth="0.8" />
+      <circle cx="28" cy="28" r="3" fill="#D4AF37" />
+      <circle cx="14" cy="14" r="2" fill="#1D6594" />
     </svg>
   );
 }
