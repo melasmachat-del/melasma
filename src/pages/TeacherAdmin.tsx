@@ -387,17 +387,8 @@ export default function TeacherAdmin() {
     URL.revokeObjectURL(url);
   };
 
-  const handleExportCSV = () => {
+  const handleShareOrDownloadCSV = async () => {
     sfx.click();
-    if (inLine) {
-      if (directCsvDownloadUrl) {
-        openExternalBrowser(directCsvDownloadUrl);
-        setCloudSyncMsg('📥 กำลังเปิดดาวน์โหลดไฟล์ CSV ผ่าน Google Drive/Docs โดยตรง (ไม่ต้องล็อกอินซ้ำ)...');
-        return;
-      }
-      setShowLineExportModal(true);
-      return;
-    }
     const headers = [
       'ลำดับ',
       'รหัสนักศึกษา',
@@ -426,36 +417,63 @@ export default function TeacherAdmin() {
 
       return [
         idx + 1,
-        `"${s.studentCode || '-'}"`,
-        `"${s.realName || '-'}"`,
-        `"${s.nickname || '-'}"`,
-        `"${s.lineDisplayName || '-'}"`,
-        s.preTestScore !== undefined ? s.preTestScore : '-',
+        `"${(s.studentCode || '-').replace(/"/g, '""')}"`,
+        `"${(s.realName || '-').replace(/"/g, '""')}"`,
+        `"${(s.nickname || '-').replace(/"/g, '""')}"`,
+        `"${(s.lineDisplayName || '-').replace(/"/g, '""')}"`,
+        s.preTestScore !== undefined ? `${s.preTestScore}%` : '-',
         s.preTestSkillScore !== undefined ? s.preTestSkillScore : '-',
         s.preTestAt ? `"${new Date(s.preTestAt).toLocaleString('th-TH')}"` : '-',
         `"${s.stagesCompleted?.length || 0}/5"`,
         s.totalXP || 0,
-        s.postTestScore !== undefined ? s.postTestScore : '-',
+        s.postTestScore !== undefined ? `${s.postTestScore}%` : '-',
         s.postTestSkillScore !== undefined ? s.postTestSkillScore : '-',
         s.postTestAt ? `"${new Date(s.postTestAt).toLocaleString('th-TH')}"` : '-',
-        delta,
+        typeof delta === 'number' ? (delta >= 0 ? `+${delta}%` : `${delta}%`) : '-',
         s.chatbotSurveyScore !== undefined ? s.chatbotSurveyScore : '-',
-        `"${s.certificateNo || '-'}"`,
+        `"${(s.certificateNo || '-').replace(/"/g, '""')}"`,
         s.certificateIssuedAt ? `"${new Date(s.certificateIssuedAt).toLocaleString('th-TH')}"` : '-',
         s.lastActiveAt ? `"${new Date(s.lastActiveAt).toLocaleString('th-TH')}"` : '-',
       ];
     });
 
     const csvContent = '\uFEFF' + [headers.join(','), ...rows.map(r => r.join(','))].join('\r\n');
+    const fileName = `รายงานคะแนนนักศึกษา_${teacher.schoolName}_${new Date().toISOString().slice(0, 10)}.csv`;
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `รายงานคะแนนนักศึกษา_${teacher.schoolName}_${new Date().toISOString().slice(0, 10)}.csv`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
+
+    // 1) ลองใช้ Web Share API (ส่งเข้า LINE, บันทึกลงเครื่อง, หรือเปิดใน Excel บนมือถือโดยตรง)
+    try {
+      if (typeof navigator !== 'undefined' && navigator.canShare) {
+        const file = new File([blob], fileName, { type: 'text/csv' });
+        if (navigator.canShare({ files: [file] })) {
+          await navigator.share({
+            title: `รายงานคะแนนนักศึกษา ${teacher.schoolName}`,
+            text: `รายงานผลการเรียนรู้เรื่องโรคฝ้า (${allStudents.length} คน)`,
+            files: [file],
+          });
+          setCloudSyncMsg('✅ แชร์/บันทึกไฟล์รายงานสำเร็จเรียบร้อย');
+          return;
+        }
+      }
+    } catch (err) {
+      console.warn('Web Share failed, fallback to download/copy:', err);
+    }
+
+    // 2) Fallback: ดาวน์โหลดไฟล์ลงเครื่องตรงๆ
+    try {
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      setCloudSyncMsg('📥 เริ่มดาวน์โหลดไฟล์ CSV เรียบร้อยแล้ว');
+    } catch (e) {
+      // 3) Fallback สุดท้าย: คัดลอกตารางลงคลิปบอร์ด
+      await handleCopyTableToClipboard();
+    }
   };
 
   const handleTestBackend = async () => {
@@ -999,15 +1017,15 @@ export default function TeacherAdmin() {
                     onClick={handleExportExcel}
                     className="btn-primary !bg-emerald-600 hover:!bg-emerald-700 font-bold text-xs !py-3 w-full shadow-sm"
                   >
-                    📥 ดาวน์โหลดไฟล์ Excel (.xlsx) →
+                    📥 ดาวน์โหลดไฟล์ Excel (.xls) →
                   </button>
-                  {inLine && directExcelDownloadUrl && (
+                  {cloudSheetUrl && (
                     <button
                       type="button"
-                      onClick={() => { sfx.click(); openExternalBrowser(directExcelDownloadUrl); }}
+                      onClick={() => { sfx.click(); openExternalBrowser(cloudSheetUrl); }}
                       className="btn-outline !text-[11px] !py-1.5 w-full text-emerald-800 border-emerald-300 hover:bg-emerald-100 font-bold"
                     >
-                      ⚡ โหลดตรงจาก Google (ไม่ต้องล็อกอิน)
+                      🌐 เปิดดู Google Sheets สด
                     </button>
                   )}
                 </div>
@@ -1019,11 +1037,11 @@ export default function TeacherAdmin() {
                   <div className="flex items-center gap-2">
                     <span className="text-2xl">📑</span>
                     <h4 className="font-extrabold text-sky-950 text-sm">
-                      ไฟล์ข้อมูลสถิติ CSV (UTF-8)
+                      ไฟล์ข้อมูลสถิติ CSV (UTF-8) ⭐ แนะนำ
                     </h4>
                   </div>
                   <p className="text-xs text-sky-800 mt-2 leading-relaxed">
-                    ไฟล์ CSV มีรหัสภาษาไทย UTF-8 BOM มาตรฐาน สำหรับนำไปประมวลผลต่อในโปรแกรมสถิติงานวิจัย (SPSS, R, Python, Google Sheets) ครบ 5 ตอน
+                    ไฟล์ CSV มีรหัสภาษาไทย UTF-8 BOM มาตรฐาน รองรับการแชร์เข้าแอป LINE / บันทึกลงเครื่อง / เปิดใน Excel บนมือถือได้ทันที 100%
                   </p>
                   <p className="text-[11px] font-bold text-sky-900 mt-2">
                     นักศึกษาทั้งหมด: {allStudents.length} คน
@@ -1032,20 +1050,11 @@ export default function TeacherAdmin() {
                 <div className="space-y-2">
                   <button
                     type="button"
-                    onClick={handleExportCSV}
+                    onClick={handleShareOrDownloadCSV}
                     className="btn-primary !bg-sky-600 hover:!bg-sky-700 font-bold text-xs !py-3 w-full shadow-sm"
                   >
-                    📥 ดาวน์โหลดไฟล์ CSV (.csv) →
+                    📤 แชร์ / บันทึกไฟล์ CSV (.csv) →
                   </button>
-                  {inLine && directCsvDownloadUrl && (
-                    <button
-                      type="button"
-                      onClick={() => { sfx.click(); openExternalBrowser(directCsvDownloadUrl); }}
-                      className="btn-outline !text-[11px] !py-1.5 w-full text-sky-800 border-sky-300 hover:bg-sky-100 font-bold"
-                    >
-                      ⚡ โหลดตรงจาก Google (ไม่ต้องล็อกอิน)
-                    </button>
-                  )}
                 </div>
               </div>
 
@@ -1245,31 +1254,28 @@ export default function TeacherAdmin() {
 
               <div>
                 <h3 className="text-base font-extrabold text-slate-900">
-                  ดาวน์โหลดรายงานผลการเรียน (ผ่าน Google)
+                  ส่งออกรายงานผลการเรียน
                 </h3>
                 <p className="text-xs text-slate-600 mt-1.5 leading-relaxed">
-                  กดปุ่มด้านล่างเพื่อดาวน์โหลดไฟล์เข้าเครื่องทันที <b>(เด้งไป Google โดยตรง ไม่ต้องล็อกอิน LINE ซ้ำ)</b>:
+                  เลือกวิธีที่สะดวกสำหรับเปิดใน Microsoft Excel หรือบันทึกลงมือถือ:
                 </p>
               </div>
 
               <div className="space-y-2.5 pt-1">
-                {directCsvDownloadUrl && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      sfx.click();
-                      setShowLineExportModal(false);
-                      openExternalBrowser(directCsvDownloadUrl);
-                    }}
-                    className="btn-primary !bg-sky-600 hover:!bg-sky-700 w-full text-xs font-bold !py-3 flex flex-col items-center justify-center gap-0.5 shadow-sm"
-                  >
-                    <div className="flex items-center gap-1.5">
-                      <span>📑</span>
-                      <span>1. ดาวน์โหลดไฟล์ CSV (.csv) — แนะนำ ⭐</span>
-                    </div>
-                    <span className="text-[10px] font-normal opacity-90">เปิดใน Excel มือถือได้ 100% ภาษาไทยคมชัด ไม่ขึ้นไฟล์เสียหาย</span>
-                  </button>
-                )}
+                <button
+                  type="button"
+                  onClick={async () => {
+                    setShowLineExportModal(false);
+                    await handleShareOrDownloadCSV();
+                  }}
+                  className="btn-primary !bg-sky-600 hover:!bg-sky-700 w-full text-xs font-bold !py-3 flex flex-col items-center justify-center gap-0.5 shadow-sm"
+                >
+                  <div className="flex items-center gap-1.5">
+                    <span>📤</span>
+                    <span>1. แชร์ / บันทึกไฟล์ CSV ลงเครื่อง — แนะนำ ⭐</span>
+                  </div>
+                  <span className="text-[10px] font-normal opacity-90">ส่งเข้าแอป LINE / เซฟลงเครื่อง / เปิดใน Excel ได้ทันที</span>
+                </button>
 
                 <button
                   type="button"
@@ -1286,21 +1292,6 @@ export default function TeacherAdmin() {
                   <span className="text-[10px] font-normal opacity-90">แตะครั้งเดียวแล้วไปเปิดแอป Excel แล้วกด "วาง (Paste)"</span>
                 </button>
 
-                {directExcelDownloadUrl && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      sfx.click();
-                      setShowLineExportModal(false);
-                      openExternalBrowser(directExcelDownloadUrl);
-                    }}
-                    className="btn-primary !bg-emerald-600 hover:!bg-emerald-700 w-full text-xs font-bold !py-2.5 flex items-center justify-center gap-2 shadow-sm"
-                  >
-                    <span>📊</span>
-                    <span>3. ดาวน์โหลดไฟล์ Excel (.xlsx แท้)</span>
-                  </button>
-                )}
-
                 {cloudSheetUrl && (
                   <button
                     type="button"
@@ -1309,10 +1300,10 @@ export default function TeacherAdmin() {
                       setShowLineExportModal(false);
                       openExternalBrowser(cloudSheetUrl);
                     }}
-                    className="btn-outline w-full text-xs font-bold !py-2 flex items-center justify-center gap-2 border-indigo-200 text-indigo-900 hover:bg-indigo-50"
+                    className="btn-outline w-full text-xs font-bold !py-2.5 flex items-center justify-center gap-2 border-indigo-200 text-indigo-900 hover:bg-indigo-50"
                   >
                     <span>🌐</span>
-                    <span>4. เปิดดู Google Sheets สดออนไลน์</span>
+                    <span>3. เปิดดู Google Sheets สดออนไลน์</span>
                   </button>
                 )}
               </div>
