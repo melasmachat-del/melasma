@@ -14,8 +14,8 @@ import SkeletonCard from '../components/ui/SkeletonCard';
 import EmptyState from '../components/ui/EmptyState';
 import { CERT_STAGE_COUNT, certificateStageProgress, hasCompletedCertificatePath } from '../scenarios';
 
-const CERT_W = 594;
-const CERT_H = Math.round(CERT_W / 1.414);
+const CERT_W = 650;
+const CERT_H = 460;
 const CERT_SITE_NAME = 'Melasma เรียนรู้ฝ้าอย่างเข้าใจ';
 
 function buildVerifyUrl(code: string) {
@@ -99,12 +99,17 @@ export default function Certificate() {
 
   const formatThaiDate = (iso: string) => {
     if (!iso) return '';
-    const d = new Date(iso);
-    const months = [
-      'มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน',
-      'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม',
-    ];
-    return `${d.getDate()} ${months[d.getMonth()]} พ.ศ. ${d.getFullYear() + 543}`;
+    try {
+      const d = new Date(iso);
+      if (isNaN(d.getTime())) return iso;
+      const months = [
+        'มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน',
+        'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม',
+      ];
+      return `${d.getDate()} ${months[d.getMonth()]} พ.ศ. ${d.getFullYear() + 543}`;
+    } catch {
+      return iso;
+    }
   };
 
   const downloadDataUrl = (dataUrl: string, filename: string) => {
@@ -244,76 +249,127 @@ export default function Certificate() {
                     <div
                       id="cert-card"
                       className="relative overflow-hidden shadow-2xl"
-                      style={{ width: CERT_W, height: CERT_H, backgroundColor: '#F8FCFF', color: '#123E61', fontFamily: '"Noto Sans Thai", "Tahoma", sans-serif' }}
+                      style={{
+                        width: CERT_W,
+                        height: CERT_H,
+                        backgroundColor: '#F8FCFF',
+                        color: '#123E61',
+                        fontFamily: '"Noto Sans Thai", "IBM Plex Sans Thai", "Tahoma", sans-serif',
+                      }}
                     >
-                      <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, #F8FCFF 0%, #FFFFFF 55%, #EAF6FF 100%)' }} />
-                      <div className="absolute inset-[7px] border border-[#2A78A8]" />
-                      <div className="absolute inset-[11px] border border-[#B9DFF0]" />
+                      {/* Background Gradient */}
+                      <div
+                        className="absolute inset-0"
+                        style={{ background: 'linear-gradient(135deg, #F8FCFF 0%, #FFFFFF 50%, #EAF6FF 100%)' }}
+                      />
+
+                      {/* Double Certificate Frame */}
+                      <div className="absolute inset-[8px] border-2 border-[#206A9C]" />
+                      <div className="absolute inset-[13px] border border-[#A7D4EB]" />
+
+                      {/* Decorative Corner Ornaments */}
                       <FloralCorner position="top-right" />
                       <FloralCorner position="bottom-left" />
 
-                      <div className="relative z-10 flex h-full flex-col items-center px-12 py-5 text-center">
+                      {/* Certificate Layout Flex Container */}
+                      <div className="relative z-10 flex h-full flex-col justify-between px-10 py-6 text-center">
+
+                        {/* Top: Header with Logos & Organization */}
                         <div className="flex flex-col items-center">
-                          <div className="flex flex-col items-center" style={{ width: 420 }}>
+                          <div className="flex items-center justify-center gap-3">
+                            <img
+                              src={asset('brand/logowu.png')}
+                              alt="มหาวิทยาลัยวลัยลักษณ์"
+                              className="h-10 w-auto object-contain"
+                              onError={(e) => { (e.target as HTMLElement).style.display = 'none'; }}
+                            />
+                            <div className="h-6 w-px bg-slate-200" />
                             <img
                               src={asset('brand/medical-logo.png')}
                               alt="โลโก้หน่วยงาน"
-                              className="object-contain"
-                              style={{ width: 190, height: 54 }}
-                              loading="eager"
+                              className="h-8 w-auto object-contain"
+                              onError={(e) => { (e.target as HTMLElement).style.display = 'none'; }}
                             />
-                            <p className="mt-1 text-[12px] font-bold leading-tight text-[#123E61]">{CERT_SITE_NAME}</p>
-                            <p className="mt-1 text-[9px] leading-tight text-[#557B96]">เว็บไซต์การเรียนรู้เรื่องฝ้าและการดูแลผิว</p>
                           </div>
-                          <div className="mt-1.5 h-0.5 w-36 rounded-full bg-[#39A9DC]" />
+                          <p className="mt-1 text-[12px] font-bold text-[#123E61] tracking-wide">
+                            {CERT_SITE_NAME}
+                          </p>
+                          <p className="text-[9.5px] text-[#557B96] font-medium">
+                            โครงการส่งเสริมความรู้และทักษะการดูแลผิว มหาวิทยาลัยวลัยลักษณ์
+                          </p>
+                          <div className="mt-1.5 h-0.5 w-44 rounded-full bg-gradient-to-r from-transparent via-[#39A9DC] to-transparent" />
                         </div>
 
-                        <div className="mt-3">
-                          <h2 className="font-serif text-[1.65rem] font-bold leading-tight text-[#123E61]">ใบประกาศนียบัตร</h2>
-                          <p className="mt-0.5 text-[11px] font-medium text-[#557B96]">เกียรติบัตรฉบับนี้ให้ไว้เพื่อแสดงว่า</p>
+                        {/* Middle: Certificate Title, Recipient Name & Statement */}
+                        <div className="my-auto flex flex-col items-center space-y-1">
+                          <h2 className="text-[25px] font-extrabold text-[#0E3D60] tracking-wide font-serif">
+                            ใบประกาศนียบัตร
+                          </h2>
+                          <p className="text-[11px] font-medium text-[#4A728E]">
+                            เกียรติบัตรฉบับนี้ให้ไว้เพื่อแสดงว่า
+                          </p>
+
+                          {/* Recipient Name */}
+                          <div className="py-1">
+                            <h1
+                              className={`font-serif font-extrabold text-[#1B4B72] tracking-tight leading-tight ${
+                                displayName.length > 30 ? 'text-[22px]' : displayName.length > 20 ? 'text-[26px]' : 'text-[30px]'
+                              }`}
+                            >
+                              {displayName}
+                            </h1>
+                            <div className="mx-auto mt-1.5 h-0.5 w-56 rounded-full bg-[#39A9DC]" />
+                          </div>
+
+                          {/* Description */}
+                          <div className="max-w-[490px] text-[11.5px] leading-[1.6] text-slate-700 font-medium px-2">
+                            <p>ได้สำเร็จการเรียนรู้เรื่องฝ้า (Melasma) และการดูแลผิวอย่างถูกต้องและปลอดภัย</p>
+                            <p>ตามเนื้อหาและเกณฑ์มาตรฐานของโครงการ {CERT_SITE_NAME}</p>
+                          </div>
+
+                          {/* Issue Date */}
+                          <p className="pt-1 text-[11px] font-medium text-slate-600 whitespace-nowrap">
+                            ให้ไว้ ณ วันที่ {formatThaiDate(issueDate)}
+                          </p>
                         </div>
 
-                        <div className="mt-2 w-full">
-                          <h1 className={`break-words font-serif font-bold leading-tight text-[#24547D] ${
-                            displayName.length > 30 ? 'text-[1.7rem]' : displayName.length > 20 ? 'text-[1.95rem]' : 'text-[2.15rem]'
-                          }`}>
-                            {displayName}
-                          </h1>
-                          <div className="mx-auto mt-1.5 h-0.5 w-52 rounded-full bg-[#39A9DC]" />
-                        </div>
-
-                        <div className="mt-2 max-w-[430px] text-[12px] leading-[1.5] text-slate-600">
-                          <p>ได้สำเร็จการเรียนรู้เรื่องฝ้า (Melasma)</p>
-                          <p>และการดูแลผิวอย่างถูกต้องและปลอดภัย</p>
-                          <p>ตามเนื้อหาของโครงการ {CERT_SITE_NAME}</p>
-                        </div>
-
-                        <p className="mt-1.5 text-[11px] font-medium text-slate-600">ให้ไว้ ณ วันที่ {formatThaiDate(issueDate)}</p>
-
-                        <div className="absolute inset-x-12 bottom-4 flex items-end justify-between gap-5 border-t border-[#B9DFF0] pt-2 text-left">
-                          <div className="min-w-0 flex-1 text-[9px] leading-tight text-slate-500">
+                        {/* Bottom: Signature / Endorsement & Verification QR Code */}
+                        <div className="w-full border-t border-[#B9DFF0] pt-2.5 flex items-end justify-between px-3 text-left">
+                          {/* Left: Organization & Certificate ID */}
+                          <div className="text-[9.5px] leading-tight text-slate-500">
                             <p className="font-semibold text-[#557B96]">รับรองโดยเว็บไซต์</p>
-                            <p className="mt-1 max-w-[230px] break-words font-bold text-[#123E61]">{CERT_SITE_NAME}</p>
-                            <p className="mt-1 font-mono text-[8px]">เลขที่ {certNo}</p>
+                            <p className="mt-0.5 font-bold text-[#123E61]">{CERT_SITE_NAME}</p>
+                            <p className="mt-1 font-mono text-[8.5px] text-slate-500">
+                              เลขที่: <span className="font-bold text-[#123E61]">{certNo || 'MEL-2026-0001'}</span>
+                            </p>
                           </div>
 
-                          <div className="flex shrink-0 items-end gap-2.5">
-                            <div className="text-center">
-                              <div className="flex h-9 w-9 items-center justify-center rounded-full border-2 border-[#39A9DC] text-[#1B6B9B]">
-                                <span className="text-[8px] font-bold leading-tight">รับรอง<br />แล้ว</span>
+                          {/* Right: Approval Seal & QR Code */}
+                          <div className="flex items-center gap-3">
+                            <div className="flex flex-col items-center">
+                              <div className="flex h-10 w-10 items-center justify-center rounded-full border-2 border-[#39A9DC] bg-white text-[#1B6B9B] shadow-sm">
+                                <span className="text-[8px] font-extrabold leading-tight text-center">
+                                  รับรอง<br />แล้ว
+                                </span>
                               </div>
-                              <p className="mt-1 text-[8px] text-slate-500">เว็บไซต์อนุมัติ</p>
+                              <span className="mt-0.5 text-[8px] font-bold text-slate-500">เว็บไซต์อนุมัติ</span>
                             </div>
+
                             {qrDataUrl && (
-                              <div className="text-center">
-                                <div className="border border-[#39A9DC] bg-white p-1">
-                                  <img src={qrDataUrl} alt="QR Code สำหรับตรวจสอบใบประกาศนียบัตร" className="block h-11 w-11" />
+                              <div className="flex flex-col items-center">
+                                <div className="border border-[#39A9DC] bg-white p-1 rounded shadow-sm">
+                                  <img
+                                    src={qrDataUrl}
+                                    alt="QR Code สำหรับตรวจสอบใบประกาศนียบัตร"
+                                    className="block h-10 w-10"
+                                  />
                                 </div>
-                                <p className="mt-0.5 text-[8px] font-semibold text-slate-500">สแกนตรวจสอบ</p>
+                                <span className="mt-0.5 text-[8px] font-semibold text-slate-500">สแกนตรวจสอบ</span>
                               </div>
                             )}
                           </div>
                         </div>
+
                       </div>
                     </div>
                   </div>
