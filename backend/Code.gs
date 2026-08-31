@@ -860,11 +860,9 @@ function handleTeacherChangePin_(payload) {
 }
 
 function handleDownloadExcel_(params) {
-  const sheet = getSheet_(CONFIG.SHEET_NAMES.PLAYERS);
-  const ss = sheet.getParent();
-  const exportUrl = ss.getUrl().replace(/\/edit.*$/, '') + '/export?format=xlsx';
-  const html = '<!DOCTYPE html><html><head><meta charset="utf-8"><meta http-equiv="refresh" content="0;url=' + exportUrl + '"><title>กำลังดาวน์โหลด Excel...</title></head><body style="font-family:sans-serif;text-align:center;padding:40px;color:#1e293b;"><h3 style="color:#0284c7;">📊 กำลังดาวน์โหลดไฟล์ Microsoft Excel (.xlsx)...</h3><p style="font-size:14px;color:#64748b;">หากไฟล์ไม่เริ่มดาวน์โหลดอัตโนมัติ <a href="' + exportUrl + '" style="color:#0284c7;font-weight:bold;">คลิกที่นี่เพื่อดาวน์โหลดทันที</a></p><script>window.location.href="' + exportUrl + '";</script></body></html>';
-  return HtmlService.createHtmlOutput(html).setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+  // ส่งออกเป็นไฟล์ CSV (UTF-8 BOM) ตรงๆ ผ่าน ContentService
+  // ป้องกันปัญหา iframe ของ Apps Script ถูก docs.google.com ปฏิเสธการเชื่อมต่อ
+  return handleDownloadCsv_(params);
 }
 
 function handleDownloadCsv_(params) {

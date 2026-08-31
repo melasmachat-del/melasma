@@ -289,11 +289,6 @@ export default function TeacherAdmin() {
   const handleExportExcel = () => {
     sfx.click();
     if (inLine) {
-      if (directExcelDownloadUrl) {
-        openExternalBrowser(directExcelDownloadUrl);
-        setCloudSyncMsg('📥 กำลังเปิดดาวน์โหลดไฟล์ Excel (.xlsx) ผ่าน Google Drive/Docs โดยตรง (ไม่ต้องล็อกอินซ้ำ)...');
-        return;
-      }
       setShowLineExportModal(true);
       return;
     }
