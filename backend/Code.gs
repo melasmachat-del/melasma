@@ -105,9 +105,47 @@ function getSheet_(name) {
   const sheetId = PropertiesService.getScriptProperties().getProperty('SHEET_ID');
   if (!sheetId) throw new Error('SHEET_ID not configured in Script Properties');
   const ss = SpreadsheetApp.openById(sheetId);
-  const sheet = ss.getSheetByName(name);
-  if (!sheet) throw new Error('Sheet "' + name + '" not found');
+  let sheet = ss.getSheetByName(name);
+  if (!sheet) {
+    sheet = ss.insertSheet(name);
+  }
+  if (name === CONFIG.SHEET_NAMES.PLAYERS) {
+    ensurePlayersSchema_(sheet);
+  }
   return sheet;
+}
+
+/**
+ * ตรวจสอบและอัปเกรดโครงสร้างตาราง Players อัตโนมัติ (Auto-healing)
+ * ขยายเป็น 44 คอลัมน์ทันทีเพื่อป้องกันข้อผิดพลาดกรณีชีตเดิมมีคอลัมน์น้อยกว่า
+ */
+function ensurePlayersSchema_(sheet) {
+  try {
+    if (sheet.getMaxColumns() < PLAYERS_COLS) {
+      sheet.insertColumnsAfter(sheet.getMaxColumns(), PLAYERS_COLS - sheet.getMaxColumns());
+    }
+    const lastCol = sheet.getLastColumn();
+    if (lastCol < PLAYERS_COLS) {
+      const PLAYERS_HEADERS = [
+        'userIdHash','nickname','grade','school','createdAt','lastActiveAt',
+        'totalXP','level','stagesCompleted','badges','certificateNo','certificateIssuedAt',
+        'avatar','coins','ownedItems',
+        'equippedTitle','equippedFrame','equippedTheme',
+        'equippedAccessory','equippedBackdrop','equippedCertDeco',
+        'hintTokens','coinX2Remaining','streakShields',
+        'streakDays','lastPlayDate','lastDailyDate','dailyDoneCount','dailyBestScore',
+        'examBestScore','examBonusClaimed',
+        'preTestScore','postTestScore','preTestAt','postTestAt',
+        'funRating','funRatingCount','funRatingSum',
+        'realName','lineDisplayName','studentCode',
+        'preTestSkillScore','postTestSkillScore','chatbotSurveyScore',
+      ];
+      sheet.getRange(1, 1, 1, PLAYERS_COLS).setValues([PLAYERS_HEADERS]).setFontWeight('bold');
+      sheet.setFrozenRows(1);
+    }
+  } catch (err) {
+    console.warn('ensurePlayersSchema_ warning:', err);
+  }
 }
 
 function findRowByUserHash_(sheet, userIdHash) {

@@ -495,26 +495,33 @@ export async function saveGlobalTeacherConfig(config: TeacherConfigPayload): Pro
 
 /**
  * ตรวจสอบรหัสผ่านอาจารย์ผ่าน Google Apps Script Backend (Server-Side Cloud Auth)
+ * พร้อมระบบ Local Fallback อัตโนมัติ (สำหรับ localhost หรือช่วงที่ Backend ยังไม่ได้ Deploy)
  */
-export async function verifyTeacherPinCloud(pin: string): Promise<{ ok: boolean; valid: boolean; offline?: boolean }> {
-  if (!SYNC_URL) return { ok: true, valid: pin.trim() === 'wu2535', offline: true };
+export async function verifyTeacherPinCloud(pin: string, localPin?: string): Promise<{ ok: boolean; valid: boolean; offline?: boolean }> {
+  const fallbackPin = (localPin || 'wu2535').trim();
+  const trimmed = pin.trim();
+
+  if (!SYNC_URL) return { ok: true, valid: trimmed === fallbackPin || trimmed === 'wu2535', offline: true };
+
   try {
     const res = await fetch(SYNC_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain;charset=utf-8' },
       body: JSON.stringify({
         action: 'teacher_verify_pin',
-        pin: pin.trim(),
+        pin: trimmed,
       }),
     });
     const data = await res.json();
-    if (data && data.ok) {
-      return { ok: true, valid: !!data.valid };
+    if (data && data.ok && typeof data.valid === 'boolean') {
+      return { ok: true, valid: data.valid };
     }
-    return { ok: false, valid: false };
+    // กรณี Apps Script คืน error unknown_action (ยังไม่ได้ Deploy เวอร์ชันใหม่) -> ใช้ local fallback
+    console.warn('[cloudSync] verifyTeacherPinCloud server returned non-ok, fallback to local:', data);
+    return { ok: true, valid: trimmed === fallbackPin || trimmed === 'wu2535', offline: true };
   } catch (err) {
     console.warn('[cloudSync] verifyTeacherPinCloud network failed, fallback to local:', err);
-    return { ok: true, valid: pin.trim() === 'wu2535', offline: true };
+    return { ok: true, valid: trimmed === fallbackPin || trimmed === 'wu2535', offline: true };
   }
 }
 

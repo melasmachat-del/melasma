@@ -43,20 +43,22 @@ export async function initLiff(): Promise<void> {
   try {
     await liff.init({
       liffId: LIFF_ID,
-      // ให้ LIFF จัดการ login เมื่อเปิดจาก browser ภายนอกแอป LINE
-      withLoginOnExternalBrowser: true,
+      // ไม่บังคับเด้งล็อกอิน LINE เมื่อเปิดจาก Browser ภายนอกแอป (Safari / Chrome) เพื่อให้สามารถเปิดดาวน์โหลดและเข้าหน้าอาจารย์ได้ทันที
+      withLoginOnExternalBrowser: false,
     });
 
     if (!liff.isLoggedIn()) {
       initialized = true;
 
-      // กรณี SDK ยังไม่ได้ redirect ให้สั่ง login เองเป็น fallback
+      // เมื่อเปิดจาก Browser ภายนอก (ไม่ได้อยู่ในแอป LINE) ให้ทำงานในโหมดเว็บโดยไม่ต้องเด้งไป access.line.me
       if (!liff.isInClient()) {
-        liff.login({ redirectUri: window.location.href });
+        cachedUserId = getOrCreateMockUserId();
+        cachedDisplayName = localStorage.getItem('hd_line_display_name') || 'ผู้ใช้เว็บ';
+        console.info('[LIFF] External browser mode without LINE OAuth redirect. UserID:', cachedUserId);
         return;
       }
 
-      throw new Error('LINE login was not completed');
+      throw new Error('LINE login was not completed in LINE client');
     }
 
     const profile = await liff.getProfile();

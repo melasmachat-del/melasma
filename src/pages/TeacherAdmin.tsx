@@ -165,19 +165,20 @@ export default function TeacherAdmin() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!enteredPin.trim() || isVerifyingPin) return;
+    const pin = enteredPin.trim();
+    if (!pin || isVerifyingPin) return;
 
     setIsVerifyingPin(true);
     setPinError(false);
 
     try {
-      const res = await verifyTeacherPinCloud(enteredPin);
+      const res = await verifyTeacherPinCloud(pin, teacher.teacherPin);
       setIsVerifyingPin(false);
 
-      if (res.valid) {
+      if (res.valid || teacher.login(pin)) {
         sfx.click();
-        teacher.setTeacherPin(enteredPin.trim());
-        teacher.login(enteredPin.trim());
+        teacher.setTeacherPin(pin);
+        teacher.login(pin);
         setPinError(false);
         setEnteredPin('');
       } else {
@@ -186,7 +187,7 @@ export default function TeacherAdmin() {
       }
     } catch {
       setIsVerifyingPin(false);
-      if (teacher.login(enteredPin)) {
+      if (teacher.login(pin)) {
         sfx.click();
         setPinError(false);
         setEnteredPin('');
@@ -1302,10 +1303,23 @@ export default function TeacherAdmin() {
                     }}
                     className="btn-outline w-full text-xs font-bold !py-2.5 flex items-center justify-center gap-2 border-indigo-200 text-indigo-900 hover:bg-indigo-50"
                   >
-                    <span>🌐</span>
+                    <span>📊</span>
                     <span>3. เปิดดู Google Sheets สดออนไลน์</span>
                   </button>
                 )}
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    sfx.click();
+                    setShowLineExportModal(false);
+                    openExternalBrowser(window.location.href);
+                  }}
+                  className="btn-outline w-full text-xs font-bold !py-2.5 flex items-center justify-center gap-2 border-sky-200 text-sky-900 hover:bg-sky-50"
+                >
+                  <span>🌐</span>
+                  <span>4. เปิดใน Safari / Chrome (ไม่ต้องล็อกอิน LINE)</span>
+                </button>
               </div>
 
               <button
