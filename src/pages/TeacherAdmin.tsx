@@ -552,45 +552,49 @@ export default function TeacherAdmin() {
       <main className="mx-auto max-w-5xl px-4 pt-4 sm:px-6">
         {/* Top Header Card */}
         <div className="mb-5 overflow-hidden rounded-[26px] border border-white/80 bg-white p-4 shadow-clay-sm sm:p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3.5 sm:gap-4 w-full sm:w-auto">
             <img
               src={asset('brand/logowu.png')}
               alt="มหาวิทยาลัยวลัยลักษณ์"
-              className="h-14 w-auto object-contain"
+              className="h-12 sm:h-14 w-auto object-contain shrink-0"
               onError={(e) => { (e.target as HTMLElement).style.display = 'none'; }}
             />
-            <div>
-              <span className="text-xs font-extrabold uppercase tracking-wider text-sky-700">{teacher.schoolName}</span>
-              <h2 className="text-base sm:text-lg font-extrabold text-slate-900 leading-tight">
+            <div className="min-w-0">
+              <span className="text-[11px] font-extrabold uppercase tracking-wider text-sky-700">{teacher.schoolName}</span>
+              <h2 className="text-base sm:text-lg font-extrabold text-slate-900 leading-tight truncate">
                 ห้องเรียน: {teacher.classCode} ({teacher.academicYear})
               </h2>
-              <p className="text-xs text-slate-500">นักศึกษาในระบบทั้งหมด: {stats.total} คน</p>
+              <p className="text-xs text-slate-500">นักศึกษาในระบบทั้งหมด: <b>{stats.total} คน</b></p>
             </div>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex flex-wrap items-center justify-end gap-2 w-full sm:w-auto">
+            {cloudSheetUrl && (
+              <button
+                type="button"
+                onClick={() => { sfx.click(); openExternalBrowser(cloudSheetUrl); }}
+                className="btn-primary !bg-emerald-600 hover:!bg-emerald-700 text-xs font-bold !min-h-10 !px-3.5 shadow-sm flex-1 sm:flex-none flex items-center justify-center gap-1.5"
+              >
+                <span>🌐</span>
+                <span>เปิด Google Sheet ↗</span>
+              </button>
+            )}
             <button
               onClick={handleSyncFromCloud}
               disabled={isSyncingCloud}
-              className="btn-outline !min-h-10 !px-3 text-xs font-bold text-sky-700 border-sky-200 hover:bg-sky-50 disabled:opacity-50"
+              className="btn-outline !min-h-10 !px-3 text-xs font-bold text-sky-700 border-sky-200 hover:bg-sky-50 disabled:opacity-50 flex-1 sm:flex-none flex items-center justify-center gap-1"
             >
-              {isSyncingCloud ? '⏳ กำลังซิงค์...' : '🔄 ซิงค์ Google Sheets'}
-            </button>
-            <button
-              onClick={handleExportExcel}
-              className="btn-primary !min-h-10 !px-3.5 text-xs font-bold !bg-emerald-600 hover:!bg-emerald-700 shadow-sm"
-            >
-              📊 ดาวน์โหลด Excel
+              <span>{isSyncingCloud ? '⏳' : '🔄'}</span>
+              <span>{isSyncingCloud ? 'ซิงค์...' : 'ซิงค์ข้อมูล'}</span>
             </button>
             <button
               onClick={() => { sfx.click(); teacher.logout(); }}
-              className="btn-outline !min-h-10 !px-3 text-xs font-bold text-rose-700 border-rose-200 hover:bg-rose-50"
+              className="btn-outline !min-h-10 !px-3 text-xs font-bold text-rose-700 border-rose-200 hover:bg-rose-50 flex-none"
             >
               ออกจากระบบ
             </button>
           </div>
         </div>
-
 
         {/* Cloud Sync Status Banner */}
         {cloudSyncMsg && (
@@ -609,84 +613,120 @@ export default function TeacherAdmin() {
         )}
 
         {/* Analytics Highlights */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
-          <div className="p-4 rounded-2xl bg-white border border-sky-100 shadow-clay-sm">
-            <span className="text-[11px] font-bold text-sky-700 uppercase">ทำ Pre-test</span>
-            <p className="text-xl font-extrabold text-slate-900 mt-1">{stats.preDone} คน</p>
-            <span className="text-xs text-slate-500">เฉลี่ย {stats.preAvg}%</span>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-5">
+          <div className="p-4 rounded-2xl bg-white border border-sky-100 shadow-clay-sm flex flex-col justify-between">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-extrabold text-sky-700 uppercase">ทำ Pre-test</span>
+              <span className="text-base">📝</span>
+            </div>
+            <div className="mt-2">
+              <p className="text-xl sm:text-2xl font-black text-slate-900">{stats.preDone} <span className="text-xs font-normal text-slate-500">คน</span></p>
+              <div className="mt-1 inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-sky-50 text-sky-800 text-[11px] font-bold">
+                เฉลี่ย {stats.preAvg}%
+              </div>
+            </div>
           </div>
 
-          <div className="p-4 rounded-2xl bg-white border border-emerald-100 shadow-clay-sm">
-            <span className="text-[11px] font-bold text-emerald-700 uppercase">ทำ Post-test</span>
-            <p className="text-xl font-extrabold text-slate-900 mt-1">{stats.postDone} คน</p>
-            <span className="text-xs text-slate-500">เฉลี่ย {stats.postAvg}%</span>
+          <div className="p-4 rounded-2xl bg-white border border-emerald-100 shadow-clay-sm flex flex-col justify-between">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-extrabold text-emerald-700 uppercase">ทำ Post-test</span>
+              <span className="text-base">📈</span>
+            </div>
+            <div className="mt-2">
+              <p className="text-xl sm:text-2xl font-black text-slate-900">{stats.postDone} <span className="text-xs font-normal text-slate-500">คน</span></p>
+              <div className="mt-1 inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-800 text-[11px] font-bold">
+                เฉลี่ย {stats.postAvg}%
+              </div>
+            </div>
           </div>
 
-          <div className="p-4 rounded-2xl bg-white border border-amber-100 shadow-clay-sm">
-            <span className="text-[11px] font-bold text-amber-700 uppercase">พัฒนาการ (Gain)</span>
-            <p className={`text-xl font-extrabold mt-1 ${stats.gain >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
-              {stats.gain >= 0 ? `+${stats.gain}%` : `${stats.gain}%`}
-            </p>
-            <span className="text-xs text-slate-500">เปรียบเทียบก่อน-หลัง</span>
+          <div className="p-4 rounded-2xl bg-white border border-amber-100 shadow-clay-sm flex flex-col justify-between">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-extrabold text-amber-700 uppercase">พัฒนาการ (Gain)</span>
+              <span className="text-base">🚀</span>
+            </div>
+            <div className="mt-2">
+              <p className={`text-xl sm:text-2xl font-black ${stats.gain >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
+                {stats.gain >= 0 ? `+${stats.gain}%` : `${stats.gain}%`}
+              </p>
+              <div className="mt-1 inline-flex items-center gap-1 text-[11px] font-bold text-slate-500">
+                เปรียบเทียบก่อน-หลัง
+              </div>
+            </div>
           </div>
 
-          <div className="p-4 rounded-2xl bg-white border border-violet-100 shadow-clay-sm">
-            <span className="text-[11px] font-bold text-violet-700 uppercase">ออกเกียรติบัตร</span>
-            <p className="text-xl font-extrabold text-slate-900 mt-1">{stats.certDone} ใบ</p>
-            <span className="text-xs text-slate-500">ผ่านครบ 5 ด่าน</span>
+          <div className="p-4 rounded-2xl bg-white border border-violet-100 shadow-clay-sm flex flex-col justify-between">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-extrabold text-violet-700 uppercase">ออกเกียรติบัตร</span>
+              <span className="text-base">🎓</span>
+            </div>
+            <div className="mt-2">
+              <p className="text-xl sm:text-2xl font-black text-slate-900">{stats.certDone} <span className="text-xs font-normal text-slate-500">ใบ</span></p>
+              <div className="mt-1 inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-violet-50 text-violet-800 text-[11px] font-bold">
+                ผ่านครบ 5 ด่าน
+              </div>
+            </div>
           </div>
         </div>
 
         {/* Tab Navigation */}
-        <div className="flex border-b border-slate-200 mb-5 gap-2 overflow-x-auto pb-1 text-xs sm:text-sm font-bold">
+        <div className="flex border-b border-slate-200 mb-5 gap-1.5 sm:gap-2 overflow-x-auto pb-2 scrollbar-none text-xs sm:text-sm font-bold">
           <button
             onClick={() => { sfx.click(); setActiveTab('controls'); }}
-            className={`px-4 py-2.5 rounded-xl transition ${activeTab === 'controls' ? 'bg-sky-600 text-white shadow-clay-blue' : 'text-slate-600 hover:bg-sky-50'}`}
+            className={`px-3.5 py-2.5 rounded-xl transition whitespace-nowrap flex items-center gap-1.5 ${activeTab === 'controls' ? 'bg-sky-600 text-white shadow-clay-blue' : 'text-slate-600 hover:bg-sky-50 bg-white/60'}`}
           >
-            🎛️ ตั้งค่าระบบการสอน (Toggles)
+            <span>🎛️</span>
+            <span>ตั้งค่าการสอน</span>
           </button>
           <button
             onClick={() => { sfx.click(); setActiveTab('students'); }}
-            className={`px-4 py-2.5 rounded-xl transition ${activeTab === 'students' ? 'bg-sky-600 text-white shadow-clay-blue' : 'text-slate-600 hover:bg-sky-50'}`}
+            className={`px-3.5 py-2.5 rounded-xl transition whitespace-nowrap flex items-center gap-1.5 ${activeTab === 'students' ? 'bg-sky-600 text-white shadow-clay-blue' : 'text-slate-600 hover:bg-sky-50 bg-white/60'}`}
           >
-            👥 ตารางคะแนนนักศึกษา ({allStudents.length})
+            <span>👥</span>
+            <span>ติดตามนักศึกษา ({allStudents.length})</span>
           </button>
           <button
             onClick={() => { sfx.click(); setActiveTab('export'); }}
-            className={`px-4 py-2.5 rounded-xl transition ${activeTab === 'export' ? 'bg-sky-600 text-white shadow-clay-blue' : 'text-slate-600 hover:bg-sky-50'}`}
+            className={`px-3.5 py-2.5 rounded-xl transition whitespace-nowrap flex items-center gap-1.5 ${activeTab === 'export' ? 'bg-sky-600 text-white shadow-clay-blue' : 'text-slate-600 hover:bg-sky-50 bg-white/60'}`}
           >
-            💾 ส่งออกรายงาน (Export)
+            <span>📊</span>
+            <span>ฐานข้อมูล Google Sheets</span>
           </button>
           <button
             onClick={() => { sfx.click(); setActiveTab('questions'); }}
-            className={`px-4 py-2.5 rounded-xl transition ${activeTab === 'questions' ? 'bg-sky-600 text-white shadow-clay-blue' : 'text-slate-600 hover:bg-sky-50'}`}
+            className={`px-3.5 py-2.5 rounded-xl transition whitespace-nowrap flex items-center gap-1.5 ${activeTab === 'questions' ? 'bg-sky-600 text-white shadow-clay-blue' : 'text-slate-600 hover:bg-sky-50 bg-white/60'}`}
           >
-            📋 ดูคลังข้อสอบ 5 ตอน
+            <span>📋</span>
+            <span>คลังข้อสอบ 5 ตอน</span>
           </button>
           <button
             onClick={() => { sfx.click(); setActiveTab('system'); }}
-            className={`px-4 py-2.5 rounded-xl transition ${activeTab === 'system' ? 'bg-sky-600 text-white shadow-clay-blue' : 'text-slate-600 hover:bg-sky-50'}`}
+            className={`px-3.5 py-2.5 rounded-xl transition whitespace-nowrap flex items-center gap-1.5 ${activeTab === 'system' ? 'bg-sky-600 text-white shadow-clay-blue' : 'text-slate-600 hover:bg-sky-50 bg-white/60'}`}
           >
-            ⚙️ รหัส PIN & Backend
+            <span>⚙️</span>
+            <span>ความปลอดภัย & PIN</span>
           </button>
         </div>
 
         {/* TAB 1: CONTROLS & TOGGLES */}
         {activeTab === 'controls' && (
-          <div className="space-y-4 rounded-[28px] border border-white bg-white p-6 shadow-clay">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b pb-2">
-              <h3 className="text-base font-extrabold text-slate-900">
-                สวิตช์ควบคุมระบบและการเรียนรู้ (Teaching Controls)
-              </h3>
+          <div className="space-y-4 rounded-[28px] border border-white bg-white p-4 sm:p-6 shadow-clay">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b pb-3">
+              <div>
+                <h3 className="text-base font-extrabold text-slate-900">
+                  สวิตช์ควบคุมระบบและการเรียนรู้ (Teaching Controls)
+                </h3>
+                <p className="text-xs text-slate-500">ปรับเปลี่ยนการเข้าถึงเนื้อหาและแบบทดสอบของนักศึกษา</p>
+              </div>
               <span className="text-[11px] font-bold text-sky-800 bg-sky-100 px-3 py-1 rounded-full self-start sm:self-auto">
-                ☁️ ซิงค์ไปเครื่องนักศึกษาทุกคนอัตโนมัติ (Google Apps Script)
+                ☁️ ซิงค์ไปเครื่องนักศึกษาทุกคนอัตโนมัติ
               </span>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 sm:gap-4">
               {/* Toggle 1: Pre-test */}
               <div className="flex items-center justify-between p-4 rounded-2xl border border-sky-100 bg-sky-50/50">
-                <div>
+                <div className="pr-3">
                   <h4 className="font-bold text-slate-900 text-sm">บังคับทำแบบสอบถามก่อนเรียน (Pre-test)</h4>
                   <p className="text-xs text-slate-500 mt-0.5">นักศึกษาต้องทำ Pre-test ก่อนเริ่มเล่นเกม 5 ด่าน</p>
                 </div>
@@ -698,7 +738,7 @@ export default function TeacherAdmin() {
                     teacher.setRequirePreTest(next);
                     syncSettingChange({ requirePreTest: next });
                   }}
-                  className={`relative h-7 w-12 rounded-full p-1 transition-colors ${teacher.requirePreTest ? 'bg-sky-600' : 'bg-slate-300'}`}
+                  className={`relative h-7 w-12 rounded-full p-1 transition-colors shrink-0 ${teacher.requirePreTest ? 'bg-sky-600' : 'bg-slate-300'}`}
                 >
                   <span className={`block h-5 w-5 rounded-full bg-white shadow transition-transform ${teacher.requirePreTest ? 'translate-x-5' : 'translate-x-0'}`} />
                 </button>
@@ -706,7 +746,7 @@ export default function TeacherAdmin() {
 
               {/* Toggle 2: Post-test */}
               <div className="flex items-center justify-between p-4 rounded-2xl border border-sky-100 bg-sky-50/50">
-                <div>
+                <div className="pr-3">
                   <h4 className="font-bold text-slate-900 text-sm">เปิดให้ทำแบบสอบถามหลังเรียน (Post-test)</h4>
                   <p className="text-xs text-slate-500 mt-0.5">เปิดให้นักศึกษาทำ Post-test เพื่อวัดพัฒนาการ</p>
                 </div>
@@ -718,7 +758,7 @@ export default function TeacherAdmin() {
                     teacher.setEnablePostTest(next);
                     syncSettingChange({ enablePostTest: next });
                   }}
-                  className={`relative h-7 w-12 rounded-full p-1 transition-colors ${teacher.enablePostTest ? 'bg-sky-600' : 'bg-slate-300'}`}
+                  className={`relative h-7 w-12 rounded-full p-1 transition-colors shrink-0 ${teacher.enablePostTest ? 'bg-sky-600' : 'bg-slate-300'}`}
                 >
                   <span className={`block h-5 w-5 rounded-full bg-white shadow transition-transform ${teacher.enablePostTest ? 'translate-x-5' : 'translate-x-0'}`} />
                 </button>
@@ -726,7 +766,7 @@ export default function TeacherAdmin() {
 
               {/* Toggle 3: Chatbot Part 5 */}
               <div className="flex items-center justify-between p-4 rounded-2xl border border-amber-100 bg-amber-50/50">
-                <div>
+                <div className="pr-3">
                   <h4 className="font-bold text-slate-900 text-sm">ตอนที่ 5: ประโยชน์ของแชตบอท (หลังใช้ Chatbot)</h4>
                   <p className="text-xs text-slate-500 mt-0.5">แสดงแบบประเมินตอนที่ 5 ในขั้นตอนสุดท้ายของ Post-test</p>
                 </div>
@@ -738,7 +778,7 @@ export default function TeacherAdmin() {
                     teacher.setEnableChatbotEvaluation(next);
                     syncSettingChange({ enableChatbotEvaluation: next });
                   }}
-                  className={`relative h-7 w-12 rounded-full p-1 transition-colors ${teacher.enableChatbotEvaluation ? 'bg-amber-600' : 'bg-slate-300'}`}
+                  className={`relative h-7 w-12 rounded-full p-1 transition-colors shrink-0 ${teacher.enableChatbotEvaluation ? 'bg-amber-600' : 'bg-slate-300'}`}
                 >
                   <span className={`block h-5 w-5 rounded-full bg-white shadow transition-transform ${teacher.enableChatbotEvaluation ? 'translate-x-5' : 'translate-x-0'}`} />
                 </button>
@@ -746,9 +786,9 @@ export default function TeacherAdmin() {
 
               {/* Toggle 4: Demo Unlock */}
               <div className="flex items-center justify-between p-4 rounded-2xl border border-violet-100 bg-violet-50/50">
-                <div>
+                <div className="pr-3">
                   <h4 className="font-bold text-slate-900 text-sm">โหมดสาธิตการสอน (Unlock All 5 Stages)</h4>
-                  <p className="text-xs text-slate-500 mt-0.5">ปลดล็อกทุกด่าน 1-5 ทันทีสำหรับอาจารย์ใช้สอนหน้าห้อง</p>
+                  <p className="text-xs text-slate-500 mt-0.5">ปลดล็อกทุกด่านทันที เหมาะสำหรับอาจารย์ใช้สอนหน้าห้อง</p>
                 </div>
                 <button
                   type="button"
@@ -758,17 +798,17 @@ export default function TeacherAdmin() {
                     teacher.setDemoUnlockAllStages(next);
                     syncSettingChange({ demoUnlockAllStages: next });
                   }}
-                  className={`relative h-7 w-12 rounded-full p-1 transition-colors ${teacher.demoUnlockAllStages ? 'bg-violet-600' : 'bg-slate-300'}`}
+                  className={`relative h-7 w-12 rounded-full p-1 transition-colors shrink-0 ${teacher.demoUnlockAllStages ? 'bg-violet-600' : 'bg-slate-300'}`}
                 >
                   <span className={`block h-5 w-5 rounded-full bg-white shadow transition-transform ${teacher.demoUnlockAllStages ? 'translate-x-5' : 'translate-x-0'}`} />
                 </button>
               </div>
 
               {/* Toggle 5: Instant Feedback */}
-              <div className="flex items-center justify-between p-4 rounded-2xl border border-slate-200 bg-slate-50/50 md:col-span-2">
-                <div>
-                  <h4 className="font-bold text-slate-900 text-sm">แสดงเฉลยและเหตุผลทางการแพทย์ (Feedback)</h4>
-                  <p className="text-xs text-slate-500 mt-0.5">แสดงคำอธิบายและแหล่งอ้างอิงทางการแพทย์เมื่อเล่นมินิเกม</p>
+              <div className="flex items-center justify-between p-4 rounded-2xl border border-sky-100 bg-sky-50/50">
+                <div className="pr-3">
+                  <h4 className="font-bold text-slate-900 text-sm">แสดงเฉลยและคำอธิบายทันทีหลังตอบ</h4>
+                  <p className="text-xs text-slate-500 mt-0.5">แสดงคำอธิบายความรู้เรื่องโรคฝ้าทันทีที่ตอบคำถามแต่ละข้อ</p>
                 </div>
                 <button
                   type="button"
@@ -778,15 +818,18 @@ export default function TeacherAdmin() {
                     teacher.setShowInstantQuizFeedback(next);
                     syncSettingChange({ showInstantQuizFeedback: next });
                   }}
-                  className={`relative h-7 w-12 rounded-full p-1 transition-colors ${teacher.showInstantQuizFeedback ? 'bg-sky-600' : 'bg-slate-300'}`}
+                  className={`relative h-7 w-12 rounded-full p-1 transition-colors shrink-0 ${teacher.showInstantQuizFeedback ? 'bg-sky-600' : 'bg-slate-300'}`}
                 >
                   <span className={`block h-5 w-5 rounded-full bg-white shadow transition-transform ${teacher.showInstantQuizFeedback ? 'translate-x-5' : 'translate-x-0'}`} />
                 </button>
               </div>
             </div>
 
-            <div className="pt-4 border-t">
-              <h4 className="font-bold text-sm text-slate-900 mb-3">ข้อมูลสถาบันและห้องเรียน</h4>
+            <div className="pt-4 border-t border-slate-100">
+              <h4 className="font-bold text-sm text-slate-900 mb-3 flex items-center gap-1.5">
+                <span>🏫</span>
+                <span>ข้อมูลสถาบันและห้องเรียน</span>
+              </h4>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div>
                   <label className="block text-xs font-bold text-slate-600 mb-1">ชื่อสถาบัน/มหาวิทยาลัย</label>
@@ -831,8 +874,8 @@ export default function TeacherAdmin() {
 
         {/* TAB 2: STUDENTS TRACKING TABLE */}
         {activeTab === 'students' && (
-          <div className="rounded-[28px] border border-white bg-white p-6 shadow-clay space-y-4">
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 border-b pb-3">
+          <div className="rounded-[28px] border border-white bg-white p-4 sm:p-6 shadow-clay space-y-4">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b pb-3">
               <div>
                 <h3 className="text-base font-extrabold text-slate-900">
                   ตารางติดตามผลคะแนนนักศึกษา ({filteredStudents.length} คน)
@@ -859,10 +902,11 @@ export default function TeacherAdmin() {
               </div>
             </div>
 
-            <div className="overflow-x-auto">
+            {/* Desktop Table View (>= md screens) */}
+            <div className="hidden md:block overflow-x-auto rounded-2xl border border-slate-200">
               <table className="w-full text-left text-xs border-collapse">
                 <thead>
-                  <tr className="bg-sky-50/70 text-slate-700 border-b border-sky-100">
+                  <tr className="bg-sky-50/80 text-slate-700 border-b border-sky-100">
                     <th className="p-3 font-extrabold">ลำดับ</th>
                     <th className="p-3 font-extrabold">รหัส</th>
                     <th className="p-3 font-extrabold">ชื่อ-นามสกุลจริง</th>
@@ -872,7 +916,7 @@ export default function TeacherAdmin() {
                     <th className="p-3 font-extrabold text-center">ผ่านด่าน</th>
                     <th className="p-3 font-extrabold text-center">Post-test</th>
                     <th className="p-3 font-extrabold text-center">พัฒนาการ</th>
-                    <th className="p-3 font-extrabold text-center">แชตบอต (ตอนที่ 5)</th>
+                    <th className="p-3 font-extrabold text-center">แชตบอต</th>
                     <th className="p-3 font-extrabold text-center">เกียรติบัตร</th>
                   </tr>
                 </thead>
@@ -928,7 +972,11 @@ export default function TeacherAdmin() {
                             ) : '-'}
                           </td>
                           <td className="p-3 text-center text-[10px] font-bold text-slate-500">
-                            {s.certificateNo || 'ยังไม่ออก'}
+                            {s.certificateNo ? (
+                              <span className="rounded-full bg-amber-50 border border-amber-200 px-2 py-0.5 text-amber-900 font-bold">
+                                {s.certificateNo}
+                              </span>
+                            ) : 'ยังไม่ออก'}
                           </td>
                         </tr>
                       );
@@ -936,6 +984,76 @@ export default function TeacherAdmin() {
                   )}
                 </tbody>
               </table>
+            </div>
+
+            {/* Mobile Cards View (< md screens) */}
+            <div className="block md:hidden space-y-3">
+              {filteredStudents.length === 0 ? (
+                <div className="p-8 text-center text-slate-400 bg-slate-50 rounded-2xl border border-dashed border-slate-200">
+                  ยังไม่มีข้อมูลนักศึกษาในระบบ หรือไม่พบข้อมูลตามคำค้นหา
+                </div>
+              ) : (
+                filteredStudents.map((s, idx) => {
+                  const delta = (s.postTestScore !== undefined && s.preTestScore !== undefined)
+                    ? s.postTestScore - s.preTestScore
+                    : null;
+                  return (
+                    <div key={s.userIdHash + idx} className="p-4 rounded-2xl border border-slate-200 bg-slate-50/60 space-y-3">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex items-center gap-2">
+                          <span className="w-6 h-6 rounded-full bg-sky-100 text-sky-800 font-extrabold text-xs flex items-center justify-center shrink-0">
+                            {idx + 1}
+                          </span>
+                          <div>
+                            <h4 className="font-extrabold text-slate-900 text-sm leading-tight">{s.realName || s.nickname || 'ผู้เรียน'}</h4>
+                            <p className="text-[11px] text-slate-500 mt-0.5">
+                              รหัส: <b className="text-sky-900">{s.studentCode || '-'}</b> • LINE: <b>{s.lineDisplayName || '-'}</b>
+                            </p>
+                          </div>
+                        </div>
+                        {s.certificateNo ? (
+                          <span className="px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 text-[10px] font-bold shrink-0 border border-amber-200">
+                            🎓 {s.certificateNo}
+                          </span>
+                        ) : (
+                          <span className="px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 text-[10px] font-bold shrink-0">
+                            ยังไม่ออกใบประกาศ
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Score Metrics */}
+                      <div className="grid grid-cols-3 gap-2 text-center text-xs">
+                        <div className="p-2 rounded-xl bg-sky-50 border border-sky-100">
+                          <span className="text-[10px] font-bold text-sky-700 block">Pre-test</span>
+                          <span className="font-extrabold text-sky-900 text-sm">
+                            {s.preTestScore !== undefined ? `${s.preTestScore}%` : '-'}
+                          </span>
+                        </div>
+                        <div className="p-2 rounded-xl bg-emerald-50 border border-emerald-100">
+                          <span className="text-[10px] font-bold text-emerald-700 block">Post-test</span>
+                          <span className="font-extrabold text-emerald-900 text-sm">
+                            {s.postTestScore !== undefined ? `${s.postTestScore}%` : '-'}
+                          </span>
+                        </div>
+                        <div className="p-2 rounded-xl bg-slate-100/80 border border-slate-200">
+                          <span className="text-[10px] font-bold text-slate-600 block">พัฒนาการ</span>
+                          <span className={`font-extrabold text-sm ${delta !== null && delta >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
+                            {delta !== null ? (delta >= 0 ? `+${delta}%` : `${delta}%`) : '-'}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Progress Meta */}
+                      <div className="flex items-center justify-between text-[11px] text-slate-600 pt-1 border-t border-slate-200/60">
+                        <span>ผ่านด่าน: <b>{s.stagesCompleted?.length || 0}/5</b></span>
+                        <span>คะแนนรวม: <b>{s.totalXP || 0} XP</b></span>
+                        <span>ประเมิน AI: <b>{s.chatbotSurveyScore !== undefined ? `⭐ ${s.chatbotSurveyScore}` : '-'}</b></span>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
             </div>
           </div>
         )}
