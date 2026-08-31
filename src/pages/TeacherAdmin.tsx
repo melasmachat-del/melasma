@@ -987,14 +987,14 @@ export default function TeacherAdmin() {
                   </p>
                 </div>
 
-                <div className="flex flex-col sm:flex-row md:flex-col gap-2 shrink-0">
+                <div className="flex flex-col sm:flex-row md:flex-col gap-2.5 shrink-0 min-w-[260px]">
                   {cloudSheetUrl && (
                     <button
                       type="button"
                       onClick={() => { sfx.click(); openExternalBrowser(cloudSheetUrl); }}
-                      className="btn-primary !bg-emerald-500 hover:!bg-emerald-400 !text-slate-950 font-black text-sm !py-3 !px-6 shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2"
+                      className="w-full bg-emerald-500 hover:bg-emerald-400 active:scale-[0.99] text-slate-950 font-black text-xs sm:text-sm py-3 px-5 rounded-2xl shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2"
                     >
-                      <span>🌐</span>
+                      <span className="text-base">🌐</span>
                       <span>เปิด Google Sheets ตารางคะแนนสด ↗</span>
                     </button>
                   )}
@@ -1002,10 +1002,10 @@ export default function TeacherAdmin() {
                     type="button"
                     onClick={handleSyncFromCloud}
                     disabled={isSyncingCloud}
-                    className="btn-outline !text-white !border-white/30 hover:!bg-white/10 text-xs font-bold !py-2 !px-4 flex items-center justify-center gap-1.5"
+                    className="w-full bg-white/15 hover:bg-white/25 active:bg-white/30 text-white border border-white/30 rounded-2xl text-xs font-bold py-2.5 px-4 flex items-center justify-center gap-2 backdrop-blur-sm transition-all disabled:opacity-50"
                   >
                     <span>{isSyncingCloud ? '⏳' : '🔄'}</span>
-                    <span>{isSyncingCloud ? 'กำลังซิงค์...' : 'ดึงข้อมูลสถิติล่าสุดลงเครื่อง'}</span>
+                    <span>{isSyncingCloud ? 'กำลังซิงค์ข้อมูล...' : 'ดึงข้อมูลสถิติล่าสุดลงเครื่อง'}</span>
                   </button>
                 </div>
               </div>
