@@ -1061,18 +1061,19 @@ export default function TeacherAdmin() {
         {/* TAB 3: GOOGLE SHEETS & EXPORT GUIDE */}
         {activeTab === 'export' && (
           <div className="rounded-[28px] border border-white bg-white p-6 shadow-clay space-y-6">
-            {/* Hero Header Card */}
-            <div className="p-6 rounded-2xl bg-gradient-to-br from-indigo-900 via-sky-900 to-slate-900 text-white shadow-lg space-y-4">
+            {/* Hero Header Card (Bright / Light Clay Tone) */}
+            <div className="p-5 sm:p-6 rounded-[26px] bg-gradient-to-br from-sky-50 via-indigo-50/30 to-white border border-sky-200/80 shadow-clay-sm space-y-4">
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div className="space-y-1.5">
-                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 text-sky-200 text-xs font-bold backdrop-blur-sm">
-                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                <div className="space-y-2">
+                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200/80 text-xs font-extrabold shadow-sm">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
                     <span>ระบบคลาวด์เชื่อมต่อสมบูรณ์ (Real-Time Auto Sync)</span>
                   </div>
-                  <h3 className="text-xl font-black tracking-tight text-white">
-                    📊 ฐานข้อมูลรายงานผลการเรียน (Google Sheets)
+                  <h3 className="text-lg sm:text-xl font-black tracking-tight text-slate-900 flex items-center gap-2">
+                    <span>📊</span>
+                    <span>ฐานข้อมูลรายงานผลการเรียน (Google Sheets)</span>
                   </h3>
-                  <p className="text-xs text-sky-150 text-slate-300 max-w-xl leading-relaxed">
+                  <p className="text-xs sm:text-sm text-slate-600 max-w-xl leading-relaxed">
                     ข้อมูลคะแนนและพัฒนาการของนักศึกษาทุกคนจะถูกบันทึกลงใน Google Sheets กลางอัตโนมัติ สามารถกดเปิดดูแบบสดๆ ได้ทันที หรือดาวน์โหลดเป็นไฟล์ Excel / PDF / CSV จากใน Google Sheets ได้ตลอดเวลา
                   </p>
                 </div>
@@ -1082,7 +1083,7 @@ export default function TeacherAdmin() {
                     <button
                       type="button"
                       onClick={() => { sfx.click(); openExternalBrowser(cloudSheetUrl); }}
-                      className="w-full bg-emerald-500 hover:bg-emerald-400 active:scale-[0.99] text-slate-950 font-black text-xs sm:text-sm py-3 px-5 rounded-2xl shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2"
+                      className="w-full btn-primary !bg-emerald-600 hover:!bg-emerald-700 active:scale-[0.99] text-white font-extrabold text-xs sm:text-sm py-3 px-5 rounded-2xl shadow-clay-sm hover:shadow-md transition-all flex items-center justify-center gap-2"
                     >
                       <span className="text-base">🌐</span>
                       <span>เปิด Google Sheets ตารางคะแนนสด ↗</span>
@@ -1092,7 +1093,7 @@ export default function TeacherAdmin() {
                     type="button"
                     onClick={handleSyncFromCloud}
                     disabled={isSyncingCloud}
-                    className="w-full bg-white/15 hover:bg-white/25 active:bg-white/30 text-white border border-white/30 rounded-2xl text-xs font-bold py-2.5 px-4 flex items-center justify-center gap-2 backdrop-blur-sm transition-all disabled:opacity-50"
+                    className="w-full bg-white hover:bg-sky-50 active:bg-sky-100 text-sky-800 border border-sky-200 rounded-2xl text-xs font-bold py-2.5 px-4 flex items-center justify-center gap-2 shadow-sm transition-all disabled:opacity-50"
                   >
                     <span>{isSyncingCloud ? '⏳' : '🔄'}</span>
                     <span>{isSyncingCloud ? 'กำลังซิงค์ข้อมูล...' : 'ดึงข้อมูลสถิติล่าสุดลงเครื่อง'}</span>
@@ -1100,13 +1101,17 @@ export default function TeacherAdmin() {
                 </div>
               </div>
 
-              {/* Status Pill */}
-              <div className="pt-2 border-t border-white/10 flex flex-wrap items-center justify-between gap-2 text-[11px] text-slate-300">
-                <div className="flex items-center gap-2">
-                  <span>🔒 <b>สถานะการเข้าถึง:</b> ทุกคนที่มีลิงก์มีสิทธิ์ดู (อ่านเท่านั้น / Viewer) ปลอดภัย 100% ข้อมูลไม่สูญหาย</span>
+              {/* Status Pill Footer */}
+              <div className="pt-3 border-t border-sky-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs text-slate-600">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-amber-600 font-bold">🔒 สถานะการเข้าถึง:</span>
+                  <span>ทุกคนที่มีลิงก์มีสิทธิ์ดู (อ่านเท่านั้น / Viewer) ปลอดภัย 100% ข้อมูลไม่สูญหาย</span>
                 </div>
-                <div>
-                  <span>นักศึกษาในระบบ: <b>{allStudents.length} คน</b></span>
+                <div className="flex items-center gap-1.5 self-start sm:self-auto">
+                  <span>นักศึกษาในระบบ:</span>
+                  <span className="px-2.5 py-0.5 rounded-full bg-sky-100 text-sky-900 font-extrabold text-xs">
+                    {allStudents.length} คน
+                  </span>
                 </div>
               </div>
             </div>
