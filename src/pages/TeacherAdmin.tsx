@@ -591,34 +591,6 @@ export default function TeacherAdmin() {
           </div>
         </div>
 
-        {/* LINE In-App Browser Warning & Helper Banner */}
-        {inLine && (
-          <div className="mb-5 rounded-[24px] border border-amber-300 bg-gradient-to-r from-amber-100 via-amber-50 to-amber-100 p-4 sm:p-5 shadow-clay-sm flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div className="flex items-center gap-3.5">
-              <span className="flex h-12 w-12 flex-none items-center justify-center rounded-2xl bg-amber-200 text-2xl text-amber-950 shadow-sm">
-                📱
-              </span>
-              <div>
-                <span className="rounded-full bg-amber-200/80 px-2.5 py-0.5 text-[10px] font-extrabold text-amber-950">
-                  กำลังใช้งานผ่านแอป LINE (In-App Browser)
-                </span>
-                <h4 className="text-xs sm:text-sm font-extrabold text-slate-900 mt-0.5">
-                  แนะนำเปิดในเบราว์เซอร์จริง (Safari / Chrome) เพื่อดาวน์โหลดไฟล์ Excel ได้ทันที
-                </h4>
-                <p className="text-[11px] text-amber-900 leading-relaxed mt-0.5">
-                  แอป LINE มีระบบบล็อกการดาวน์โหลดไฟล์ .xls ลงเครื่อง แนะนำให้กดปุ่มเปิดบราวเซอร์จริง หรือใช้ปุ่ม <b>"คัดลอกตาราง"</b> ไป Paste ใน Excel ได้เลยครับ
-                </p>
-              </div>
-            </div>
-            <button
-              type="button"
-              onClick={() => { sfx.click(); openExternalBrowser(window.location.href); }}
-              className="btn-primary !bg-amber-600 hover:!bg-amber-700 font-bold text-xs sm:text-sm !px-5 !py-3 whitespace-nowrap w-full sm:w-auto shadow-clay-sm flex-none"
-            >
-              🌐 เปิดใน Safari / Chrome →
-            </button>
-          </div>
-        )}
 
         {/* Cloud Sync Status Banner */}
         {cloudSyncMsg && (
