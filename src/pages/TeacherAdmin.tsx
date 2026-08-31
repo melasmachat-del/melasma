@@ -31,8 +31,9 @@ export default function TeacherAdmin() {
   const [checkingBackend, setCheckingBackend] = useState(false);
 
   // Cloud sync state
+  const DEFAULT_SHEET_URL = 'https://docs.google.com/spreadsheets/d/1ngfohj3IAImeSulWSi7yNijAj2dX4Ge1bqrMy9sPK18/edit?usp=sharing';
   const [isSyncingCloud, setIsSyncingCloud] = useState(false);
-  const [cloudSheetUrl, setCloudSheetUrl] = useState<string | null>(null);
+  const [cloudSheetUrl, setCloudSheetUrl] = useState<string>(DEFAULT_SHEET_URL);
   const [cloudSyncMsg, setCloudSyncMsg] = useState<string | null>(null);
   const [showLineExportModal, setShowLineExportModal] = useState(false);
   const [copySuccess, setCopySuccess] = useState(false);
@@ -967,154 +968,173 @@ export default function TeacherAdmin() {
           </div>
         )}
 
-        {/* TAB 3: EXPORT REPORTS */}
+        {/* TAB 3: GOOGLE SHEETS & EXPORT GUIDE */}
         {activeTab === 'export' && (
           <div className="rounded-[28px] border border-white bg-white p-6 shadow-clay space-y-6">
-            <div className="border-b pb-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-              <div>
-                <h3 className="text-base font-extrabold text-slate-900">
-                  ส่งออกข้อมูลรายงานผลการเรียนของทุกคน (Excel & Google Sheets)
-                </h3>
-                <p className="text-xs text-slate-500">
-                  รองรับการดาวน์โหลดไฟล์ Excel (.xls), CSV (UTF-8 BOM), และการดึงข้อมูลรวมจาก Google Apps Script Backend
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={handleSyncFromCloud}
-                disabled={isSyncingCloud}
-                className="btn-outline !min-h-9 !px-4 text-xs font-bold text-sky-700 border-sky-300 hover:bg-sky-50 self-start sm:self-auto"
-              >
-                {isSyncingCloud ? '⏳ กำลังดึงข้อมูล...' : '🔄 ดึงข้อมูลล่าสุดจาก Google Sheets'}
-              </button>
-            </div>
-
-            {/* Export Cards Grid (3 Options: Excel, CSV, Clipboard) */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {/* Card 1: Excel .xls */}
-              <div className="p-5 rounded-2xl bg-emerald-50/80 border border-emerald-200 flex flex-col justify-between space-y-4">
-                <div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-2xl">📊</span>
-                    <h4 className="font-extrabold text-emerald-950 text-sm">
-                      ไฟล์ Microsoft Excel (.xls)
-                    </h4>
+            {/* Hero Header Card */}
+            <div className="p-6 rounded-2xl bg-gradient-to-br from-indigo-900 via-sky-900 to-slate-900 text-white shadow-lg space-y-4">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div className="space-y-1.5">
+                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 text-sky-200 text-xs font-bold backdrop-blur-sm">
+                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                    <span>ระบบคลาวด์เชื่อมต่อสมบูรณ์ (Real-Time Auto Sync)</span>
                   </div>
-                  <p className="text-xs text-emerald-800 mt-2 leading-relaxed">
-                    ส่งออกเป็นตาราง Excel แบบจัดแต่งสไตล์ (สีหัวตาราง, สีคะแนนก่อน-หลังเรียน, ฟอนต์ Tahoma) เปิดใน Microsoft Excel ได้ทันทีโดยภาษาไทยไม่เพี้ยน
-                  </p>
-                  <p className="text-[11px] font-bold text-emerald-900 mt-2">
-                    นักศึกษาทั้งหมด: {allStudents.length} คน
+                  <h3 className="text-xl font-black tracking-tight text-white">
+                    📊 ฐานข้อมูลรายงานผลการเรียน (Google Sheets)
+                  </h3>
+                  <p className="text-xs text-sky-150 text-slate-300 max-w-xl leading-relaxed">
+                    ข้อมูลคะแนนและพัฒนาการของนักศึกษาทุกคนจะถูกบันทึกลงใน Google Sheets กลางอัตโนมัติ สามารถกดเปิดดูแบบสดๆ ได้ทันที หรือดาวน์โหลดเป็นไฟล์ Excel / PDF / CSV จากใน Google Sheets ได้ตลอดเวลา
                   </p>
                 </div>
-                <div className="space-y-2">
-                  <button
-                    type="button"
-                    onClick={handleExportExcel}
-                    className="btn-primary !bg-emerald-600 hover:!bg-emerald-700 font-bold text-xs !py-3 w-full shadow-sm"
-                  >
-                    📥 ดาวน์โหลดไฟล์ Excel (.xls) →
-                  </button>
+
+                <div className="flex flex-col sm:flex-row md:flex-col gap-2 shrink-0">
                   {cloudSheetUrl && (
                     <button
                       type="button"
                       onClick={() => { sfx.click(); openExternalBrowser(cloudSheetUrl); }}
-                      className="btn-outline !text-[11px] !py-1.5 w-full text-emerald-800 border-emerald-300 hover:bg-emerald-100 font-bold"
+                      className="btn-primary !bg-emerald-500 hover:!bg-emerald-400 !text-slate-950 font-black text-sm !py-3 !px-6 shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2"
                     >
-                      🌐 เปิดดู Google Sheets สด
+                      <span>🌐</span>
+                      <span>เปิด Google Sheets ตารางคะแนนสด ↗</span>
                     </button>
                   )}
-                </div>
-              </div>
-
-              {/* Card 2: CSV UTF-8 BOM */}
-              <div className="p-5 rounded-2xl bg-sky-50/80 border border-sky-200 flex flex-col justify-between space-y-4">
-                <div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-2xl">📑</span>
-                    <h4 className="font-extrabold text-sky-950 text-sm">
-                      ไฟล์ข้อมูลสถิติ CSV (UTF-8) ⭐ แนะนำ
-                    </h4>
-                  </div>
-                  <p className="text-xs text-sky-800 mt-2 leading-relaxed">
-                    ไฟล์ CSV มีรหัสภาษาไทย UTF-8 BOM มาตรฐาน รองรับการแชร์เข้าแอป LINE / บันทึกลงเครื่อง / เปิดใน Excel บนมือถือได้ทันที 100%
-                  </p>
-                  <p className="text-[11px] font-bold text-sky-900 mt-2">
-                    นักศึกษาทั้งหมด: {allStudents.length} คน
-                  </p>
-                </div>
-                <div className="space-y-2">
                   <button
                     type="button"
-                    onClick={handleShareOrDownloadCSV}
-                    className="btn-primary !bg-sky-600 hover:!bg-sky-700 font-bold text-xs !py-3 w-full shadow-sm"
+                    onClick={handleSyncFromCloud}
+                    disabled={isSyncingCloud}
+                    className="btn-outline !text-white !border-white/30 hover:!bg-white/10 text-xs font-bold !py-2 !px-4 flex items-center justify-center gap-1.5"
                   >
-                    📤 แชร์ / บันทึกไฟล์ CSV (.csv) →
+                    <span>{isSyncingCloud ? '⏳' : '🔄'}</span>
+                    <span>{isSyncingCloud ? 'กำลังซิงค์...' : 'ดึงข้อมูลสถิติล่าสุดลงเครื่อง'}</span>
                   </button>
                 </div>
               </div>
 
-              {/* Card 3: Direct Clipboard Copy (Best for Mobile & LINE LIFF) */}
-              <div className="p-5 rounded-2xl bg-amber-50/80 border border-amber-200 flex flex-col justify-between space-y-4">
+              {/* Status Pill */}
+              <div className="pt-2 border-t border-white/10 flex flex-wrap items-center justify-between gap-2 text-[11px] text-slate-300">
+                <div className="flex items-center gap-2">
+                  <span>🔒 <b>สถานะการเข้าถึง:</b> ทุกคนที่มีลิงก์มีสิทธิ์ดู (อ่านเท่านั้น / Viewer) ปลอดภัย 100% ข้อมูลไม่สูญหาย</span>
+                </div>
                 <div>
+                  <span>นักศึกษาในระบบ: <b>{allStudents.length} คน</b></span>
+                </div>
+              </div>
+            </div>
+
+            {/* Step-by-Step Guide for Admin */}
+            <div className="space-y-4 pt-2">
+              <div className="flex items-center gap-2 border-b pb-2">
+                <span className="text-xl">📖</span>
+                <h4 className="text-base font-extrabold text-slate-900">
+                  คู่มือการใช้งานและวิธีส่งออกไฟล์สำหรับ Admin / อาจารย์
+                </h4>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Step 1: PC Download Guide */}
+                <div className="p-5 rounded-2xl bg-slate-50 border border-slate-200 space-y-3">
                   <div className="flex items-center gap-2">
-                    <span className="text-2xl">📋</span>
-                    <h4 className="font-extrabold text-amber-950 text-sm">
-                      คัดลอกตารางข้อมูลทั้งหมด (Clipboard)
-                    </h4>
+                    <span className="w-6 h-6 rounded-full bg-sky-600 text-white text-xs font-extrabold flex items-center justify-center">1</span>
+                    <h5 className="font-bold text-slate-900 text-sm">
+                      💻 วิธีดาวน์โหลดไฟล์ผ่านคอมพิวเตอร์ (PC / Mac)
+                    </h5>
                   </div>
-                  <p className="text-xs text-amber-800 mt-2 leading-relaxed">
-                    คัดลอกข้อมูลตารางนักศึกษาทุกคนลงคลิปบอร์ดในรูปแบบคอลัมน์มาตรฐาน สามารถนำไปกด <b>Paste (วาง)</b> ใน Microsoft Excel หรือ Google Sheets บนมือถือได้ทันที
+                  <ol className="text-xs text-slate-600 space-y-2 list-decimal list-inside leading-relaxed">
+                    <li>กดปุ่ม <b>"เปิด Google Sheets ตารางคะแนนสด"</b> ด้านบน</li>
+                    <li>ไปที่แถบเมนูด้านบนซ้าย: <b>ไฟล์ (File)</b></li>
+                    <li>เลือก <b>ดาวน์โหลด (Download)</b></li>
+                    <li>
+                      เลือกรูปแบบไฟล์ที่ต้องการ:
+                      <ul className="list-disc list-inside pl-4 pt-1 space-y-1 text-slate-700 font-medium">
+                        <li><b>Microsoft Excel (.xlsx)</b> — นำไปเปิดในโปรแกรม Excel ได้ทันที</li>
+                        <li><b>เอกสาร PDF (.pdf)</b> — เหมาะสำหรับพิมพ์รายงานหรือส่งตรวจ</li>
+                        <li><b>ค่าที่คั่นด้วยเครื่องหมายจุลภาค (.csv)</b> — สำหรับโปรแกรมสถิติ SPSS</li>
+                      </ul>
+                    </li>
+                  </ol>
+                </div>
+
+                {/* Step 2: Mobile Download Guide */}
+                <div className="p-5 rounded-2xl bg-slate-50 border border-slate-200 space-y-3">
+                  <div className="flex items-center gap-2">
+                    <span className="w-6 h-6 rounded-full bg-emerald-600 text-white text-xs font-extrabold flex items-center justify-center">2</span>
+                    <h5 className="font-bold text-slate-900 text-sm">
+                      📱 วิธีดาวน์โหลดไฟล์ผ่านมือถือ (iPhone / Android)
+                    </h5>
+                  </div>
+                  <ol className="text-xs text-slate-600 space-y-2 list-decimal list-inside leading-relaxed">
+                    <li>เปิดลิงก์ Google Sheets ในแอปหรือเบราว์เซอร์มือถือ</li>
+                    <li>แตะไอคอน <b>จุดสามจุด ( ⠇ หรือ ... )</b> ที่มุมขวาบน</li>
+                    <li>เลือกเมนู <b>แชร์และส่งออก (Share & export)</b></li>
+                    <li>
+                      เลือกวิธีส่งออก:
+                      <ul className="list-disc list-inside pl-4 pt-1 space-y-1 text-slate-700 font-medium">
+                        <li><b>บันทึกเป็น (Save as)</b> → เลือก <b>Excel (.xlsx)</b></li>
+                        <li><b>ส่งสำเนา (Send a copy)</b> → ส่งไฟล์เข้าแอป LINE หรืออีเมล</li>
+                      </ul>
+                    </li>
+                  </ol>
+                </div>
+              </div>
+
+              {/* Step 3: Column Reference */}
+              <div className="p-5 rounded-2xl bg-amber-50/70 border border-amber-200 space-y-3">
+                <div className="flex items-center gap-2">
+                  <span className="w-6 h-6 rounded-full bg-amber-600 text-white text-xs font-extrabold flex items-center justify-center">3</span>
+                  <h5 className="font-bold text-amber-950 text-sm">
+                    📊 คำอธิบาย 18 คอลัมน์สำคัญในตารางรายงานผลการเรียน
+                  </h5>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 text-xs text-slate-700 pt-1">
+                  <div className="p-3 bg-white rounded-xl border border-amber-200/80 shadow-sm space-y-1">
+                    <p className="font-bold text-sky-900">👤 ข้อมูลผู้เรียน</p>
+                    <p className="text-slate-600 leading-relaxed">• <b>รหัสนักศึกษา / ชื่อจริง</b> (ระบุตัวตน)<br/>• <b>ชื่อในแอป / ชื่อโปรไฟล์ LINE</b></p>
+                  </div>
+                  <div className="p-3 bg-white rounded-xl border border-amber-200/80 shadow-sm space-y-1">
+                    <p className="font-bold text-sky-900">📝 ก่อนเรียน (Pre-test)</p>
+                    <p className="text-slate-600 leading-relaxed">• <b>คะแนนความรู้ (%)</b> (ตอนที่ 1)<br/>• <b>คะแนนทักษะ (เต็ม 100)</b> (ตอนที่ 2)<br/>• <b>วันเวลาที่ทำ</b></p>
+                  </div>
+                  <div className="p-3 bg-white rounded-xl border border-amber-200/80 shadow-sm space-y-1">
+                    <p className="font-bold text-sky-900">🎮 การเรียนรู้ในบทเรียน</p>
+                    <p className="text-slate-600 leading-relaxed">• <b>ด่านที่ผ่าน</b> (ด่าน 1 ถึง 5)<br/>• <b>คะแนนสะสมรวม (Total XP)</b></p>
+                  </div>
+                  <div className="p-3 bg-white rounded-xl border border-amber-200/80 shadow-sm space-y-1">
+                    <p className="font-bold text-emerald-900">📈 หลังเรียน (Post-test)</p>
+                    <p className="text-slate-600 leading-relaxed">• <b>คะแนนความรู้ (%)</b> (ตอนที่ 3)<br/>• <b>คะแนนทักษะ (เต็ม 100)</b> (ตอนที่ 4)<br/>• <b>พัฒนาการ (Gain Delta %)</b></p>
+                  </div>
+                  <div className="p-3 bg-white rounded-xl border border-amber-200/80 shadow-sm space-y-1">
+                    <p className="font-bold text-purple-900">🤖 การประเมินแชตบอต</p>
+                    <p className="text-slate-600 leading-relaxed">• <b>คะแนนเฉลี่ยตอนที่ 5 (1.0 - 5.0)</b><br/>ประเมินความพึงพอใจและประโยชน์ของ AI</p>
+                  </div>
+                  <div className="p-3 bg-white rounded-xl border border-amber-200/80 shadow-sm space-y-1">
+                    <p className="font-bold text-amber-900">🎓 เกียรติบัตร</p>
+                    <p className="text-slate-600 leading-relaxed">• <b>เลขที่เกียรติบัตร</b> (เช่น WU-MEL-2569-0001)<br/>• <b>วันที่ออกเกียรติบัตรทางการ</b></p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Quick Clipboard Copy Tool */}
+              <div className="p-4 rounded-2xl bg-indigo-50/70 border border-indigo-200 flex flex-col sm:flex-row items-center justify-between gap-3">
+                <div className="space-y-0.5">
+                  <p className="text-xs font-bold text-indigo-950 flex items-center gap-1.5">
+                    <span>📋</span>
+                    <span>ตัวช่วยคัดลอกข้อมูลด่วน (Quick Clipboard Copy)</span>
                   </p>
-                  <p className="text-[11px] font-bold text-amber-900 mt-2">
-                    {copySuccess ? '✓ คัดลอกเรียบร้อยแล้ว!' : 'แตะครั้งเดียวคัดลอกได้ทันที'}
+                  <p className="text-[11px] text-indigo-800">
+                    แตะปุ่มนี้เพื่อคัดลอกข้อมูลตารางนักศึกษาทุกคนลงคลิปบอร์ด แล้วนำไปกด "วาง (Paste)" ใน Excel หรือ Google Sheets ในเครื่องได้ทันที
                   </p>
                 </div>
                 <button
                   type="button"
                   onClick={handleCopyTableToClipboard}
-                  className={`btn-primary font-bold text-xs !py-3 w-full shadow-sm transition-all ${
+                  className={`btn-primary font-bold text-xs !py-2.5 !px-5 whitespace-nowrap shadow-sm transition-all shrink-0 ${
                     copySuccess
                       ? '!bg-emerald-600 hover:!bg-emerald-700 text-white'
-                      : '!bg-amber-600 hover:!bg-amber-700 text-white'
+                      : '!bg-indigo-600 hover:!bg-indigo-700 text-white'
                   }`}
                 >
-                  {copySuccess ? '✓ คัดลอกข้อมูลตารางแล้ว!' : '📋 คัดลอกตารางข้อมูลทั้งหมด →'}
+                  {copySuccess ? '✓ คัดลอกข้อมูลแล้ว!' : '📋 คัดลอกตารางข้อมูลทั้งหมด'}
                 </button>
-              </div>
-            </div>
-
-            {/* Cloud Google Sheets Integration Box */}
-            <div className="p-5 rounded-2xl bg-gradient-to-br from-indigo-50/70 to-blue-50/70 border border-indigo-200 flex flex-col sm:flex-row items-center justify-between gap-4">
-              <div className="space-y-1">
-                <div className="flex items-center gap-2">
-                  <span className="text-xl">🌐</span>
-                  <h4 className="font-extrabold text-indigo-950 text-sm">
-                    ฐานข้อมูล Google Sheets ออนไลน์ (Apps Script Backend)
-                  </h4>
-                </div>
-                <p className="text-xs text-indigo-800 leading-relaxed">
-                  ข้อมูลคะแนนของนักศึกษาทุกคนที่ส่งผ่านโทรศัพท์มือถือและ LINE LIFF จะถูกรวบรวมไว้ที่ Google Sheets อัตโนมัติ สามารถกดซิงค์เพื่ออัปเดตลงเครื่อง หรือเปิดดูตารางสดออนไลน์ได้ตลอดเวลา
-                </p>
-              </div>
-              <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
-                <button
-                  type="button"
-                  onClick={handleSyncFromCloud}
-                  disabled={isSyncingCloud}
-                  className="btn-primary !bg-indigo-600 hover:!bg-indigo-700 font-bold text-xs !px-4 !py-2.5 whitespace-nowrap w-full sm:w-auto shadow-sm"
-                >
-                  {isSyncingCloud ? '⏳ กำลังซิงค์...' : '🔄 ซิงค์ทุกคนจาก Sheets'}
-                </button>
-                {cloudSheetUrl && (
-                  <button
-                    type="button"
-                    onClick={() => { sfx.click(); openExternalBrowser(cloudSheetUrl); }}
-                    className="btn-outline text-xs font-bold text-indigo-800 border-indigo-300 hover:bg-indigo-100 !px-4 !py-2.5 whitespace-nowrap text-center w-full sm:w-auto"
-                  >
-                    📊 เปิด Google Sheet ↗
-                  </button>
-                )}
               </div>
             </div>
           </div>
